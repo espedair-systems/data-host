@@ -1,0 +1,9 @@
+# Default configuration for local execution (outside Docker)
+# For Docker, see docker/config.yaml or use environment variables
+port: 8080
+frontend_path: "./frontend/dist"
+data_path: "../data-services/dist"
+database_url: "blueprint.db"
+mounts:
+  - path: "/registry"
+    source_path: "../data-services/dist"

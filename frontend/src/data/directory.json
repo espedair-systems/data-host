@@ -1,0 +1,191 @@
+[
+  {
+    "id": "site",
+    "title": "Site",
+    "internal": true,
+    "image": "../images/calm.png",
+    "featured": true,
+    "tags": [
+      "Inspect",
+      "Admin"
+    ],
+    "description": "Offers guided meditations, sleep stories, and calming music to help users relax and improve sleep.",
+    "link": "/site"
+  },
+  {
+    "id": "schema",
+    "title": "Schema",
+    "internal": true,
+    "image": "../images/007.png",
+    "tags": [
+      "Inspect",
+      "Admin",
+      "Agents"
+    ],
+    "description": "Provides a variety of guided meditations, sleep content, and mindfulness exercises for daily use.",
+    "link": "/schema"
+  },
+  {
+    "id": "config",
+    "title": "Config",
+    "internal": true,
+    "tags": [
+      "Inspect",
+      "Admin"
+    ],
+    "image": "",
+    "description": "Focuses on sleep and stress reduction with guided meditations in multiple languages.",
+    "link": "/config"
+  },
+  {
+    "id": "ingestion",
+    "title": "Schema Ingestion",
+    "internal": true,
+    "image": "",
+    "tags": [
+      "Ingestion",
+      "Admin"
+    ],
+    "description": "Import and register new data schemas into the registry for validation and visualization.",
+    "link": "/ingestion"
+  },
+  {
+    "id": "ingestion-bigquery",
+    "title": "BigQuery Ingestion",
+    "internal": true,
+    "image": "",
+    "tags": [
+      "Ingestion",
+      "Admin"
+    ],
+    "description": "Directly extract schema metadata from Google BigQuery datasets using service account credentials.",
+    "link": "/ingestion/bigquery"
+  },
+  {
+    "id": "ingestion-oracle",
+    "title": "Oracle Ingestion",
+    "internal": true,
+    "image": "",
+    "tags": [
+      "Ingestion",
+      "Admin"
+    ],
+    "description": "Connect to Oracle databases to extract table structures, constraints, and relationships.",
+    "link": "/ingestion/oracle"
+  },
+  {
+    "id": "ingestion-postgres",
+    "title": "Postgres Ingestion",
+    "internal": true,
+    "image": "",
+    "tags": [
+      "Ingestion",
+      "Admin"
+    ],
+    "description": "Import schema metadata from PostgreSQL databases using standard information schema catalogs.",
+    "link": "/ingestion/postgres"
+  },
+  {
+    "id": "ingestion-mssql",
+    "title": "MS SQL Ingestion",
+    "internal": true,
+    "image": "",
+    "tags": [
+      "Ingestion",
+      "Admin"
+    ],
+    "description": "Connect to Microsoft SQL Server to scan table objects, views, and index definitions.",
+    "link": "/ingestion/mssql"
+  },
+  {
+    "id": "ingestion-mysql",
+    "title": "MySQL Ingestion",
+    "internal": true,
+    "image": "",
+    "tags": [
+      "Ingestion",
+      "Admin"
+    ],
+    "description": "Import schema metadata from MySQL or MariaDB databases using information schema catalogs.",
+    "link": "/ingestion/mysql"
+  },
+  {
+    "id": "ingestion-mongo",
+    "title": "MongoDB Ingestion",
+    "internal": true,
+    "image": "",
+    "tags": [
+      "Ingestion",
+      "Admin"
+    ],
+    "description": "Infer schema structures from MongoDB collections using document sampling and pattern matching.",
+    "link": "/ingestion/mongo"
+  },
+  {
+    "id": "ingestion-gcs",
+    "title": "Cloud Storage Ingestion",
+    "internal": true,
+    "image": "",
+    "tags": [
+      "Ingestion",
+      "Admin"
+    ],
+    "description": "Register and scan metadata from Google Cloud Storage buckets and objects.",
+    "link": "/ingestion/gcs"
+  },
+  {
+    "id": "platform-gcp",
+    "title": "Google Cloud",
+    "internal": true,
+    "image": "",
+    "tags": [
+      "Platforms"
+    ],
+    "description": "Overview of GCP infrastructure, services, and integration points.",
+    "link": "/platforms/gcp"
+  },
+  {
+    "id": "platform-aws",
+    "title": "AWS",
+    "internal": true,
+    "image": "",
+    "tags": [
+      "Platforms"
+    ],
+    "description": "Overview of AWS cloud resources, VPCs, and serverless architectures.",
+    "link": "/platforms/aws"
+  },
+  {
+    "id": "platform-gcve",
+    "title": "GCVE",
+    "internal": true,
+    "image": "",
+    "tags": [
+      "Platforms"
+    ],
+    "description": "Google Cloud VMware Engine management and hybrid cloud orchestration.",
+    "link": "/platforms/gcve"
+  },
+  {
+    "id": "platform-saas",
+    "title": "SaaS Solutions",
+    "internal": true,
+    "image": "",
+    "tags": [
+      "Platforms"
+    ],
+    "description": "Inventory and connection status of various SaaS platforms and APIs.",
+    "link": "/platforms/saas"
+  },
+  {
+    "id": "environments",
+    "title": "Environments",
+    "internal": true,
+    "image": "",
+    "tags": [
+      "Admin"
+    ],
+    "description": "Manage and monitor Production (Prod, Staging) and Non-Production (Dev, Test) environment states.",
+    "link": "/environments"
+  }
+]

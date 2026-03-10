@@ -1,0 +1,53 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://espedair.io/schema/collections",
+    "title": "Collections Schema",
+    "description": "Schema for grouping database tables into logical collections",
+    "type": "array",
+    "items": {
+        "$ref": "#/$defs/Collection"
+    },
+    "$defs": {
+        "Collection": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "description": "Unique identifier for the collection"
+                },
+                "title": {
+                    "type": "string",
+                    "description": "Display title of the collection"
+                },
+                "emoji": {
+                    "type": "string",
+                    "description": "Emoji icon representing the collection"
+                },
+                "description": {
+                    "type": "string",
+                    "description": "Detailed description of what the collection contains"
+                },
+                "tables": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "List of table names included in this collection"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "Tags for categorizing the collection"
+                }
+            },
+            "required": [
+                "id",
+                "title",
+                "tables"
+            ],
+            "additionalProperties": false
+        }
+    }
+}

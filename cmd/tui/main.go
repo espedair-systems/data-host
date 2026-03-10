@@ -1,0 +1,304 @@
+package main
+
+import (
+	configAdapter "data-host/internal/adapters/driven/config"
+	"data-host/internal/adapters/driven/repository"
+	"data-host/internal/adapters/driving/http"
+	"data-host/internal/core/domain"
+	"data-host/internal/core/ports"
+	"data-host/internal/core/services"
+	"data-host/internal/database"
+	"fmt"
+	"log"
+	"os"
+	"os/exec"
+	"runtime"
+	"strconv"
+	"strings"
+
+	"github.com/charmbracelet/bubbles/textinput"
+	"github.com/charmbracelet/bubbles/viewport"
+	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
+)
+
+type logMsg string
+type route404Msg string
+
+type model struct {
+	portInput         textinput.Model
+	frontendPathInput textinput.Model
+	dataPathInput     textinput.Model
+	dbPathInput       textinput.Model
+	focusIndex        int
+	running           bool
+	hostService       ports.HostService
+	viewport404       viewport.Model
+	viewportLogs      viewport.Model
+	errors404         []string
+	logs              []string
+	width             int
+	height            int
+	logChan           chan string
+}
+
+type chanWriter struct {
+	channel chan<- string
+}
+
+func (w *chanWriter) Write(p []byte) (n int, err error) {
+	w.channel <- string(p)
+	return len(p), nil
+}
+
+func initialModel() model {
+	configLoader := configAdapter.NewViperAdapter("config", "yaml", ".")
+	config, err := configLoader.Load()
+	if err != nil {
+		config = domain.HostConfig{
+			Port:         8080,
+			FrontendPath: "./frontend/dist",
+			DataPath:     "/",
+			DatabaseURL:  "blueprint.db",
+		}
+	}
+
+	p := textinput.New()
+	p.SetValue(strconv.Itoa(config.Port))
+	p.Focus()
+
+	f := textinput.New()
+	f.SetValue(config.FrontendPath)
+
+	d := textinput.New()
+	d.SetValue(config.DataPath)
+
+	db := textinput.New()
+	db.SetValue(config.DatabaseURL)
+
+	httpAdapter := http.NewGinAdapter()
+
+	vp404 := viewport.New(0, 0)
+	vp404.Style = lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color("202"))
+
+	vpLogs := viewport.New(0, 0)
+	vpLogs.Style = lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color("63"))
+
+	return model{
+		portInput:         p,
+		frontendPathInput: f,
+		dataPathInput:     d,
+		dbPathInput:       db,
+		hostService:       services.NewHostService(httpAdapter),
+		viewport404:       vp404,
+		viewportLogs:      vpLogs,
+		logChan:           make(chan string, 100),
+	}
+}
+
+func (m model) Init() tea.Cmd {
+	return textinput.Blink
+}
+
+func openBrowser(url string) {
+	var err error
+	switch runtime.GOOS {
+	case "linux":
+		err = exec.Command("xdg-open", url).Start()
+	case "windows":
+		err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
+	case "darwin":
+		err = exec.Command("open", url).Start()
+	}
+	if err != nil {
+		log.Printf("Error opening browser: %v", err)
+	}
+}
+
+func listenForEvents(m model) tea.Cmd {
+	return func() tea.Msg {
+		select {
+		case route := <-m.hostService.GetOn404():
+			return route404Msg(route)
+		case l := <-m.logChan:
+			return logMsg(l)
+		}
+	}
+}
+
+func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var cmd tea.Cmd
+	var cmds []tea.Cmd
+
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "ctrl+c", "q":
+			if m.running {
+				_ = m.hostService.Stop()
+			}
+			return m, tea.Quit
+
+		case "tab", "shift+tab", "up", "down":
+			if m.running {
+				m.viewport404, cmd = m.viewport404.Update(msg)
+				cmds = append(cmds, cmd)
+				m.viewportLogs, cmd = m.viewportLogs.Update(msg)
+				cmds = append(cmds, cmd)
+				return m, tea.Batch(cmds...)
+			}
+
+			s := msg.String()
+			if s == "up" || s == "shift+tab" {
+				m.focusIndex--
+			} else {
+				m.focusIndex++
+			}
+			if m.focusIndex > 3 {
+				m.focusIndex = 0
+			} else if m.focusIndex < 0 {
+				m.focusIndex = 3
+			}
+			m.portInput.Blur()
+			m.frontendPathInput.Blur()
+			m.dataPathInput.Blur()
+			m.dbPathInput.Blur()
+			switch m.focusIndex {
+			case 0:
+				cmds = append(cmds, m.portInput.Focus())
+			case 1:
+				cmds = append(cmds, m.frontendPathInput.Focus())
+			case 2:
+				cmds = append(cmds, m.dataPathInput.Focus())
+			case 3:
+				cmds = append(cmds, m.dbPathInput.Focus())
+			}
+
+		case "enter":
+			if !m.running {
+				port, _ := strconv.Atoi(m.portInput.Value())
+				config := domain.HostConfig{
+					Port:         port,
+					FrontendPath: m.frontendPathInput.Value(),
+					DataPath:     m.dataPathInput.Value(),
+					DatabaseURL:  m.dbPathInput.Value(),
+				}
+
+				var repo ports.RegistryRepository
+				appEnv := os.Getenv("APP_ENV")
+				if appEnv == "production" || appEnv == "publish" {
+					repo = repository.NewFilesystemRepository(config)
+				} else {
+					db := database.New(config.DatabaseURL)
+					repo, _ = repository.NewSQLiteRepository(db.GetDB(), config)
+				}
+
+				m.hostService.SetLogOutput(&chanWriter{channel: m.logChan})
+				m.running = true
+				go func() {
+					if err := m.hostService.Start(config, repo); err != nil {
+						log.Printf("Server Error: %v", err)
+					}
+				}()
+
+				openBrowser(fmt.Sprintf("http://localhost:%d/home", port))
+				return m, listenForEvents(m)
+			}
+		}
+
+	case tea.WindowSizeMsg:
+		m.width = msg.Width
+		m.height = msg.Height
+		vHeight := (m.height - 10) / 2
+		m.viewport404.Width = m.width - 2
+		m.viewport404.Height = vHeight
+		m.viewportLogs.Width = m.width - 2
+		m.viewportLogs.Height = vHeight
+
+	case route404Msg:
+		m.errors404 = append(m.errors404, string(msg))
+		m.viewport404.SetContent(strings.Join(m.errors404, "\n"))
+		m.viewport404.GotoBottom()
+		return m, listenForEvents(m)
+
+	case logMsg:
+		l := strings.TrimSpace(string(msg))
+		if l != "" {
+			m.logs = append(m.logs, l)
+			m.viewportLogs.SetContent(strings.Join(m.logs, "\n"))
+			m.viewportLogs.GotoBottom()
+		}
+		return m, listenForEvents(m)
+	}
+
+	if !m.running {
+		m.portInput, cmd = m.portInput.Update(msg)
+		cmds = append(cmds, cmd)
+		m.frontendPathInput, cmd = m.frontendPathInput.Update(msg)
+		cmds = append(cmds, cmd)
+		m.dataPathInput, cmd = m.dataPathInput.Update(msg)
+		cmds = append(cmds, cmd)
+		m.dbPathInput, cmd = m.dbPathInput.Update(msg)
+		cmds = append(cmds, cmd)
+	}
+
+	return m, tea.Batch(cmds...)
+}
+
+func (m model) View() string {
+	if !m.running {
+		var s strings.Builder
+		s.WriteString(titleStyle.Render("DATA-HOST") + "\n\n")
+		s.WriteString("Configure and start the service:\n\n")
+
+		renderInput := func(label string, input textinput.Model, index int) {
+			if m.focusIndex == index {
+				s.WriteString(focusedStyle.Render("> "+label+": ") + input.View() + "\n")
+			} else {
+				s.WriteString("  " + label + ": " + input.View() + "\n")
+			}
+		}
+
+		renderInput("Port", m.portInput, 0)
+		renderInput("Frontend Path", m.frontendPathInput, 1)
+		renderInput("Data Path", m.dataPathInput, 2)
+		renderInput("Database Path", m.dbPathInput, 3)
+
+		s.WriteString("\n" + statusStopped.Render("STOPPED") + "\n\n")
+		s.WriteString("Press Enter to START and launch browser\n")
+		s.WriteString("Press Q or Ctrl+C to quit\n")
+		return s.String()
+	}
+
+	return lipgloss.JoinVertical(lipgloss.Left,
+		titleStyle.Render("DATA-HOST - RUNNING"),
+		lipgloss.NewStyle().Foreground(lipgloss.Color("202")).Bold(true).Render(" 404 Errors (History):"),
+		m.viewport404.View(),
+		lipgloss.NewStyle().Foreground(lipgloss.Color("63")).Bold(true).Render(" Server Logs:"),
+		m.viewportLogs.View(),
+		" Press Q or Ctrl+C to stop and quit | Use Up/Down/Arrows to scroll",
+	)
+}
+
+var (
+	titleStyle = lipgloss.NewStyle().
+			Bold(true).
+			Foreground(lipgloss.Color("#FAFAFA")).
+			Background(lipgloss.Color("#7D56F4")).
+			Padding(0, 1).
+			MarginBottom(1)
+
+	focusedStyle  = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
+	statusStopped = lipgloss.NewStyle().
+			Bold(true).
+			Foreground(lipgloss.Color("#FF0000")).
+			Padding(0, 1)
+)
+
+func main() {
+	p := tea.NewProgram(initialModel(), tea.WithAltScreen(), tea.WithMouseCellMotion())
+	if _, err := p.Run(); err != nil {
+		fmt.Printf("Error running TUI: %v", err)
+		os.Exit(1)
+	}
+}
