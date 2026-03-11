@@ -34,22 +34,24 @@ import SaaSPlatform from './pages/SaaSPlatform';
 import GCPIssues from './pages/GCPIssues';
 import Environments from './pages/Environments';
 import DirectoryPreferences from './pages/DirectoryPreferences';
-import { Typography, Paper, Box } from '@mui/material';
 import { ColorModeProvider } from './context/ColorModeContext';
 import { DirectoryPreferenceProvider } from './context/DirectoryPreferenceContext';
-
 const FilesPage = () => (
-  <Box>
-    <Typography variant="h4" gutterBottom>Files</Typography>
-    <Paper sx={{ p: 2 }}><Typography>File directory interface will go here.</Typography></Paper>
-  </Box>
+  <div className="flex flex-col gap-6">
+    <h1 className="text-3xl font-bold tracking-tight">Files</h1>
+    <div className="p-6 border rounded-xl bg-card text-card-foreground shadow-sm">
+      <p className="text-muted-foreground">File directory interface will go here.</p>
+    </div>
+  </div>
 );
 
 const SettingsPage = () => (
-  <Box>
-    <Typography variant="h4" gutterBottom>Settings</Typography>
-    <Paper sx={{ p: 2 }}><Typography>System settings will go here.</Typography></Paper>
-  </Box>
+  <div className="flex flex-col gap-6">
+    <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
+    <div className="p-6 border rounded-xl bg-card text-card-foreground shadow-sm">
+      <p className="text-muted-foreground">System settings will go here.</p>
+    </div>
+  </div>
 );
 
 function App() {

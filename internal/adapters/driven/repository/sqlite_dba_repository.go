@@ -133,3 +133,23 @@ func (r *SQLiteDBARepository) LoadSchema(fs domain.FileSchema) error {
 
 	return tx.Commit()
 }
+
+func (r *SQLiteDBARepository) GetSchemas() ([]ports.BlueprintSchema, error) {
+	rows, err := r.db.Query("SELECT id, name, desc, created_at, updated_at FROM schemas ORDER BY name ASC")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var results []ports.BlueprintSchema
+	for rows.Next() {
+		var s ports.BlueprintSchema
+		var desc sql.NullString
+		if err := rows.Scan(&s.ID, &s.Name, &desc, &s.CreatedAt, &s.UpdatedAt); err != nil {
+			return nil, err
+		}
+		s.Desc = desc.String
+		results = append(results, s)
+	}
+	return results, nil
+}

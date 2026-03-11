@@ -5,10 +5,12 @@ import (
 	"data-host/internal/core/ports"
 	"fmt"
 	"io"
+	"os"
 )
 
 type hostService struct {
 	httpServer ports.HTTPServer
+	logOutput  io.Writer
 }
 
 func NewHostService(httpServer ports.HTTPServer) ports.HostService {
@@ -17,13 +19,21 @@ func NewHostService(httpServer ports.HTTPServer) ports.HostService {
 	}
 }
 
+func (s *hostService) log(format string, args ...interface{}) {
+	w := s.logOutput
+	if w == nil {
+		w = os.Stdout
+	}
+	fmt.Fprintf(w, "[Service] "+format+"\n", args...)
+}
+
 func (s *hostService) Start(config domain.HostConfig, repo ports.RegistryRepository) error {
-	fmt.Printf("Starting host service with config: %+v\n", config)
+	s.log("Starting host service with config: %+v", config)
 	return s.httpServer.Start(config, repo)
 }
 
 func (s *hostService) Stop() error {
-	fmt.Println("Stopping host service")
+	s.log("Stopping host service")
 	return s.httpServer.Stop()
 }
 
@@ -32,5 +42,6 @@ func (s *hostService) GetOn404() <-chan string {
 }
 
 func (s *hostService) SetLogOutput(w io.Writer) {
+	s.logOutput = w
 	s.httpServer.SetLogOutput(w)
 }

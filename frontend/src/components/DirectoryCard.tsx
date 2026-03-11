@@ -3,12 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import {
     Card,
     CardContent,
-    CardMedia,
-    Typography,
-    Chip,
-    Box,
-    CardActionArea,
-} from '@mui/material';
+} from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+
 
 interface DirectoryItem {
     id: string;
@@ -32,50 +29,60 @@ const DirectoryCard: React.FC<DirectoryCardProps> = ({ item }) => {
     // Skip if image is empty string or has failed to load
     const showImage = item.image && item.image !== "" && !imageError;
 
+    const handleNavigation = () => {
+        if (item.internal) {
+            navigate(item.link);
+        } else {
+            window.open(item.link, '_blank');
+        }
+    };
+
     return (
-        <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-            <CardActionArea
-                onClick={() => {
-                    if (item.internal) {
-                        navigate(item.link);
-                    } else {
-                        window.open(item.link, '_blank');
-                    }
-                }}
-                sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}
+        <Card className="h-full flex flex-col group overflow-hidden border-border/50 hover:border-primary/50 transition-colors">
+            <div
+                className="flex-grow flex flex-col items-stretch cursor-pointer"
+                onClick={handleNavigation}
             >
                 {showImage && (
-                    <CardMedia
-                        component="img"
-                        height="140"
-                        image={item.image!.replace('../', '/')}
-                        alt={item.title}
-                        onError={() => setImageError(true)}
-                        sx={{ objectFit: 'contain', p: 2, bgcolor: 'action.hover' }}
-                    />
+                    <div className="h-[140px] flex items-center justify-center p-4 bg-muted/30 group-hover:bg-muted/50 transition-colors">
+                        <img
+                            src={item.image!.replace('../', '/')}
+                            alt={item.title}
+                            className="max-h-full max-w-full object-contain"
+                            onError={() => setImageError(true)}
+                        />
+                    </div>
                 )}
-                <CardContent sx={{ flexGrow: 1 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                        <Typography gutterBottom variant="h6" component="div" sx={{ mb: 0 }}>
+                <CardContent className="flex-grow p-5">
+                    <div className="flex justify-between items-center mb-2 gap-2">
+                        <h3 className="text-lg font-semibold leading-tight tracking-tight">
                             {item.title}
-                        </Typography>
-                        {item.featured && (
-                            <Chip label="Featured" size="small" color="primary" sx={{ height: 20 }} />
-                        )}
-                        {item.internal && (
-                            <Chip label="Internal" size="small" color="secondary" sx={{ height: 20 }} />
-                        )}
-                    </Box>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                        </h3>
+                        <div className="flex gap-1 shrink-0">
+                            {item.featured && (
+                                <Badge variant="default" className="h-5 px-1.5 text-[10px] uppercase font-bold">
+                                    Featured
+                                </Badge>
+                            )}
+                            {item.internal && (
+                                <Badge variant="secondary" className="h-5 px-1.5 text-[10px] uppercase font-bold">
+                                    Internal
+                                </Badge>
+                            )}
+                        </div>
+                    </div>
+                    <p className="text-sm text-muted-foreground line-clamp-3 mb-4">
                         {item.description}
-                    </Typography>
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    </p>
+                    <div className="flex flex-wrap gap-1.5 mt-auto">
                         {item.tags?.map((tag) => (
-                            <Chip key={tag} label={tag} size="small" variant="outlined" />
+                            <Badge key={tag} variant="outline" className="font-normal text-xs px-2 py-0">
+                                {tag}
+                            </Badge>
                         ))}
-                    </Box>
+                    </div>
                 </CardContent>
-            </CardActionArea>
+            </div>
         </Card>
     );
 };

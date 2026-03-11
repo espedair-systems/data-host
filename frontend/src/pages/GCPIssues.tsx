@@ -1,7 +1,21 @@
 import React from 'react';
-import { Box, Typography, Paper, Breadcrumbs, Link, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Chip, IconButton } from '@mui/material';
-import { Link as RouterLink, useLocation } from 'react-router-dom';
-import { Error as ErrorIcon, ChevronRight as ViewIcon } from '@mui/icons-material';
+import { Link, useLocation } from 'react-router-dom';
+import {
+    ChevronRight,
+    Search,
+    ShieldAlert
+} from 'lucide-react';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { cn } from '@/lib/utils';
 
 const PlatformIssues: React.FC = () => {
     const location = useLocation();
@@ -15,7 +29,7 @@ const PlatformIssues: React.FC = () => {
     };
 
     const typeLabel = platformLabels[platformType] || 'Platform';
-    const parentPath = `/platforms/${platformType}`;
+    const parentPath = `/ platforms / ${platformType} `;
 
     const issues = [
         { id: 'ISS-001', severity: 'High', service: typeLabel === 'AWS' ? 'EC2' : 'Compute', message: 'Quota exceeded for regional resources', time: '2026-03-09 05:12' },
@@ -23,74 +37,102 @@ const PlatformIssues: React.FC = () => {
         { id: 'ISS-003', severity: 'Low', service: 'IAM', message: 'User access patterns abnormal', time: '2026-03-08 18:45' }
     ];
 
-    const getSeverityColor = (severity: string) => {
+    const getSeverityStyles = (severity: string) => {
         switch (severity.toLowerCase()) {
-            case 'high': return 'error';
-            case 'medium': return 'warning';
-            case 'low': return 'info';
-            default: return 'default';
+            case 'high': return "bg-red-500/10 text-red-600 border-red-200 hover:bg-red-500/15";
+            case 'medium': return "bg-amber-500/10 text-amber-600 border-amber-200 hover:bg-amber-500/15";
+            case 'low': return "bg-blue-500/10 text-blue-600 border-blue-200 hover:bg-blue-500/15";
+            default: return "bg-muted text-muted-foreground";
         }
     };
 
     return (
-        <Box sx={{ p: 1 }}>
-            <Breadcrumbs aria-label="breadcrumb" sx={{ mb: 2 }}>
-                <Link component={RouterLink} color="inherit" to="/">Registry</Link>
-                <Link component={RouterLink} color="inherit" to={parentPath}>{typeLabel}</Link>
-                <Typography color="text.primary">Issues</Typography>
-            </Breadcrumbs>
+        <div className="p-6 space-y-8 max-w-7xl mx-auto animate-in fade-in duration-500">
+            <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-4 font-medium">
+                <Link to="/" className="hover:text-foreground transition-colors">Registry</Link>
+                <ChevronRight className="h-4 w-4" />
+                <Link to={parentPath} className="hover:text-foreground transition-colors">{typeLabel}</Link>
+                <ChevronRight className="h-4 w-4" />
+                <span className="text-foreground font-bold">Issues</span>
+            </nav>
 
-            <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 2 }}>
-                <ErrorIcon color="error" sx={{ fontSize: 40 }} />
-                <Box>
-                    <Typography variant="h4" sx={{ fontWeight: 700, mb: 0 }}>
-                        {typeLabel} Platform Issues
-                    </Typography>
-                    <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-                        Active alerts and system warnings across {typeLabel} services.
-                    </Typography>
-                </Box>
-            </Box>
+            <header className="flex items-center gap-4 shrink-0">
+                <div className="p-3.5 rounded-2xl bg-destructive/10 text-destructive shadow-sm border border-destructive/20 animate-pulse">
+                    <ShieldAlert className="h-10 w-10" />
+                </div>
+                <div>
+                    <h1 className="text-3xl font-black tracking-tight text-foreground">{typeLabel} Platform Issues</h1>
+                    <p className="text-muted-foreground mt-1 font-medium">
+                        Real-time incident feed and infrastructure anomalies across {typeLabel} nodes.
+                    </p>
+                </div>
+            </header>
 
-            <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 2 }}>
+            <div className="rounded-2xl border bg-card/40 backdrop-blur-sm overflow-hidden shadow-sm">
                 <Table>
-                    <TableHead sx={{ bgcolor: 'action.hover' }}>
-                        <TableRow>
-                            <TableCell sx={{ fontWeight: 700 }}>Issue ID</TableCell>
-                            <TableCell sx={{ fontWeight: 700 }}>Severity</TableCell>
-                            <TableCell sx={{ fontWeight: 700 }}>Service</TableCell>
-                            <TableCell sx={{ fontWeight: 700 }}>Message</TableCell>
-                            <TableCell sx={{ fontWeight: 700 }}>Detected At</TableCell>
-                            <TableCell sx={{ fontWeight: 700 }} align="right">Action</TableCell>
+                    <TableHeader className="bg-muted/50">
+                        <TableRow className="hover:bg-transparent border-none">
+                            <TableHead className="w-[120px] h-12 uppercase text-[10px] font-black tracking-widest text-muted-foreground/60 px-6">Issue ID</TableHead>
+                            <TableHead className="w-[120px] h-12 uppercase text-[10px] font-black tracking-widest text-muted-foreground/60 px-6">Severity</TableHead>
+                            <TableHead className="w-[150px] h-12 uppercase text-[10px] font-black tracking-widest text-muted-foreground/60 px-6">Service</TableHead>
+                            <TableHead className="h-12 uppercase text-[10px] font-black tracking-widest text-muted-foreground/60 px-6">Diagnostic Message</TableHead>
+                            <TableHead className="w-[180px] h-12 uppercase text-[10px] font-black tracking-widest text-muted-foreground/60 px-6">Timestamp</TableHead>
+                            <TableHead className="h-12 text-right uppercase text-[10px] font-black tracking-widest text-muted-foreground/60 px-6">Investigate</TableHead>
                         </TableRow>
-                    </TableHead>
+                    </TableHeader>
                     <TableBody>
                         {issues.map((issue) => (
-                            <TableRow key={issue.id} hover>
-                                <TableCell sx={{ fontFamily: 'monospace' }}>{issue.id}</TableCell>
-                                <TableCell>
-                                    <Chip
-                                        label={issue.severity}
-                                        size="small"
-                                        color={getSeverityColor(issue.severity) as any}
-                                        variant="outlined"
-                                        sx={{ minWidth: 80 }}
-                                    />
+                            <TableRow key={issue.id} className="group hover:bg-muted/30 transition-colors border-muted/20">
+                                <TableCell className="px-6 py-5">
+                                    <code className="text-[11px] font-mono font-bold bg-muted/60 px-2 py-1 rounded border border-muted-foreground/10 text-muted-foreground group-hover:text-foreground transition-colors">
+                                        {issue.id}
+                                    </code>
                                 </TableCell>
-                                <TableCell sx={{ fontWeight: 600 }}>{issue.service}</TableCell>
-                                <TableCell>{issue.message}</TableCell>
-                                <TableCell>{issue.time}</TableCell>
-                                <TableCell align="right">
-                                    <IconButton size="small">
-                                        <ViewIcon fontSize="small" />
-                                    </IconButton>
+                                <TableCell className="px-6 py-5">
+                                    <Badge
+                                        variant="outline"
+                                        className={cn("font-black text-[9px] uppercase tracking-widest py-0.5 px-3 border-none", getSeverityStyles(issue.severity))}
+                                    >
+                                        {issue.severity}
+                                    </Badge>
+                                </TableCell>
+                                <TableCell className="px-6 py-5">
+                                    <div className="font-bold text-foreground flex items-center gap-2 uppercase text-[11px] tracking-tight">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-primary/40" />
+                                        {issue.service}
+                                    </div>
+                                </TableCell>
+                                <TableCell className="px-6 py-5">
+                                    <span className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors leading-relaxed">
+                                        {issue.message}
+                                    </span>
+                                </TableCell>
+                                <TableCell className="px-6 py-5">
+                                    <span className="text-[11px] font-bold text-muted-foreground/50 tabular-nums">
+                                        {issue.time}
+                                    </span>
+                                </TableCell>
+                                <TableCell className="px-6 py-5 text-right">
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-8 gap-2 font-bold uppercase text-[10px] tracking-widest hover:bg-primary/5 hover:text-primary transition-all"
+                                    >
+                                        Inspect
+                                        <ChevronRight className="h-3 w-3" />
+                                    </Button>
                                 </TableCell>
                             </TableRow>
                         ))}
                     </TableBody>
                 </Table>
-            </TableContainer>
-        </Box>
+            </div>
+
+            <footer className="pt-4 flex items-center gap-3 text-[10px] text-muted-foreground/40 font-black uppercase tracking-widest">
+                <Search className="h-3 w-3" />
+                <span>Issue reconciliation engine polling every 30 seconds.</span>
+            </footer>
+        </div>
     );
 };
 

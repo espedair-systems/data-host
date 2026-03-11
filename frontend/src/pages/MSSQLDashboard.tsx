@@ -1,20 +1,35 @@
 import React from 'react';
-import { Box, Typography, Paper, Breadcrumbs, Link, Grid, Divider, List, ListItem, ListItemText, ListItemIcon, Button } from '@mui/material';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import {
-    Storage as MSSQLIcon,
-    History as HistoryIcon,
-    CheckCircle as SuccessIcon,
-    Error as ErrorIcon,
-    Computer as ServerIcon
-} from '@mui/icons-material';
+    Database,
+    History,
+    CheckCircle2,
+    AlertCircle,
+    ChevronRight,
+    Zap,
+    Server,
+    Activity,
+    Search,
+    ShieldCheck,
+    Cpu
+} from 'lucide-react';
+import {
+    Card,
+    CardContent,
+    CardHeader,
+    CardTitle,
+    CardDescription
+} from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 const MSSQLDashboard: React.FC = () => {
     const stats = [
-        { label: 'Ingested Objects', value: '412' },
-        { label: 'SQL Instances', value: '4' },
-        { label: 'Databases', value: '18' },
-        { label: 'Status', value: 'Healthy' }
+        { label: 'Ingested Objects', value: '412', icon: <Search className="h-4 w-4 text-red-500" /> },
+        { label: 'SQL Instances', value: '4', icon: <Server className="h-4 w-4 text-indigo-500" /> },
+        { label: 'Databases', value: '18', icon: <Database className="h-4 w-4 text-emerald-500" /> },
+        { label: 'Status', value: 'Healthy', icon: <Activity className="h-4 w-4 text-muted-foreground" /> }
     ];
 
     const recentActivity = [
@@ -24,88 +39,132 @@ const MSSQLDashboard: React.FC = () => {
     ];
 
     return (
-        <Box sx={{ p: 1 }}>
-            <Breadcrumbs aria-label="breadcrumb" sx={{ mb: 2 }}>
-                <Link component={RouterLink} color="inherit" to="/">Registry</Link>
-                <Link component={RouterLink} color="inherit" to="/ingestion">Ingestion</Link>
-                <Typography color="text.primary">MS SQL Dashboard</Typography>
-            </Breadcrumbs>
+        <div className="p-6 space-y-10 max-w-7xl mx-auto animate-in fade-in duration-500">
+            <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-4 font-medium">
+                <Link to="/" className="hover:text-foreground transition-colors">Registry</Link>
+                <ChevronRight className="h-4 w-4" />
+                <Link to="/ingestion" className="hover:text-foreground transition-colors">Ingestion</Link>
+                <ChevronRight className="h-4 w-4" />
+                <span className="text-foreground font-bold text-red-600">MS SQL Dashboard</span>
+            </nav>
 
-            <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 2 }}>
-                <MSSQLIcon color="info" sx={{ fontSize: 40 }} />
-                <Box>
-                    <Typography variant="h4" sx={{ fontWeight: 700, mb: 0 }}>
-                        MS SQL Dashboard
-                    </Typography>
-                    <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-                        Manage and monitor metadata ingestion from Microsoft SQL Server instances.
-                    </Typography>
-                </Box>
-            </Box>
+            <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 shrink-0 border-b pb-8">
+                <div className="flex items-center gap-4">
+                    <div className="p-3.5 rounded-2xl bg-red-500/10 text-red-600 shadow-sm border border-red-500/20">
+                        <Database className="h-10 w-10" />
+                    </div>
+                    <div>
+                        <h1 className="text-3xl font-black tracking-tight text-foreground">Microsoft SQL Server</h1>
+                        <p className="text-muted-foreground mt-1 font-medium">Coordinate metadata discovery and schema mapping for Enterprise SQL environments.</p>
+                    </div>
+                </div>
+            </header>
 
-            <Grid container spacing={3} sx={{ mb: 4 }}>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {stats.map((stat) => (
-                    <Grid key={stat.label} size={{ xs: 12, sm: 6, md: 3 }}>
-                        <Paper variant="outlined" sx={{ p: 2, textAlign: 'center', borderRadius: 2 }}>
-                            <Typography variant="h4" sx={{ fontWeight: 700, color: 'info.main' }}>
-                                {stat.value}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
+                    <Card key={stat.label} className="border-none shadow-sm bg-muted/30 group hover:shadow-md transition-all">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
                                 {stat.label}
-                            </Typography>
-                        </Paper>
-                    </Grid>
+                            </CardTitle>
+                            {stat.icon}
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-3xl font-black tracking-tighter text-foreground group-hover:text-primary transition-colors">
+                                {stat.value}
+                            </div>
+                        </CardContent>
+                    </Card>
                 ))}
-            </Grid>
+            </div>
 
-            <Grid container spacing={3}>
-                <Grid size={{ xs: 12, md: 8 }}>
-                    <Paper variant="outlined" sx={{ p: 0, borderRadius: 2 }}>
-                        <Box sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <HistoryIcon color="action" />
-                            <Typography variant="h6" sx={{ fontWeight: 600 }}>Recent Object Discovery</Typography>
-                        </Box>
-                        <Divider />
-                        <List disablePadding>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <Card className="lg:col-span-2 border shadow-lg bg-card/60 backdrop-blur-sm shadow-red-500/5">
+                    <CardHeader className="flex flex-row items-center justify-between bg-muted/20 pb-4">
+                        <div className="space-y-1">
+                            <CardTitle className="text-xl font-black tracking-tight flex items-center gap-2">
+                                <History className="h-5 w-5 text-red-600" />
+                                Object Discovery
+                            </CardTitle>
+                            <CardDescription className="text-xs font-bold uppercase tracking-tight text-muted-foreground/50">Enterprise Ingestion Activity</CardDescription>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                        <div className="divide-y divide-muted/30">
                             {recentActivity.map((activity, index) => (
-                                <React.Fragment key={index}>
-                                    <ListItem sx={{ py: 2 }}>
-                                        <ListItemIcon>
-                                            {activity.status === 'success' ? <SuccessIcon color="success" /> : <ErrorIcon color="error" />}
-                                        </ListItemIcon>
-                                        <ListItemText
-                                            primary={`${activity.server}\\${activity.db}`}
-                                            secondary={activity.time}
-                                        />
-                                        <Typography variant="caption" sx={{ fontWeight: 600, color: activity.status === 'success' ? 'success.main' : 'error.main' }}>
-                                            {activity.status.toUpperCase()}
-                                        </Typography>
-                                    </ListItem>
-                                    {index < recentActivity.length - 1 && <Divider />}
-                                </React.Fragment>
+                                <div key={index} className="flex items-center justify-between p-5 hover:bg-muted/30 transition-colors group">
+                                    <div className="flex items-start gap-4">
+                                        <div className={cn("p-2 rounded-full mt-0.5",
+                                            activity.status === 'success' ? "bg-green-500/10 text-green-600" : "bg-red-500/10 text-red-600"
+                                        )}>
+                                            {activity.status === 'success' ? <CheckCircle2 className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
+                                        </div>
+                                        <div className="space-y-1">
+                                            <div className="font-bold text-foreground group-hover:text-primary transition-colors flex items-center gap-2">
+                                                {activity.server}
+                                                <span className="text-muted-foreground opacity-30 font-medium tracking-widest text-[10px]">\</span>
+                                                <span className="font-mono text-xs font-medium text-muted-foreground uppercase">{activity.db}</span>
+                                            </div>
+                                            <div className="text-[11px] font-bold text-muted-foreground/60 tabular-nums">
+                                                {activity.time}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <Badge
+                                        variant="outline"
+                                        className={cn(
+                                            "font-black text-[9px] uppercase tracking-widest py-0.5 px-3 border-none",
+                                            activity.status === 'success' ? "bg-green-500/10 text-green-600" : "bg-red-500/10 text-red-600"
+                                        )}
+                                    >
+                                        {activity.status}
+                                    </Badge>
+                                </div>
                             ))}
-                        </List>
-                    </Paper>
-                </Grid>
-                <Grid size={{ xs: 12, md: 4 }}>
-                    <Paper variant="outlined" sx={{ p: 3, borderRadius: 2, bgcolor: 'info.main', color: 'white', position: 'relative' }}>
-                        <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>Enterprise Scale</Typography>
-                        <Typography variant="body2" sx={{ mb: 3, opacity: 0.9 }}>
-                            Map your Microsoft ecosystem by connecting SQL Server and Azure SQL instances.
-                        </Typography>
-                        <Button
-                            component={RouterLink}
-                            to="/ingestion/mssql/new"
-                            variant="contained"
-                            sx={{ bgcolor: 'white', color: 'info.main', '&:hover': { bgcolor: 'grey.100' } }}
-                        >
-                            Scan Instance
-                        </Button>
-                        <ServerIcon sx={{ fontSize: 80, opacity: 0.15, position: 'absolute', right: 10, bottom: 0 }} />
-                    </Paper>
-                </Grid>
-            </Grid>
-        </Box>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <div className="space-y-6">
+                    <Card className="border-none shadow-xl bg-[#A91D22] text-white overflow-hidden relative group">
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent pointer-events-none" />
+                        <CardHeader className="relative z-10 space-y-4">
+                            <CardTitle className="text-2xl font-black tracking-tight leading-tight text-white">Instance Scan</CardTitle>
+                            <CardDescription className="text-red-50 font-bold leading-relaxed">
+                                Connect to your SQL Server and Azure SQL clusters to map the Microsoft ecosystem.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="relative z-10 pt-4">
+                            <Button asChild className="w-full h-12 bg-white text-[#A91D22] hover:bg-white/90 rounded-xl font-bold gap-2 focus-visible:ring-red-400">
+                                <Link to="/ingestion/mssql/new">
+                                    <Zap className="h-4 w-4 shrink-0" />
+                                    Scan New Instance
+                                </Link>
+                            </Button>
+                        </CardContent>
+                        <div className="absolute -bottom-6 -right-6 opacity-10 group-hover:scale-125 transition-transform duration-700">
+                            <Cpu className="h-32 w-32 rotate-12" />
+                        </div>
+                    </Card>
+
+                    <Card className="bg-muted/50 border-none shadow-sm h-fit">
+                        <CardHeader className="pb-2 text-xs font-black uppercase tracking-widest text-muted-foreground">Governance Engine</CardHeader>
+                        <CardContent className="space-y-3 p-5">
+                            {[
+                                { icon: <ShieldCheck className="h-4 w-4 text-green-500" />, label: "Active Directory Integration" },
+                                { icon: <ShieldCheck className="h-4 w-4 text-green-500" />, label: "Data Quality Constraints" },
+                                { icon: <ShieldCheck className="h-4 w-4 text-green-500" />, label: "Column-level Tracking" },
+                            ].map((rule, i) => (
+                                <div key={i} className="flex items-center gap-3">
+                                    {rule.icon}
+                                    <span className="text-[11px] font-black uppercase tracking-tight">{rule.label}</span>
+                                </div>
+                            ))}
+                        </CardContent>
+                    </Card>
+                </div>
+            </div>
+        </div>
     );
 };
 

@@ -23,6 +23,12 @@ type GinAdapter struct {
 	LogOutput io.Writer
 }
 
+func (a *GinAdapter) log(format string, args ...interface{}) {
+	if a.LogOutput != nil {
+		fmt.Fprintf(a.LogOutput, "[Router] "+format+"\n", args...)
+	}
+}
+
 func NewGinAdapter() *GinAdapter {
 	return &GinAdapter{
 		On404: make(chan string, 100),
@@ -83,6 +89,24 @@ func (a *GinAdapter) Start(config domain.HostConfig, repo ports.RegistryReposito
 			return
 		}
 		c.JSON(http.StatusOK, items)
+	})
+
+	r.GET("/api/site/schemas", func(c *gin.Context) {
+		dashboards, err := repo.GetAllSchemaDashboards()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, dashboards)
+	})
+
+	r.GET("/api/blueprint/schemas", func(c *gin.Context) {
+		schemas, err := repo.GetBlueprintSchemas()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, schemas)
 	})
 
 	r.POST("/api/site/schemas/:module/table", func(c *gin.Context) {
@@ -146,7 +170,10 @@ func (a *GinAdapter) Start(config domain.HostConfig, repo ports.RegistryReposito
 	// Catch-all handler for everything else (Total Control - No Directory Listings)
 	r.NoRoute(func(c *gin.Context) {
 		path := c.Request.URL.Path
-		fmt.Printf("[Router] Processing path: %s\n", path)
+		// Only log non-static asset requests to avoid noise
+		if !strings.Contains(path, ".") {
+			a.log("Processing path: %s", path)
+		}
 
 		// PRIORITY 1: Registry Management App (at /home)
 		if path == "/home" || strings.HasPrefix(path, "/home/") {
@@ -163,7 +190,7 @@ func (a *GinAdapter) Start(config domain.HostConfig, repo ports.RegistryReposito
 
 			// SPA Fallback for /home
 			indexPath := filepath.Join(config.FrontendPath, "index.html")
-			fmt.Printf("[Router] Match: Registry UI -> %s\n", indexPath)
+			a.log("Match: Registry UI -> %s", indexPath)
 			c.File(indexPath)
 			return
 		}
@@ -176,12 +203,12 @@ func (a *GinAdapter) Start(config domain.HostConfig, repo ports.RegistryReposito
 			if info.IsDir() {
 				indexPath := filepath.Join(sitePath, "index.html")
 				if _, errIdx := os.Stat(indexPath); errIdx == nil {
-					fmt.Printf("[Router] Match: Docs Index -> %s\n", indexPath)
+					a.log("Match: Docs Index -> %s", indexPath)
 					c.File(indexPath)
 					return
 				}
 			} else {
-				fmt.Printf("[Router] Match: Docs File -> %s\n", sitePath)
+				a.log("Match: Docs File -> %s", sitePath)
 				c.File(sitePath)
 				return
 			}
@@ -205,12 +232,12 @@ func (a *GinAdapter) Start(config domain.HostConfig, repo ports.RegistryReposito
 					if info.IsDir() {
 						indexPath := filepath.Join(targetPath, "index.html")
 						if _, errIdx := os.Stat(indexPath); errIdx == nil {
-							fmt.Printf("[Router] Match: Mount Index -> %s\n", indexPath)
+							a.log("Match: Mount Index -> %s", indexPath)
 							c.File(indexPath)
 							return
 						}
 					} else {
-						fmt.Printf("[Router] Match: Mount File -> %s\n", targetPath)
+						a.log("Match: Mount File -> %s", targetPath)
 						c.File(targetPath)
 						return
 					}

@@ -1,22 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import {
-    List,
-    ListItemButton,
-    ListItemIcon,
-    ListItemText,
-    Collapse,
-    CircularProgress,
-    Typography,
-    Box
-} from '@mui/material';
-import {
     Folder as FolderIcon,
-    ExpandLess,
-    ExpandMore,
-    Description as FileIcon,
-    InfoOutlined as DetailsIcon
-} from '@mui/icons-material';
+    ChevronRight,
+    ChevronDown,
+    File as FileIcon,
+    Info as DetailsIcon,
+    Loader2
+} from 'lucide-react';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 interface SchemaNode {
     name: string;
@@ -45,51 +38,62 @@ const FileTreeItem: React.FC<{ node: SchemaNode; level: number }> = ({ node, lev
     };
 
     return (
-        <>
-            <ListItemButton
+        <div className="flex flex-col">
+            <Button
+                variant="ghost"
+                size="sm"
                 onClick={handleClick}
-                sx={{ pl: level * 2 + 2, py: 0.5 }}
+                className={cn(
+                    "h-8 w-full justify-start px-2 py-1 gap-2 overflow-hidden",
+                    level > 0 && "px-2"
+                )}
+                style={{ paddingLeft: `${level * 12 + 8}px` }}
             >
-                <ListItemIcon sx={{ minWidth: 32 }}>
-                    {node.isDir ? <FolderIcon fontSize="small" color="primary" /> : <FileIcon fontSize="small" />}
-                </ListItemIcon>
-                <ListItemText
-                    primary={node.name}
-                    primaryTypographyProps={{
-                        variant: 'body2',
-                        fontWeight: node.hasData ? 700 : 400
-                    }}
-                />
-                {(hasChildren || node.hasData) ? (open ? <ExpandLess fontSize="small" /> : <ExpandMore fontSize="small" />) : null}
-            </ListItemButton>
-            {(hasChildren || node.hasData) && (
-                <Collapse in={open} timeout="auto" unmountOnExit>
-                    <List component="div" disablePadding>
-                        {node.hasData && (
-                            <ListItemButton
-                                onClick={() => navigate(`/schema?details=${node.path}`)}
-                                selected={searchParams.get('details') === node.path && !location.pathname.includes('/map')}
-                                sx={{ pl: (level + 1) * 2 + 2, py: 0.3 }}
-                            >
-                                <ListItemIcon sx={{ minWidth: 32 }}>
-                                    <DetailsIcon fontSize="small" sx={{ color: 'text.secondary' }} />
-                                </ListItemIcon>
-                                <ListItemText
-                                    primary="Details"
-                                    primaryTypographyProps={{
-                                        variant: 'caption',
-                                        fontWeight: (searchParams.get('details') === node.path && !location.pathname.includes('/map')) ? 700 : 400
-                                    }}
-                                />
-                            </ListItemButton>
-                        )}
-                        {hasChildren && node.children!.map((child) => (
-                            <FileTreeItem key={child.path} node={child} level={level + 1} />
-                        ))}
-                    </List>
-                </Collapse>
+                <div className="shrink-0 flex items-center justify-center w-4 h-4">
+                    {node.isDir ? (
+                        <FolderIcon className="h-4 w-4 text-blue-500 fill-blue-500/20" />
+                    ) : (
+                        <FileIcon className="h-4 w-4 text-muted-foreground" />
+                    )}
+                </div>
+                <span className={cn(
+                    "text-sm truncate",
+                    node.hasData ? "font-semibold" : "font-normal"
+                )}>
+                    {node.name}
+                </span>
+                {(hasChildren || node.hasData) && (
+                    <div className="ml-auto shrink-0">
+                        {open ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+                    </div>
+                )}
+            </Button>
+
+            {open && (hasChildren || node.hasData) && (
+                <div className="flex flex-col">
+                    {node.hasData && (
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => navigate(`/schema?details=${node.path}`)}
+                            className={cn(
+                                "h-7 w-full justify-start px-2 py-0 gap-2 overflow-hidden",
+                                searchParams.get('details') === node.path && !location.pathname.includes('/map')
+                                    ? "bg-secondary text-secondary-foreground font-semibold"
+                                    : "text-muted-foreground"
+                            )}
+                            style={{ paddingLeft: `${(level + 1) * 12 + 8}px` }}
+                        >
+                            <DetailsIcon className="h-3 w-3 shrink-0" />
+                            <span className="text-xs">Details</span>
+                        </Button>
+                    )}
+                    {hasChildren && node.children!.map((child) => (
+                        <FileTreeItem key={child.path} node={child} level={level + 1} />
+                    ))}
+                </div>
             )}
-        </>
+        </div>
     );
 };
 
@@ -99,7 +103,6 @@ const FileTree: React.FC<FileTreeProps> = ({ apiUrl, title }) => {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        setLoading(true);
         fetch(apiUrl)
             .then(res => {
                 if (!res.ok) throw new Error('Failed to fetch file tree');
@@ -116,34 +119,34 @@ const FileTree: React.FC<FileTreeProps> = ({ apiUrl, title }) => {
     }, [apiUrl]);
 
     if (loading) return (
-        <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
-            <CircularProgress size={24} />
-        </Box>
+        <div className="flex items-center justify-center p-4">
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+        </div>
     );
 
     return (
-        <Box sx={{ width: '100%' }}>
+        <div className="w-full flex flex-col">
             {title && (
-                <Typography variant="overline" sx={{ px: 2, display: 'block', color: 'text.secondary', fontWeight: 700 }}>
+                <div className="px-3 py-1 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                     {title}
-                </Typography>
+                </div>
             )}
-            {error ? (
-                <Typography color="error" variant="caption" sx={{ p: 2, display: 'block' }}>
-                    Error: {error}
-                </Typography>
-            ) : tree.length === 0 ? (
-                <Typography variant="caption" sx={{ p: 2, display: 'block', color: 'text.secondary' }}>
-                    Empty directory.
-                </Typography>
-            ) : (
-                <List component="div" disablePadding>
-                    {tree.map((node) => (
+            <div className="flex flex-col">
+                {error ? (
+                    <div className="px-3 py-2 text-xs text-destructive">
+                        Error: {error}
+                    </div>
+                ) : tree.length === 0 ? (
+                    <div className="px-3 py-2 text-xs text-muted-foreground italic">
+                        Empty directory.
+                    </div>
+                ) : (
+                    tree.map((node) => (
                         <FileTreeItem key={node.path} node={node} level={0} />
-                    ))}
-                </List>
-            )}
-        </Box>
+                    ))
+                )}
+            </div>
+        </div>
     );
 };
 

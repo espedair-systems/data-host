@@ -1,65 +1,88 @@
 import React from 'react';
-import { Box, Typography, Breadcrumbs, Link, Grid, Card, CardContent, Divider } from '@mui/material';
-import { Link as RouterLink } from 'react-router-dom';
-import { CloudQueue as CloudIcon, Storage as StorageIcon, Security as SecurityIcon, NetworkCheck as NetworkIcon } from '@mui/icons-material';
+import { Link } from 'react-router-dom';
+import {
+    Server,
+    Database,
+    Cloud,
+    Shield,
+    ChevronRight,
+    Search,
+    Compass
+} from 'lucide-react';
+import {
+    Card,
+    CardContent,
+} from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 const GCPPage: React.FC = () => {
     const services = [
-        { title: 'Compute', icon: <NetworkIcon />, count: '45 Instances', status: 'Healthy' },
-        { title: 'Storage', icon: <StorageIcon />, count: '12 Buckets', status: 'Healthy' },
-        { title: 'BigQuery', icon: <CloudIcon />, count: '8 Datasets', status: 'Healthy' },
-        { title: 'Security', icon: <SecurityIcon />, count: '24 Policies', status: 'Protected' }
+        { title: 'Compute', icon: <Server className="h-5 w-5" />, count: '45 Instances', status: 'Healthy', color: 'text-blue-500', bg: 'bg-blue-500/10' },
+        { title: 'Storage', icon: <Database className="h-5 w-5" />, count: '12 Buckets', status: 'Healthy', color: 'text-green-500', bg: 'bg-green-500/10' },
+        { title: 'BigQuery', icon: <Cloud className="h-5 w-5" />, count: '8 Datasets', status: 'Healthy', color: 'text-orange-500', bg: 'bg-orange-500/10' },
+        { title: 'Security', icon: <Shield className="h-5 w-5" />, count: '24 Policies', status: 'Protected', color: 'text-purple-500', bg: 'bg-purple-500/10' }
     ];
 
     return (
-        <Box sx={{ p: 1 }}>
-            <Breadcrumbs aria-label="breadcrumb" sx={{ mb: 2 }}>
-                <Link component={RouterLink} color="inherit" to="/">Registry</Link>
-                <Typography color="text.primary">Google Cloud Platform</Typography>
-            </Breadcrumbs>
+        <div className="p-6 space-y-10 max-w-7xl mx-auto animate-in fade-in duration-500">
+            <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-4 font-medium">
+                <Link to="/" className="hover:text-foreground transition-colors">Registry</Link>
+                <ChevronRight className="h-4 w-4" />
+                <span className="text-foreground font-bold">Google Cloud Platform</span>
+            </nav>
 
-            <Box sx={{
-                mb: 4,
-                p: 4,
-                borderRadius: 4,
-                background: 'linear-gradient(135deg, #4285F4 0%, #34A853 100%)',
-                color: 'white',
-                boxShadow: '0 8px 32px rgba(66, 133, 244, 0.3)'
-            }}>
-                <Typography variant="h3" sx={{ fontWeight: 800, mb: 1 }}>Google Cloud</Typography>
-                <Typography variant="h6" sx={{ opacity: 0.9 }}>Unified monitoring and metadata for GCP infrastructure.</Typography>
-            </Box>
+            <header className="relative overflow-hidden rounded-[2rem] p-10 bg-gradient-to-br from-[#4285F4] via-[#34A853] to-[#FBBC05] text-white shadow-2xl shadow-blue-500/20 group">
+                <div className="absolute inset-0 bg-black/10 backdrop-blur-[2px]" />
+                <div className="relative z-10 space-y-4">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2.5 rounded-xl bg-white/20 backdrop-blur-md border border-white/20">
+                            <Cloud className="h-8 w-8" />
+                        </div>
+                        <h1 className="text-5xl font-black tracking-tight drop-shadow-sm">Google Cloud</h1>
+                    </div>
+                    <p className="text-white/80 text-xl font-medium max-w-2xl leading-relaxed">
+                        Unified monitoring and federated metadata for your Google Cloud infrastructure nodes.
+                    </p>
+                </div>
+                <Compass className="absolute top-1/2 -right-20 -translate-y-1/2 h-96 w-96 text-white/5 rotate-12 group-hover:rotate-45 transition-transform duration-1000 ease-out" />
+            </header>
 
-            <Grid container spacing={3}>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {services.map((service) => (
-                    <Grid key={service.title} size={{ xs: 12, sm: 6, md: 3 }}>
-                        <Card variant="outlined" sx={{ borderRadius: 3, '&:hover': { boxShadow: '0 4px 20px rgba(0,0,0,0.08)' } }}>
-                            <CardContent>
-                                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                                    <Box sx={{
-                                        p: 1.5,
-                                        borderRadius: 2,
-                                        bgcolor: 'primary.light',
-                                        color: 'primary.main',
-                                        display: 'flex',
-                                        mr: 2
-                                    }}>
-                                        {service.icon}
-                                    </Box>
-                                    <Typography variant="h6" sx={{ fontWeight: 700 }}>{service.title}</Typography>
-                                </Box>
-                                <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>{service.count}</Typography>
-                                <Divider sx={{ my: 1.5 }} />
-                                <Box sx={{ display: 'flex', alignItems: 'center', color: 'success.main', gap: 0.5 }}>
-                                    <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'currentColor' }} />
-                                    <Typography variant="caption" sx={{ fontWeight: 600 }}>{service.status}</Typography>
-                                </Box>
-                            </CardContent>
-                        </Card>
-                    </Grid>
+                    <Card key={service.title} className="group border-none shadow-md bg-card/60 backdrop-blur-sm transition-all hover:shadow-xl hover:-translate-y-1 overflow-hidden relative">
+                        <CardContent className="p-6 space-y-6">
+                            <div className="flex items-center gap-4">
+                                <div className={cn("p-3 rounded-2xl shadow-sm border border-black/5 transition-colors group-hover:scale-110 duration-300", service.bg, service.color)}>
+                                    {service.icon}
+                                </div>
+                                <h3 className="text-lg font-black tracking-tight text-foreground">{service.title}</h3>
+                            </div>
+
+                            <div className="space-y-1">
+                                <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">Capacity</div>
+                                <div className="text-3xl font-black tracking-tighter text-foreground">{service.count}</div>
+                            </div>
+
+                            <div className="pt-4 border-t border-muted/30 flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-green-600/80">{service.status}</span>
+                                </div>
+                                <Badge variant="ghost" className="text-[9px] font-bold opacity-0 group-hover:opacity-100 transition-opacity">
+                                    Browse Metadata
+                                </Badge>
+                            </div>
+                        </CardContent>
+                    </Card>
                 ))}
-            </Grid>
-        </Box>
+            </div>
+
+            <footer className="pt-6 flex items-center justify-center gap-3 text-[10px] text-muted-foreground/30 font-black uppercase tracking-[0.3em]">
+                <Search className="h-3 w-3" />
+                Global Resource Discovery Active
+            </footer>
+        </div>
     );
 };
 

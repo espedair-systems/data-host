@@ -13,6 +13,11 @@ const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(file
 // More info at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  resolve: {
+    alias: {
+      "@": path.resolve(dirname, "./src"),
+    },
+  },
   server: {
     host: true,
     port: 5173,
@@ -28,7 +33,6 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          'mui': ['@mui/material', '@mui/icons-material'],
           'vendor': ['react', 'react-dom', 'react-router-dom']
         }
       }

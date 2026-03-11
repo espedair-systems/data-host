@@ -71,3 +71,11 @@ type SchemaDashboard struct {
 	Collections     []CollectionDetail `json:"collections,omitempty"`
 	Validation      *ValidationResult  `json:"validation,omitempty"`
 }
+
+type BlueprintSchema struct {
+	ID        int64  `json:"id"`
+	Name      string `json:"name"`
+	Desc      string `json:"desc"`
+	CreatedAt string `json:"createdAt"`
+	UpdatedAt string `json:"updatedAt"`
+}

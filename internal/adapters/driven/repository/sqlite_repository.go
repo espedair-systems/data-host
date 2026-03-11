@@ -109,6 +109,26 @@ func (r *SQLiteRepository) UpdateTable(moduleName string, table domain.TableDeta
 }
 
 // Delegation to FS repo for things not yet fully in SQLite or read-only tree structures
+func (r *SQLiteRepository) GetBlueprintSchemas() ([]domain.BlueprintSchema, error) {
+	rows, err := r.db.Query("SELECT id, name, desc, created_at, updated_at FROM schemas ORDER BY name ASC")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var results []domain.BlueprintSchema
+	for rows.Next() {
+		var s domain.BlueprintSchema
+		var desc sql.NullString
+		if err := rows.Scan(&s.ID, &s.Name, &desc, &s.CreatedAt, &s.UpdatedAt); err != nil {
+			return nil, err
+		}
+		s.Desc = desc.String
+		results = append(results, s)
+	}
+	return results, nil
+}
+
 func (r *SQLiteRepository) GetSchemaTree() ([]domain.SchemaNode, error) {
 	return r.fsRepo.GetSchemaTree()
 }
@@ -120,18 +140,32 @@ func (r *SQLiteRepository) GetTrainingItems() ([]domain.MDXItem, error) {
 	return r.fsRepo.GetTrainingItems()
 }
 
+func (r *SQLiteRepository) GetAllSchemaDashboards() ([]domain.SchemaDashboard, error) {
+	dashes, err := r.fsRepo.GetAllSchemaDashboards()
+	if err != nil {
+		return nil, err
+	}
+	for i := range dashes {
+		r.applyOverrides(&dashes[i])
+	}
+	return dashes, nil
+}
+
 func (r *SQLiteRepository) GetSchemaDashboard(moduleName string) (domain.SchemaDashboard, error) {
 	dash, err := r.fsRepo.GetSchemaDashboard(moduleName)
 	if err != nil {
 		return dash, err
 	}
+	r.applyOverrides(&dash)
+	return dash, nil
+}
 
-	// Override with values from SQLite if they exist
+func (r *SQLiteRepository) applyOverrides(dash *domain.SchemaDashboard) {
 	if dash.SchemaStats != nil {
 		for i, t := range dash.SchemaStats.TableDetail {
 			var dbType, dbDesc, dbCols string
 			err := r.db.QueryRow("SELECT type, description, columns FROM table_details WHERE module = ? AND name = ?",
-				moduleName, t.Name).Scan(&dbType, &dbDesc, &dbCols)
+				dash.Name, t.Name).Scan(&dbType, &dbDesc, &dbCols)
 			if err == nil {
 				dash.SchemaStats.TableDetail[i].Type = dbType
 				dash.SchemaStats.TableDetail[i].Description = dbDesc
@@ -142,6 +176,4 @@ func (r *SQLiteRepository) GetSchemaDashboard(moduleName string) (domain.SchemaD
 			}
 		}
 	}
-
-	return dash, nil
 }

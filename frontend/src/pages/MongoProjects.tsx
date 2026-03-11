@@ -1,7 +1,22 @@
 import React from 'react';
-import { Box, Typography, Paper, Breadcrumbs, Link, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Chip } from '@mui/material';
-import { Link as RouterLink } from 'react-router-dom';
-import { AccountTree as TreeIcon } from '@mui/icons-material';
+import { Link } from 'react-router-dom';
+import {
+    Layers,
+    ChevronRight,
+    Server,
+    Cloud,
+    ShieldCheck
+} from 'lucide-react';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { cn } from '@/lib/utils';
 
 const MongoProjects: React.FC = () => {
     const clusters = [
@@ -11,58 +26,86 @@ const MongoProjects: React.FC = () => {
     ];
 
     return (
-        <Box sx={{ p: 1 }}>
-            <Breadcrumbs aria-label="breadcrumb" sx={{ mb: 2 }}>
-                <Link component={RouterLink} color="inherit" to="/">Registry</Link>
-                <Link component={RouterLink} color="inherit" to="/ingestion">Ingestion</Link>
-                <Typography color="text.primary">MongoDB Projects</Typography>
-            </Breadcrumbs>
+        <div className="p-6 space-y-10 max-w-7xl mx-auto animate-in fade-in duration-500">
+            <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-4 font-medium">
+                <Link to="/" className="hover:text-foreground transition-colors">Registry</Link>
+                <ChevronRight className="h-4 w-4" />
+                <Link to="/ingestion" className="hover:text-foreground transition-colors">Ingestion</Link>
+                <ChevronRight className="h-4 w-4" />
+                <span className="text-foreground font-bold">MongoDB Projects</span>
+            </nav>
 
-            <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 2 }}>
-                <TreeIcon sx={{ fontSize: 40, color: '#47A248' }} />
-                <Box>
-                    <Typography variant="h4" sx={{ fontWeight: 700, mb: 0 }}>
-                        MongoDB Projects
-                    </Typography>
-                    <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-                        Connected MongoDB clusters and inferenced collection groups.
-                    </Typography>
-                </Box>
-            </Box>
+            <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 shrink-0">
+                <div className="flex items-center gap-4">
+                    <div className="p-3.5 rounded-2xl bg-green-500/10 text-green-600 shadow-sm border border-green-500/20 shadow-green-500/5">
+                        <Layers className="h-9 w-9" />
+                    </div>
+                    <div>
+                        <h1 className="text-3xl font-black tracking-tight text-foreground">MongoDB Projects</h1>
+                        <p className="text-muted-foreground mt-1 font-medium">Coordinate federated MongoDB clusters and inferenced collection groups.</p>
+                    </div>
+                </div>
+            </header>
 
-            <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 2 }}>
+            <div className="rounded-2xl border bg-card/40 backdrop-blur-sm overflow-hidden shadow-sm">
                 <Table>
-                    <TableHead sx={{ bgcolor: 'action.hover' }}>
-                        <TableRow>
-                            <TableCell sx={{ fontWeight: 700 }}>Cluster ID</TableCell>
-                            <TableCell sx={{ fontWeight: 700 }}>Deployment Name</TableCell>
-                            <TableCell sx={{ fontWeight: 700 }}>Version</TableCell>
-                            <TableCell sx={{ fontWeight: 700 }} align="right">Collections</TableCell>
-                            <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
+                    <TableHeader className="bg-muted/50 border-b-none">
+                        <TableRow className="hover:bg-transparent border-none">
+                            <TableHead className="w-[180px] h-14 px-6 uppercase text-[10px] font-black tracking-widest text-muted-foreground/60">Logical UID</TableHead>
+                            <TableHead className="h-14 px-6 uppercase text-[10px] font-black tracking-widest text-muted-foreground/60">Cluster Identity</TableHead>
+                            <TableHead className="h-14 px-6 uppercase text-[10px] font-black tracking-widest text-muted-foreground/60">BSON Engine</TableHead>
+                            <TableHead className="h-14 px-6 uppercase text-[10px] font-black tracking-widest text-muted-foreground/60 text-right">Collections</TableHead>
+                            <TableHead className="h-14 px-6 uppercase text-[10px] font-black tracking-widest text-muted-foreground/60">Operational</TableHead>
                         </TableRow>
-                    </TableHead>
+                    </TableHeader>
                     <TableBody>
                         {clusters.map((c) => (
-                            <TableRow key={c.id} hover>
-                                <TableCell sx={{ fontFamily: 'monospace' }}>{c.id}</TableCell>
-                                <TableCell>{c.name}</TableCell>
-                                <TableCell>{c.version}</TableCell>
-                                <TableCell align="right">{c.collections}</TableCell>
-                                <TableCell>
-                                    <Chip
-                                        label={c.status}
-                                        size="small"
-                                        color={c.status === 'Active' ? 'success' : 'default'}
-                                        variant="outlined"
-                                        sx={{ height: 20 }}
-                                    />
+                            <TableRow key={c.id} className="group hover:bg-muted/30 transition-colors border-muted/20">
+                                <TableCell className="px-6 py-5">
+                                    <div className="flex items-center gap-2">
+                                        <div className="p-1.5 rounded-md bg-foreground/5 text-muted-foreground group-hover:text-green-500 transition-colors border border-black/5">
+                                            {c.id.includes('Atlas') ? <Cloud className="h-3.5 w-3.5" /> : <Server className="h-3.5 w-3.5" />}
+                                        </div>
+                                        <code className="text-[11px] font-mono font-bold text-muted-foreground group-hover:text-foreground transition-colors px-2 py-0.5 rounded-lg bg-muted/20 border border-muted/30">
+                                            {c.id}
+                                        </code>
+                                    </div>
+                                </TableCell>
+                                <TableCell className="px-6 py-5">
+                                    <span className="text-sm font-bold tracking-tight text-foreground/80 group-hover:text-foreground transition-colors">
+                                        {c.name}
+                                    </span>
+                                </TableCell>
+                                <TableCell className="px-6 py-5">
+                                    <Badge variant="secondary" className="font-mono text-[10px] font-bold tracking-tight rounded-md px-2 py-0 border-green-500/10 bg-green-500/5 text-green-700">
+                                        {c.version !== 'N/A' ? `v${c.version}` : 'Archived'}
+                                    </Badge>
+                                </TableCell>
+                                <TableCell className="px-6 py-5 text-right font-black text-xs text-muted-foreground group-hover:text-primary transition-colors tabular-nums">
+                                    {c.collections}
+                                </TableCell>
+                                <TableCell className="px-6 py-5">
+                                    <Badge
+                                        variant="outline"
+                                        className={cn(
+                                            "font-black text-[9px] uppercase tracking-[0.15em] py-0.5 px-3 border-none",
+                                            c.status === 'Active' ? "bg-green-500/10 text-green-600 hover:bg-green-500/15" : "bg-muted text-muted-foreground"
+                                        )}
+                                    >
+                                        {c.status}
+                                    </Badge>
                                 </TableCell>
                             </TableRow>
                         ))}
                     </TableBody>
                 </Table>
-            </TableContainer>
-        </Box>
+            </div>
+
+            <footer className="pt-4 flex items-center justify-center gap-2 text-[10px] text-muted-foreground/30 font-black uppercase tracking-[0.2em]">
+                <ShieldCheck className="h-3 w-3" />
+                Document topology is being synchronized across clusters
+            </footer>
+        </div>
     );
 };
 

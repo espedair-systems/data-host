@@ -1,26 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import {
-    Box,
-    Typography,
-    Paper,
-    Chip,
-    CircularProgress,
-    Stack,
-    FormControlLabel,
-    Checkbox,
-    FormGroup,
-    TextField,
-    InputAdornment,
-    IconButton
-} from '@mui/material';
-import {
-    FilterList as FilterIcon,
+    Filter as FilterIcon,
     Search as SearchIcon,
-    Description as DocIcon,
-    Launch as LaunchIcon,
-    BookmarkBorder as SectionIcon,
-    LocalOffer as TagIcon
-} from '@mui/icons-material';
+    FileText as DocIcon,
+    ExternalLink as LaunchIcon,
+    Bookmark as SectionIcon,
+    Tag as TagIcon,
+    Loader2
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 
 interface GuidelineEntry {
     title: string;
@@ -55,12 +48,11 @@ const SelectionDashboard: React.FC<SelectionDashboardProps> = ({ apiUrl, configU
     const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
     useEffect(() => {
-        setLoading(true);
         Promise.all([
             fetch(configUrl).then(res => res.json()),
             fetch(apiUrl).then(res => res.json())
         ])
-            .then(([rawConfig, mdxData]: [any, MDXSource[]]) => {
+            .then(([rawConfig, mdxData]: [GuidelineEntry[] | { codelabs: GuidelineEntry[] }, MDXSource[]]) => {
                 // Normalize config data (Training has it under .codelabs, Guidelines is a plain array)
                 const configEntries: GuidelineEntry[] = Array.isArray(rawConfig)
                     ? rawConfig
@@ -77,9 +69,9 @@ const SelectionDashboard: React.FC<SelectionDashboardProps> = ({ apiUrl, configU
                     return {
                         ...item,
                         // If it's training, the icon might be in appEmoji
-                        icon: item.icon || (item as any).appEmoji || '📄',
+                        icon: item.icon || (item as unknown as { appEmoji: string }).appEmoji || '📄',
                         // If it's training, the section might be in appName or we use a default
-                        section: item.section || (item as any).appName || 'Uncategorized',
+                        section: item.section || (item as unknown as { appName: string }).appName || 'Uncategorized',
                         fileName: source?.fileName
                     };
                 });
@@ -132,187 +124,159 @@ const SelectionDashboard: React.FC<SelectionDashboardProps> = ({ apiUrl, configU
     };
 
     if (loading) return (
-        <Box sx={{ display: 'flex', justifyContent: 'center', p: 8 }}>
-            <CircularProgress />
-        </Box>
+        <div className="flex items-center justify-center min-h-[400px]">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
     );
 
     if (error) return (
-        <Box sx={{ p: 4, textAlign: 'center' }}>
-            <Typography color="error">Error: {error}</Typography>
-        </Box>
+        <div className="p-8 text-center text-destructive font-medium">
+            Error: {error}
+        </div>
     );
 
     return (
-        <Box sx={{ display: 'flex', height: '100%', bgcolor: 'background.default' }}>
+        <div className="flex h-[calc(100vh-120px)] bg-background overflow-hidden border rounded-xl shadow-sm">
             {/* Left Sidebar: Selection Criteria */}
-            <Box sx={{
-                width: 300,
-                borderRight: '1px solid',
-                borderColor: 'divider',
-                p: 3,
-                overflowY: 'auto',
-                bgcolor: 'background.paper'
-            }}>
-                <Stack spacing={4}>
-                    <Box>
-                        <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <FilterIcon fontSize="small" color="primary" /> SEARCH
-                        </Typography>
-                        <TextField
-                            fullWidth
-                            size="small"
-                            placeholder="Search guidelines or files..."
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            InputProps={{
-                                startAdornment: (
-                                    <InputAdornment position="start">
-                                        <SearchIcon fontSize="small" />
-                                    </InputAdornment>
-                                ),
-                            }}
-                        />
-                    </Box>
+            <aside className="w-[300px] border-r bg-muted/10 p-6 overflow-y-auto shrink-0">
+                <div className="space-y-8">
+                    <div className="space-y-3">
+                        <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                            <FilterIcon className="h-3 w-3 text-primary" /> Search
+                        </div>
+                        <div className="relative">
+                            <SearchIcon className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                type="search"
+                                placeholder="Search..."
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                className="pl-9 h-9"
+                            />
+                        </div>
+                    </div>
 
-                    <Box>
-                        <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <SectionIcon fontSize="small" color="primary" /> CATEGORIES
-                        </Typography>
-                        <FormGroup>
+                    <div className="space-y-3">
+                        <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                            <SectionIcon className="h-3 w-3 text-primary" /> Categories
+                        </div>
+                        <div className="space-y-2">
                             {sections.map(section => (
-                                <FormControlLabel
-                                    key={section}
-                                    control={
-                                        <Checkbox
-                                            size="small"
-                                            checked={selectedSections.includes(section)}
-                                            onChange={() => toggleSection(section)}
-                                        />
-                                    }
-                                    label={<Typography variant="body2">{section}</Typography>}
-                                />
+                                <div key={section} className="flex items-center space-x-2">
+                                    <Checkbox
+                                        id={`section-${section}`}
+                                        checked={selectedSections.includes(section)}
+                                        onCheckedChange={() => toggleSection(section)}
+                                    />
+                                    <Label
+                                        htmlFor={`section-${section}`}
+                                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                    >
+                                        {section}
+                                    </Label>
+                                </div>
                             ))}
-                        </FormGroup>
-                    </Box>
+                        </div>
+                    </div>
 
-                    <Box>
-                        <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <TagIcon fontSize="small" color="primary" /> TAGS
-                        </Typography>
-                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                    <div className="space-y-3">
+                        <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                            <TagIcon className="h-3 w-3 text-primary" /> Tags
+                        </div>
+                        <div className="flex flex-wrap gap-2">
                             {allTags.map(tag => (
-                                <Chip
+                                <Badge
                                     key={tag}
-                                    label={tag}
-                                    size="small"
+                                    variant={selectedTags.includes(tag) ? "default" : "outline"}
+                                    className="cursor-pointer transition-colors"
                                     onClick={() => toggleTag(tag)}
-                                    color={selectedTags.includes(tag) ? "primary" : "default"}
-                                    variant={selectedTags.includes(tag) ? "filled" : "outlined"}
-                                    sx={{ cursor: 'pointer' }}
-                                />
+                                >
+                                    {tag}
+                                </Badge>
                             ))}
-                        </Box>
-                    </Box>
-                </Stack>
-            </Box>
+                        </div>
+                    </div>
+                </div>
+            </aside>
 
             {/* Main Area: Expanded List */}
-            <Box sx={{ flexGrow: 1, p: 4, overflowY: 'auto' }}>
-                <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <Box>
-                        <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>{title}</Typography>
-                        <Typography variant="body1" color="text.secondary">
-                            {subtitle}
-                        </Typography>
-                    </Box>
-                    <Chip label={`${filteredData.length} matches`} color="primary" variant="outlined" />
-                </Box>
+            <main className="flex-grow p-8 overflow-y-auto">
+                <div className="flex items-center justify-between mb-8">
+                    <div>
+                        <h1 className="text-3xl font-bold tracking-tight">{title}</h1>
+                        <p className="text-muted-foreground mt-1">{subtitle}</p>
+                    </div>
+                    <Badge variant="secondary" className="px-3 py-1 text-xs">
+                        {filteredData.length} matches
+                    </Badge>
+                </div>
 
-                <Stack spacing={2}>
+                <div className="space-y-4">
                     {filteredData.map((item, index) => (
-                        <Paper
+                        <div
                             key={index}
-                            variant="outlined"
-                            sx={{
-                                p: 3,
-                                borderRadius: 2,
-                                transition: 'all 0.2s',
-                                position: 'relative',
-                                borderLeft: item.fileName ? '4px solid' : '1px solid',
-                                borderLeftColor: item.section === 'Designed Docs' ? 'warning.main' : 'primary.main',
-                                bgcolor: item.section === 'Designed Docs' ? 'action.hover' : 'background.paper',
-                                '&:hover': {
-                                    borderColor: 'primary.main',
-                                    boxShadow: (theme) => `0 4px 12px ${theme.palette.primary.main}15`
-                                }
-                            }}
+                            className={cn(
+                                "p-6 rounded-xl border bg-card transition-all hover:shadow-md hover:border-primary/30 relative",
+                                item.fileName ? "border-l-4" : "",
+                                item.section === 'Designed Docs' ? "border-l-amber-500 bg-amber-500/5" : "border-l-primary"
+                            )}
                         >
-                            <Box sx={{ display: 'flex', gap: 2 }}>
-                                <Box sx={{
-                                    fontSize: 32,
-                                    width: 60,
-                                    height: 60,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    bgcolor: 'action.selected',
-                                    borderRadius: 2,
-                                    opacity: item.section === 'Designed Docs' ? 0.6 : 1
-                                }}>
+                            <div className="flex gap-6">
+                                <div className="hidden sm:flex text-3xl w-14 h-14 shrink-0 items-center justify-center bg-secondary/50 rounded-xl">
                                     {item.icon}
-                                </Box>
-                                <Box sx={{ flexGrow: 1 }}>
-                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                        <Box>
-                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                                                <Typography variant="h6" sx={{ fontWeight: 700 }}>{item.title}</Typography>
+                                </div>
+                                <div className="flex-grow">
+                                    <div className="flex justify-between items-start">
+                                        <div className="space-y-1">
+                                            <div className="flex items-center gap-3">
+                                                <h3 className="text-lg font-semibold">{item.title}</h3>
                                                 {item.fileName && (
-                                                    <Chip
-                                                        label={item.fileName}
-                                                        size="small"
-                                                        variant="outlined"
-                                                        sx={{ height: 20, fontSize: '0.65rem', opacity: 0.7 }}
-                                                    />
+                                                    <Badge variant="outline" className="h-5 px-1.5 text-[9px] font-mono opacity-70">
+                                                        {item.fileName}
+                                                    </Badge>
                                                 )}
-                                            </Box>
-                                            <Typography variant="caption" sx={{ color: 'primary.main', fontWeight: 600, textTransform: 'uppercase' }}>
+                                            </div>
+                                            <div className="text-[10px] font-bold text-primary uppercase tracking-widest">
                                                 {item.section}
-                                            </Typography>
-                                        </Box>
-                                        <IconButton
-                                            size="small"
-                                            component="a"
-                                            href={item.link}
-                                            target="_blank"
+                                            </div>
+                                        </div>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            asChild
                                             disabled={item.link === '#'}
-                                            sx={{ color: 'primary.main' }}
+                                            className="text-primary hover:text-primary hover:bg-primary/10"
                                         >
-                                            <LaunchIcon fontSize="small" />
-                                        </IconButton>
-                                    </Box>
-                                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1, mb: 2, maxWidth: 800 }}>
+                                            <a href={item.link} target="_blank" rel="noopener noreferrer">
+                                                <LaunchIcon className="h-4 w-4" />
+                                            </a>
+                                        </Button>
+                                    </div>
+                                    <p className="text-sm text-muted-foreground mt-3 mb-4 leading-relaxed max-w-3xl">
                                         {item.description}
-                                    </Typography>
-                                    <Box sx={{ display: 'flex', gap: 1 }}>
+                                    </p>
+                                    <div className="flex flex-wrap gap-1.5">
                                         {item.tags.map(tag => (
-                                            <Chip key={tag} label={tag} size="small" variant="outlined" sx={{ opacity: 0.8, borderRadius: 1 }} />
+                                            <Badge key={tag} variant="outline" className="text-[10px] font-normal px-2 py-0">
+                                                {tag}
+                                            </Badge>
                                         ))}
-                                    </Box>
-                                </Box>
-                            </Box>
-                        </Paper>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     ))}
+
                     {filteredData.length === 0 && (
-                        <Box sx={{ py: 10, textAlign: 'center', bgcolor: 'action.hover', borderRadius: 2 }}>
-                            <DocIcon sx={{ fontSize: 60, color: 'text.disabled', mb: 2 }} />
-                            <Typography color="text.secondary" variant="h6">No matches found</Typography>
-                            <Typography color="text.disabled" variant="body2">Try adjusting your filters or searching for specific filenames</Typography>
-                        </Box>
+                        <div className="py-20 text-center bg-muted/20 border-2 border-dashed rounded-2xl">
+                            <DocIcon className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
+                            <h3 className="text-lg font-semibold text-muted-foreground">No matches found</h3>
+                            <p className="text-sm text-muted-foreground/60 mt-1">Try adjusting your filters or searching for specific keywords</p>
+                        </div>
                     )}
-                </Stack>
-            </Box>
-        </Box>
+                </div>
+            </main>
+        </div>
     );
 };
 

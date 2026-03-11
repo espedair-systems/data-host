@@ -195,11 +195,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 				m.hostService.SetLogOutput(&chanWriter{channel: m.logChan})
 				m.running = true
-				go func() {
+				go func(lc chan string) {
 					if err := m.hostService.Start(config, repo); err != nil {
-						log.Printf("Server Error: %v", err)
+						lc <- fmt.Sprintf("[Fatal] Server Error: %v", err)
 					}
-				}()
+				}(m.logChan)
 
 				openBrowser(fmt.Sprintf("http://localhost:%d/home", port))
 				return m, listenForEvents(m)
@@ -209,7 +209,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
-		vHeight := (m.height - 10) / 2
+		// Title (1) + Title Margin (1) + Labels (2) + Borders (4) + Footer (1) = 9
+		// Using 11 to be safe and avoid any potential wrapping issues
+		vHeight := (m.height - 11) / 2
+		if vHeight < 1 {
+			vHeight = 1
+		}
 		m.viewport404.Width = m.width - 2
 		m.viewport404.Height = vHeight
 		m.viewportLogs.Width = m.width - 2
@@ -224,7 +229,18 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case logMsg:
 		l := strings.TrimSpace(string(msg))
 		if l != "" {
-			m.logs = append(m.logs, l)
+			// Handle multi-line log messages
+			lines := strings.Split(l, "\n")
+			for _, line := range lines {
+				trimmed := strings.TrimSpace(line)
+				if trimmed != "" {
+					m.logs = append(m.logs, trimmed)
+				}
+			}
+			// Keep log history reasonable
+			if len(m.logs) > 500 {
+				m.logs = m.logs[len(m.logs)-500:]
+			}
 			m.viewportLogs.SetContent(strings.Join(m.logs, "\n"))
 			m.viewportLogs.GotoBottom()
 		}

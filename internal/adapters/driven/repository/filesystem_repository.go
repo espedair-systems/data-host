@@ -21,26 +21,26 @@ func NewFilesystemRepository(config domain.HostConfig) ports.RegistryRepository 
 }
 
 func (r *FilesystemRepository) GetSchemaTree() ([]domain.SchemaNode, error) {
-	dataPath := filepath.Join(r.config.DataPath, "data")
+	dataPath := filepath.Join(r.getProjectRoot(), "data")
 	return buildFilteredTree(dataPath, true)
 }
 
 func (r *FilesystemRepository) GetServiceTree() ([]domain.SchemaNode, error) {
-	return buildFilteredTree(r.config.DataPath, false)
+	return buildFilteredTree(r.getProjectRoot(), false)
 }
 
 func (r *FilesystemRepository) GetGuidelines() ([]domain.MDXItem, error) {
-	target := filepath.Join(r.config.DataPath, "guidelines")
+	target := filepath.Join(r.getProjectRoot(), "guidelines")
 	return listMDXContent(target)
 }
 
 func (r *FilesystemRepository) GetTrainingItems() ([]domain.MDXItem, error) {
-	target := filepath.Join(r.config.DataPath, "training")
+	target := filepath.Join(r.getProjectRoot(), "training")
 	return listMDXContent(target)
 }
 
 func (r *FilesystemRepository) UpdateTable(moduleName string, update domain.TableDetail) error {
-	dataRoot := filepath.Join(r.config.DataPath, "data")
+	dataRoot := filepath.Join(r.getProjectRoot(), "data")
 	schemaFile := filepath.Join(dataRoot, moduleName, "schema.json")
 
 	data, err := os.ReadFile(schemaFile)
@@ -93,28 +93,48 @@ func (r *FilesystemRepository) UpdateTable(moduleName string, update domain.Tabl
 }
 
 func (r *FilesystemRepository) GetGuidelineSelection() (interface{}, error) {
-	path := filepath.Join(r.config.DataPath, "_internal", "config", "guidelines.json")
+	path := filepath.Join(r.getProjectRoot(), "src", "config", "guidelines.json")
 	return readJSON(path)
 }
 
 func (r *FilesystemRepository) UpdateGuidelineSelection(selection interface{}) error {
-	path := filepath.Join(r.config.DataPath, "_internal", "config", "guidelines.json")
+	path := filepath.Join(r.getProjectRoot(), "src", "config", "guidelines.json")
 	return writeJSON(path, selection)
 }
 
 func (r *FilesystemRepository) GetTrainingSelection() (interface{}, error) {
-	path := filepath.Join(r.config.DataPath, "_internal", "config", "training.json")
+	path := filepath.Join(r.getProjectRoot(), "src", "config", "training.json")
 	return readJSON(path)
 }
 
 func (r *FilesystemRepository) UpdateTrainingSelection(selection interface{}) error {
-	path := filepath.Join(r.config.DataPath, "_internal", "config", "training.json")
+	path := filepath.Join(r.getProjectRoot(), "src", "config", "training.json")
 	return writeJSON(path, selection)
 }
 
+func (r *FilesystemRepository) GetBlueprintSchemas() ([]domain.BlueprintSchema, error) {
+	return []domain.BlueprintSchema{}, nil
+}
+
+func (r *FilesystemRepository) getProjectRoot() string {
+	root := filepath.Clean(r.config.DataPath)
+	if filepath.Base(root) == "dist" {
+		return filepath.Dir(root)
+	}
+	return root
+}
+
+func (r *FilesystemRepository) GetAllSchemaDashboards() ([]domain.SchemaDashboard, error) {
+	projectRoot := r.getProjectRoot()
+	dataPath := filepath.Join(projectRoot, "data")
+	contentPath := filepath.Join(projectRoot, "src", "content", "docs", "registry")
+	return listSchemaDashboards(contentPath, dataPath)
+}
+
 func (r *FilesystemRepository) GetSchemaDashboard(moduleName string) (domain.SchemaDashboard, error) {
-	dataPath := filepath.Join(r.config.DataPath, "data")
-	contentPath := filepath.Join(r.config.DataPath, "src", "content", "docs", "registry") // Best guess for content root
+	projectRoot := r.getProjectRoot()
+	dataPath := filepath.Join(projectRoot, "data")
+	contentPath := filepath.Join(projectRoot, "src", "content", "docs", "registry")
 
 	dashboards, err := listSchemaDashboards(contentPath, dataPath)
 	if err != nil {

@@ -1,52 +1,56 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import {
-  AppBar,
-  Box,
-  CssBaseline,
-  Divider,
-  Drawer,
-  IconButton,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  Menu,
-  MenuItem,
-  Toolbar,
-  Typography,
-  Tooltip,
-  ListSubheader,
-} from '@mui/material';
-import {
   Menu as MenuIcon,
-  Dashboard as DashboardIcon,
-  Storage as StorageIcon,
+  LayoutDashboard as DashboardIcon,
+  Database as StorageIcon,
   Settings as SettingsIcon,
-  AccountCircle,
+  UserCircle as AccountCircle,
   Layers as LayersIcon,
-  RocketLaunch as RocketIcon,
+  Rocket as RocketIcon,
   ChevronLeft as ChevronLeftIcon,
-  Person as PersonIcon,
-  Label as LabelIcon,
-  Brightness4 as DarkModeIcon,
-  Brightness7 as LightModeIcon,
-  Visibility as ViewIcon,
-  MenuBook as BookIcon,
-  School as SchoolIcon,
-  Category as CategoryIcon,
-  TableChart as TableIcon,
-  Error as ErrorIcon,
+  User as PersonIcon,
+  Tag as LabelIcon,
+  Moon as DarkModeIcon,
+  Sun as LightModeIcon,
+  Eye as ViewIcon,
+  BookOpen as BookIcon,
+  GraduationCap as SchoolIcon,
+  FolderOpen as CategoryIcon,
+  Table as TableIcon,
+  AlertCircle as ErrorIcon,
   Cable as CableIcon,
-  Dns as EnvIcon,
-} from '@mui/icons-material';
-import { useNavigate, useLocation, Outlet, useSearchParams, Link as RouterLink } from 'react-router-dom';
+  Globe as EnvIcon,
+} from 'lucide-react';
+import { useNavigate, useLocation, Outlet, useSearchParams } from 'react-router-dom';
 import FileTree from './FileTree';
 import directoryData from '../data/directory.json';
 import { useColorMode } from '../context/ColorModeContext';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { Separator } from '@/components/ui/separator';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
-const drawerWidth = 240;
-const collapsedWidth = 64;
+const drawerWidth = 'w-60';
+const collapsedWidth = 'w-16';
 
 interface NavItem {
   text?: string;
@@ -56,10 +60,57 @@ interface NavItem {
   divider?: boolean;
 }
 
+interface DirectoryItem {
+  id: string;
+  title: string;
+  tags?: string[];
+  image?: string;
+  featured?: boolean;
+  internal?: boolean;
+  description: string;
+  link: string;
+}
+
+const NavButton = ({ item, selected, onClick, title, className, collapsed }: { item: NavItem, selected?: boolean, onClick?: () => void, title?: string, className?: string, collapsed?: boolean }) => {
+  const content = (
+    <Button
+      variant={selected ? "secondary" : "ghost"}
+      className={cn(
+        "w-full justify-start gap-4 px-3",
+        collapsed ? "justify-center px-0" : "",
+        selected ? "font-semibold text-primary" : "text-muted-foreground",
+        className
+      )}
+      onClick={onClick}
+    >
+      <div className={cn("shrink-0", selected ? "text-primary" : "text-muted-foreground")}>
+        {item.icon}
+      </div>
+      {!collapsed && <span>{item.text}</span>}
+    </Button>
+  );
+
+  if (collapsed && title) {
+    return (
+      <TooltipProvider delayDuration={0}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            {content}
+          </TooltipTrigger>
+          <TooltipContent side="right">
+            {title}
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
+
+  return content;
+};
+
 const Layout: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [schemas, setSchemas] = useState<{ name: string }[]>([]);
   const [searchParams, setSearchParams] = useSearchParams();
   const { mode, toggleColorMode } = useColorMode();
@@ -71,7 +122,7 @@ const Layout: React.FC = () => {
   // Extract all unique tags
   const allTags = useMemo(() => {
     const tags = new Set<string>();
-    directoryData.forEach((item: any) => {
+    (directoryData as DirectoryItem[]).forEach((item) => {
       item.tags?.forEach((tag: string) => tags.add(tag));
     });
     return ['All', 'Preferred', ...Array.from(tags).sort()];
@@ -85,27 +136,12 @@ const Layout: React.FC = () => {
     setCollapsed(!collapsed);
   };
 
-  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-  };
-
   const handleMenuItemClick = (path: string, external?: boolean) => {
     if (external) {
       window.open(path, '_blank');
     } else if (path !== '#') {
-      if (path === '/' || path === '') {
-        // Navigate to root and explicitly clear all search params (tags)
-        navigate('/', { replace: false });
-        setSearchParams({});
-      } else {
-        navigate(path);
-      }
+      navigate(path);
     }
-    handleMenuClose();
     setMobileOpen(false);
   };
 
@@ -139,643 +175,312 @@ const Layout: React.FC = () => {
 
   // Sidebar only shows Directory
   const sidebarItems: NavItem[] = [
-    { text: 'Directory', icon: <DashboardIcon />, path: '/' },
+    { text: 'Directory', icon: <DashboardIcon className="h-5 w-5" />, path: '/' },
   ];
 
   // Account menu shows the rest
   const accountMenuItems: NavItem[] = [
-    { text: 'Profile', icon: <PersonIcon />, path: '#' },
-    { text: 'Settings', icon: <SettingsIcon />, path: '/settings' },
+    { text: 'Profile', icon: <PersonIcon className="h-4 w-4" />, path: '#' },
+    { text: 'Settings', icon: <SettingsIcon className="h-4 w-4" />, path: '/settings' },
     { divider: true },
-    { text: 'Directory', icon: <BookIcon />, path: '/settings/directory' },
+    { text: 'Directory', icon: <BookIcon className="h-4 w-4" />, path: '/settings/directory' },
   ];
 
-  const currentWidth = collapsed ? collapsedWidth : drawerWidth;
+  const currentWidthClass = collapsed ? collapsedWidth : drawerWidth;
 
   const drawerContent = (
-    <Box sx={{ overflow: 'hidden', height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <Toolbar sx={{ display: 'flex', alignItems: 'center', justifyContent: collapsed ? 'center' : 'space-between', px: [1] }}>
+    <div className="flex flex-col h-full bg-background">
+      <div className={cn(
+        "flex h-16 items-center border-b px-4 shrink-0",
+        collapsed ? "justify-center px-0" : "justify-between"
+      )}>
         {!collapsed && (
-          <Typography variant="h6" noWrap component="div" sx={{ fontWeight: 700, color: 'primary.main' }}>
+          <span className="text-xl font-bold text-primary tracking-tight">
             Data Host
-          </Typography>
+          </span>
         )}
-        <IconButton onClick={handleCollapseToggle} sx={{ display: { xs: 'none', sm: 'flex' } }}>
-          {collapsed ? <MenuIcon /> : <ChevronLeftIcon />}
-        </IconButton>
-      </Toolbar>
-      <Divider />
-      <List>
-        {sidebarItems.map((item) => (
-          <ListItem key={item.text} disablePadding sx={{ display: 'block' }}>
-            <Tooltip title={collapsed ? item.text || "" : ""} placement="right">
-              <ListItemButton
-                component={RouterLink}
-                to={item.path || '/'}
-                onClick={() => {
-                  if (item.path === '/' || item.path === '') {
-                    setSearchParams({});
-                  }
-                  setMobileOpen(false);
-                }}
-                selected={location.pathname === item.path && !activeTag}
-                sx={{
-                  minHeight: 48,
-                  justifyContent: collapsed ? 'center' : 'initial',
-                  px: 2.5,
-                }}
-              >
-                <ListItemIcon
-                  sx={{
-                    minWidth: 0,
-                    mr: collapsed ? 'auto' : 3,
-                    justifyContent: 'center',
-                    color: location.pathname === item.path && !activeTag ? 'primary.main' : 'inherit',
-                  }}
-                >
-                  {item.icon}
-                </ListItemIcon>
-                {!collapsed && <ListItemText primary={item.text} sx={{ opacity: 1 }} />}
-              </ListItemButton>
-            </Tooltip>
-          </ListItem>
-        ))}
-      </List>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleCollapseToggle}
+          className="hidden sm:flex"
+        >
+          {collapsed ? <MenuIcon className="h-5 w-5" /> : <ChevronLeftIcon className="h-5 w-5" />}
+        </Button>
+      </div>
 
-      <Divider />
+      <ScrollArea className="flex-grow">
+        <div className="flex flex-col gap-2 p-2">
+          {sidebarItems.map((item) => (
+            <NavButton
+              key={item.text}
+              item={item}
+              selected={location.pathname === item.path}
+              onClick={() => handleMenuItemClick(item.path || '/')}
+              title={item.text}
+              collapsed={collapsed}
+            />
+          ))}
 
-      <Box sx={{ flexGrow: 1, overflowY: 'auto', overflowX: 'hidden', py: 1 }}>
-        {location.pathname.startsWith('/schema') ? (
-          <List disablePadding>
-            <FileTree apiUrl="/api/schemas/tree" title="Data Schema Tree" />
-            {location.pathname === '/schema/edit' && (
-              <>
-                <Divider sx={{ my: 1 }} />
+          <Separator className="my-2" />
+
+          {location.pathname.startsWith('/schema') ? (
+            <div className="flex flex-col gap-1">
+              <FileTree apiUrl="/api/schemas/tree" title="Data Schema Tree" />
+              {location.pathname === '/schema/edit' && (
+                <>
+                  <Separator className="my-2" />
+                  {!collapsed && (
+                    <div className="px-4 py-2 text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                      Table Editor
+                    </div>
+                  )}
+                  <NavButton
+                    item={{ text: 'Table', icon: <TableIcon className="h-4 w-4" /> }}
+                    selected={true}
+                    title="Table"
+                    className="h-9"
+                    collapsed={collapsed}
+                  />
+                </>
+              )}
+            </div>
+          ) : location.pathname.startsWith('/ingestion/') && location.pathname !== '/ingestion' ? (() => {
+            const type = location.pathname.split('/')[2];
+            const labels: Record<string, string> = {
+              bigquery: 'BigQuery',
+              oracle: 'Oracle',
+              postgres: 'Postgres',
+              mssql: 'MS SQL',
+              mysql: 'MySQL',
+              mongo: 'MongoDB',
+              gcs: 'Cloud Storage'
+            };
+            const basePath = `/ingestion/${type}`;
+
+            return (
+              <div className="flex flex-col gap-1">
                 {!collapsed && (
-                  <ListSubheader component="div" sx={{ bgcolor: 'transparent', lineHeight: '40px', fontWeight: 700 }}>
-                    Table Editor
-                  </ListSubheader>
+                  <div className="px-4 py-2 text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                    {labels[type] || 'Database'} Tools
+                  </div>
                 )}
-                <ListItem disablePadding sx={{ display: 'block' }}>
-                  <Tooltip title={collapsed ? "Table" : ""} placement="right">
-                    <ListItemButton
-                      selected={true}
-                      sx={{
-                        minHeight: 40,
-                        justifyContent: collapsed ? 'center' : 'initial',
-                        px: 2.5,
-                      }}
-                    >
-                      <ListItemIcon
-                        sx={{
-                          minWidth: 0,
-                          mr: collapsed ? 'auto' : 3,
-                          justifyContent: 'center',
-                          color: 'primary.main',
-                        }}
-                      >
-                        <TableIcon fontSize="small" />
-                      </ListItemIcon>
-                      {!collapsed && <ListItemText
-                        primary="Table"
-                        primaryTypographyProps={{ variant: 'body2' }}
-                        sx={{ opacity: 1 }}
-                      />}
-                    </ListItemButton>
-                  </Tooltip>
-                </ListItem>
-              </>
-            )}
-          </List>
-        ) : location.pathname.startsWith('/ingestion/') && location.pathname !== '/ingestion' ? (() => {
-          const type = location.pathname.split('/')[2];
-          const labels: Record<string, string> = {
-            bigquery: 'BigQuery',
-            oracle: 'Oracle',
-            postgres: 'Postgres',
-            mssql: 'MS SQL',
-            mysql: 'MySQL',
-            mongo: 'MongoDB',
-            gcs: 'Cloud Storage'
-          };
-          const basePath = `/ingestion/${type}`;
+                {[
+                  { text: 'Dashboard', icon: <DashboardIcon className="h-4 w-4" />, path: basePath },
+                  {
+                    text: ['postgres', 'bigquery', 'gcs'].includes(type) ? 'Connection' : 'New',
+                    icon: <RocketIcon className="h-4 w-4" />,
+                    path: `${basePath}/${['postgres', 'bigquery', 'gcs'].includes(type) ? 'connections' : 'new'}`
+                  },
+                  {
+                    text: type === 'postgres' ? 'Schema' : 'Projects',
+                    icon: type === 'postgres' ? <LayersIcon className="h-4 w-4" /> : <LabelIcon className="h-4 w-4" />,
+                    path: `${basePath}/${type === 'postgres' ? 'schemas' : 'projects'}`
+                  },
+                ].map((item) => (
+                  <NavButton
+                    key={item.text}
+                    item={item}
+                    selected={location.pathname === item.path}
+                    onClick={() => navigate(item.path)}
+                    title={item.text}
+                    className="h-9"
+                    collapsed={collapsed}
+                  />
+                ))}
+              </div>
+            );
+          })() : location.pathname.startsWith('/platforms/') ? (() => {
+            const type = location.pathname.split('/')[2];
+            const labels: Record<string, string> = {
+              gcp: 'Google Cloud',
+              aws: 'AWS',
+              gcve: 'GCVE',
+              saas: 'SaaS'
+            };
+            const basePath = `/platforms/${type}`;
 
-          return (
-            <List disablePadding>
+            return (
+              <div className="flex flex-col gap-1">
+                {!collapsed && (
+                  <div className="px-4 py-2 text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                    {labels[type] || 'Platform'} Tools
+                  </div>
+                )}
+                {[
+                  { text: 'Dashboard', icon: <DashboardIcon className="h-4 w-4" />, path: basePath },
+                  { text: 'Environments', icon: <EnvIcon className="h-4 w-4" />, path: `${basePath}/environments` },
+                  { text: 'Connections', icon: <CableIcon className="h-4 w-4" />, path: `${basePath}/connections` },
+                  { text: 'Issues', icon: <ErrorIcon className="h-4 w-4" />, path: `${basePath}/issues` },
+                ].map((item) => (
+                  <NavButton
+                    key={item.text}
+                    item={item}
+                    selected={location.pathname === item.path}
+                    onClick={() => navigate(item.path)}
+                    title={item.text}
+                    className="h-9"
+                    collapsed={collapsed}
+                  />
+                ))}
+              </div>
+            );
+          })() : location.pathname === '/mounts' ? (
+            <FileTree apiUrl="/api/services/tree" title="Services Dist Tree" />
+          ) : location.pathname === '/site' ? (
+            <div className="flex flex-col gap-1">
               {!collapsed && (
-                <ListSubheader component="div" sx={{ bgcolor: 'transparent', lineHeight: '48px', fontWeight: 700 }}>
-                  {labels[type] || 'Database'} Tools
-                </ListSubheader>
+                <div className="px-4 py-2 text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                  Inspect Site
+                </div>
               )}
               {[
-                { text: 'Dashboard', icon: <DashboardIcon />, path: basePath },
-                {
-                  text: ['postgres', 'bigquery', 'gcs'].includes(type) ? 'Connection' : 'New',
-                  icon: <RocketIcon />,
-                  path: `${basePath}/${['postgres', 'bigquery', 'gcs'].includes(type) ? 'connections' : 'new'}`
-                },
-                {
-                  text: type === 'postgres' ? 'Schema' : 'Projects',
-                  icon: type === 'postgres' ? <LayersIcon /> : <LabelIcon />,
-                  path: `${basePath}/${type === 'postgres' ? 'schemas' : 'projects'}`
-                },
+                { text: 'View', icon: <ViewIcon className="h-4 w-4" />, path: '/site?mode=view', active: searchParams.get('mode') === 'view' || !searchParams.get('mode') },
+                { text: 'Guidelines', icon: <BookIcon className="h-4 w-4" />, path: '/site?mode=guidelines', active: searchParams.get('mode') === 'guidelines' },
+                { text: 'Categories', icon: <CategoryIcon className="h-4 w-4" />, path: '/site?mode=categories', active: searchParams.get('mode') === 'categories', indent: true },
+                { text: 'Training', icon: <SchoolIcon className="h-4 w-4" />, path: '/site?mode=training', active: searchParams.get('mode') === 'training' },
+                { text: 'Categories', icon: <CategoryIcon className="h-4 w-4" />, path: '/site?mode=training-categories', active: searchParams.get('mode') === 'training-categories', indent: true },
+                { text: 'Schema Health', icon: <StorageIcon className="h-4 w-4" />, path: '/site?mode=schema', active: searchParams.get('mode') === 'schema' && !searchParams.get('schema') },
               ].map((item) => (
-                <ListItem key={item.text} disablePadding sx={{ display: 'block' }}>
-                  <Tooltip title={collapsed ? item.text : ""} placement="right">
-                    <ListItemButton
-                      onClick={() => navigate(item.path)}
-                      selected={location.pathname === item.path}
-                      sx={{
-                        minHeight: 40,
-                        justifyContent: collapsed ? 'center' : 'initial',
-                        px: 2.5,
-                      }}
-                    >
-                      <ListItemIcon
-                        sx={{
-                          minWidth: 0,
-                          mr: collapsed ? 'auto' : 3,
-                          justifyContent: 'center',
-                          color: location.pathname === item.path ? 'primary.main' : 'text.secondary',
-                        }}
-                      >
-                        {React.cloneElement(item.icon as React.ReactElement, { fontSize: 'small' } as any)}
-                      </ListItemIcon>
-                      {!collapsed && <ListItemText
-                        primary={item.text}
-                        primaryTypographyProps={{ variant: 'body2' }}
-                        sx={{ opacity: 1 }}
-                      />}
-                    </ListItemButton>
-                  </Tooltip>
-                </ListItem>
+                <NavButton
+                  key={item.text + item.path}
+                  item={item}
+                  selected={item.active}
+                  onClick={() => navigate(item.path)}
+                  title={item.text}
+                  className={cn("h-9", !collapsed && item.indent ? "ml-4 w-[calc(100%-1rem)]" : "")}
+                  collapsed={collapsed}
+                />
               ))}
-            </List>
-          );
-        })() : location.pathname.startsWith('/platforms/') ? (() => {
-          const type = location.pathname.split('/')[2];
-          const labels: Record<string, string> = {
-            gcp: 'Google Cloud',
-            aws: 'AWS',
-            gcve: 'GCVE',
-            saas: 'SaaS'
-          };
-          const basePath = `/platforms/${type}`;
 
-          return (
-            <List disablePadding>
+              {/* Dynamic Schema Items */}
+              {searchParams.get('mode') === 'schema' && schemas.map((s) => (
+                <NavButton
+                  key={s.name}
+                  item={{ text: s.name, icon: <LabelIcon className="h-3 w-3" /> }}
+                  selected={searchParams.get('schema') === s.name}
+                  onClick={() => navigate(`/site?mode=schema&schema=${s.name}`)}
+                  title={s.name}
+                  className={cn("h-8 ml-6 w-[calc(100%-1.5rem)] text-xs capitalize", collapsed ? "ml-0 w-full" : "")}
+                  collapsed={collapsed}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col gap-1">
               {!collapsed && (
-                <ListSubheader component="div" sx={{ bgcolor: 'transparent', lineHeight: '48px', fontWeight: 700 }}>
-                  {labels[type] || 'Platform'} Tools
-                </ListSubheader>
-              )}
-              {[
-                { text: 'Dashboard', icon: <DashboardIcon />, path: basePath },
-                { text: 'Environments', icon: <EnvIcon />, path: `${basePath}/environments` },
-                { text: 'Connections', icon: <CableIcon />, path: `${basePath}/connections` },
-                { text: 'Issues', icon: <ErrorIcon />, path: `${basePath}/issues` },
-              ].map((item) => (
-                <ListItem key={item.text} disablePadding sx={{ display: 'block' }}>
-                  <Tooltip title={collapsed ? item.text : ""} placement="right">
-                    <ListItemButton
-                      onClick={() => navigate(item.path)}
-                      selected={location.pathname === item.path}
-                      sx={{
-                        minHeight: 40,
-                        justifyContent: collapsed ? 'center' : 'initial',
-                        px: 2.5,
-                      }}
-                    >
-                      <ListItemIcon
-                        sx={{
-                          minWidth: 0,
-                          mr: collapsed ? 'auto' : 3,
-                          justifyContent: 'center',
-                          color: location.pathname === item.path ? 'primary.main' : 'text.secondary',
-                        }}
-                      >
-                        {React.cloneElement(item.icon as React.ReactElement, { fontSize: 'small' } as any)}
-                      </ListItemIcon>
-                      {!collapsed && <ListItemText
-                        primary={item.text}
-                        primaryTypographyProps={{ variant: 'body2' }}
-                        sx={{ opacity: 1 }}
-                      />}
-                    </ListItemButton>
-                  </Tooltip>
-                </ListItem>
-              ))}
-            </List>
-          );
-        })() : location.pathname === '/mounts' ? (
-          <FileTree apiUrl="/api/services/tree" title="Services Dist Tree" />
-        ) : location.pathname === '/site' ? (
-          <List disablePadding>
-            {!collapsed && (
-              <ListSubheader component="div" sx={{ bgcolor: 'transparent', lineHeight: '48px', fontWeight: 700 }}>
-                Inspect Site
-              </ListSubheader>
-            )}
-            <ListItem disablePadding sx={{ display: 'block' }}>
-              <Tooltip title={collapsed ? "View" : ""} placement="right">
-                <ListItemButton
-                  onClick={() => navigate('/site?mode=view')}
-                  selected={searchParams.get('mode') === 'view' || !searchParams.get('mode')}
-                  sx={{
-                    minHeight: 40,
-                    justifyContent: collapsed ? 'center' : 'initial',
-                    px: 2.5,
-                  }}
-                >
-                  <ListItemIcon
-                    sx={{
-                      minWidth: 0,
-                      mr: collapsed ? 'auto' : 3,
-                      justifyContent: 'center',
-                      color: (searchParams.get('mode') === 'view' || !searchParams.get('mode')) ? 'primary.main' : 'text.secondary',
-                    }}
-                  >
-                    <ViewIcon fontSize="small" />
-                  </ListItemIcon>
-                  {!collapsed && <ListItemText
-                    primary="View"
-                    primaryTypographyProps={{ variant: 'body2' }}
-                    sx={{ opacity: 1 }}
-                  />}
-                </ListItemButton>
-              </Tooltip>
-            </ListItem>
-
-            <ListItem disablePadding sx={{ display: 'block' }}>
-              <Tooltip title={collapsed ? "Guidelines" : ""} placement="right">
-                <ListItemButton
-                  onClick={() => navigate('/site?mode=guidelines')}
-                  selected={searchParams.get('mode') === 'guidelines'}
-                  sx={{
-                    minHeight: 40,
-                    justifyContent: collapsed ? 'center' : 'initial',
-                    px: 2.5,
-                  }}
-                >
-                  <ListItemIcon
-                    sx={{
-                      minWidth: 0,
-                      mr: collapsed ? 'auto' : 3,
-                      justifyContent: 'center',
-                      color: searchParams.get('mode') === 'guidelines' ? 'primary.main' : 'text.secondary',
-                    }}
-                  >
-                    <BookIcon fontSize="small" />
-                  </ListItemIcon>
-                  {!collapsed && <ListItemText
-                    primary="Guidelines"
-                    primaryTypographyProps={{ variant: 'body2' }}
-                    sx={{ opacity: 1 }}
-                  />}
-                </ListItemButton>
-              </Tooltip>
-            </ListItem>
-
-            <ListItem disablePadding sx={{ display: 'block' }}>
-              <Tooltip title={collapsed ? "Categories" : ""} placement="right">
-                <ListItemButton
-                  onClick={() => navigate('/site?mode=categories')}
-                  selected={searchParams.get('mode') === 'categories'}
-                  sx={{
-                    minHeight: 40,
-                    justifyContent: collapsed ? 'center' : 'initial',
-                    px: 2.5,
-                    ml: collapsed ? 0 : 2 // Indent slightly if not collapsed to show it's "under"
-                  }}
-                >
-                  <ListItemIcon
-                    sx={{
-                      minWidth: 0,
-                      mr: collapsed ? 'auto' : 3,
-                      justifyContent: 'center',
-                      color: searchParams.get('mode') === 'categories' ? 'primary.main' : 'text.secondary',
-                    }}
-                  >
-                    <CategoryIcon fontSize="small" />
-                  </ListItemIcon>
-                  {!collapsed && <ListItemText
-                    primary="Categories"
-                    primaryTypographyProps={{ variant: 'body2' }}
-                    sx={{ opacity: 1 }}
-                  />}
-                </ListItemButton>
-              </Tooltip>
-            </ListItem>
-            <ListItem disablePadding sx={{ display: 'block' }}>
-              <Tooltip title={collapsed ? "Training" : ""} placement="right">
-                <ListItemButton
-                  onClick={() => navigate('/site?mode=training')}
-                  selected={searchParams.get('mode') === 'training'}
-                  sx={{
-                    minHeight: 40,
-                    justifyContent: collapsed ? 'center' : 'initial',
-                    px: 2.5,
-                  }}
-                >
-                  <ListItemIcon
-                    sx={{
-                      minWidth: 0,
-                      mr: collapsed ? 'auto' : 3,
-                      justifyContent: 'center',
-                      color: searchParams.get('mode') === 'training' ? 'primary.main' : 'text.secondary',
-                    }}
-                  >
-                    <SchoolIcon fontSize="small" />
-                  </ListItemIcon>
-                  {!collapsed && <ListItemText
-                    primary="Training"
-                    primaryTypographyProps={{ variant: 'body2' }}
-                    sx={{ opacity: 1 }}
-                  />}
-                </ListItemButton>
-              </Tooltip>
-            </ListItem>
-
-            <ListItem disablePadding sx={{ display: 'block' }}>
-              <Tooltip title={collapsed ? "Categories" : ""} placement="right">
-                <ListItemButton
-                  onClick={() => navigate('/site?mode=training-categories')}
-                  selected={searchParams.get('mode') === 'training-categories'}
-                  sx={{
-                    minHeight: 40,
-                    justifyContent: collapsed ? 'center' : 'initial',
-                    px: 2.5,
-                    ml: collapsed ? 0 : 2
-                  }}
-                >
-                  <ListItemIcon
-                    sx={{
-                      minWidth: 0,
-                      mr: collapsed ? 'auto' : 3,
-                      justifyContent: 'center',
-                      color: searchParams.get('mode') === 'training-categories' ? 'primary.main' : 'text.secondary',
-                    }}
-                  >
-                    <CategoryIcon fontSize="small" />
-                  </ListItemIcon>
-                  {!collapsed && <ListItemText
-                    primary="Categories"
-                    primaryTypographyProps={{ variant: 'body2' }}
-                    sx={{ opacity: 1 }}
-                  />}
-                </ListItemButton>
-              </Tooltip>
-            </ListItem>
-
-            <ListItem disablePadding sx={{ display: 'block' }}>
-              <Tooltip title={collapsed ? "Schema" : ""} placement="right">
-                <ListItemButton
-                  onClick={() => navigate('/site?mode=schema')}
-                  selected={searchParams.get('mode') === 'schema' && !searchParams.get('schema')}
-                  sx={{
-                    minHeight: 40,
-                    justifyContent: collapsed ? 'center' : 'initial',
-                    px: 2.5,
-                  }}
-                >
-                  <ListItemIcon
-                    sx={{
-                      minWidth: 0,
-                      mr: collapsed ? 'auto' : 3,
-                      justifyContent: 'center',
-                      color: (searchParams.get('mode') === 'schema' && !searchParams.get('schema')) ? 'primary.main' : 'text.secondary',
-                    }}
-                  >
-                    <StorageIcon fontSize="small" />
-                  </ListItemIcon>
-                  {!collapsed && <ListItemText
-                    primary="Schema Health"
-                    primaryTypographyProps={{ variant: 'body2' }}
-                    sx={{ opacity: 1 }}
-                  />}
-                </ListItemButton>
-              </Tooltip>
-            </ListItem>
-
-            {/* Dynamic Schema Items */}
-            {searchParams.get('mode') === 'schema' && schemas.map((s) => (
-              <ListItem key={s.name} disablePadding sx={{ display: 'block' }}>
-                <Tooltip title={collapsed ? s.name : ""} placement="right">
-                  <ListItemButton
-                    onClick={() => navigate(`/site?mode=schema&schema=${s.name}`)}
-                    selected={searchParams.get('schema') === s.name}
-                    sx={{
-                      minHeight: 36,
-                      justifyContent: collapsed ? 'center' : 'initial',
-                      px: 2.5,
-                      ml: collapsed ? 0 : 3
-                    }}
-                  >
-                    <ListItemIcon
-                      sx={{
-                        minWidth: 0,
-                        mr: collapsed ? 'auto' : 2,
-                        justifyContent: 'center',
-                        color: searchParams.get('schema') === s.name ? 'primary.main' : 'text.secondary',
-                      }}
-                    >
-                      <LabelIcon sx={{ fontSize: '1rem' }} />
-                    </ListItemIcon>
-                    {!collapsed && <ListItemText
-                      primary={s.name}
-                      primaryTypographyProps={{
-                        variant: 'caption',
-                        sx: { textTransform: 'capitalize', fontWeight: searchParams.get('schema') === s.name ? 700 : 400 }
-                      }}
-                      sx={{ opacity: 1 }}
-                    />}
-                  </ListItemButton>
-                </Tooltip>
-              </ListItem>
-            ))}
-          </List>
-        ) : (
-          <List
-            subheader={
-              !collapsed ? (
-                <ListSubheader component="div" sx={{ bgcolor: 'transparent', lineHeight: '48px', fontWeight: 700 }}>
+                <div className="px-4 py-2 text-xs font-bold text-muted-foreground uppercase tracking-wider">
                   Directory Categories
-                </ListSubheader>
-              ) : null
-            }
-          >
-            {allTags.map((tag) => (
-              <ListItem key={tag} disablePadding sx={{ display: 'block' }}>
-                <Tooltip title={collapsed ? tag : ""} placement="right">
-                  <ListItemButton
-                    onClick={() => handleTagClick(tag)}
-                    selected={activeTag === tag || (tag === 'All' && !activeTag)}
-                    sx={{
-                      minHeight: 40,
-                      justifyContent: collapsed ? 'center' : 'initial',
-                      px: 2.5,
-                    }}
-                  >
-                    <ListItemIcon
-                      sx={{
-                        minWidth: 0,
-                        mr: collapsed ? 'auto' : 3,
-                        justifyContent: 'center',
-                        color: activeTag === tag ? 'primary.main' : 'text.secondary',
-                      }}
-                    >
-                      <LabelIcon fontSize="small" />
-                    </ListItemIcon>
-                    {!collapsed && <ListItemText
-                      primary={tag}
-                      primaryTypographyProps={{ variant: 'body2' }}
-                      sx={{ opacity: 1 }}
-                    />}
-                  </ListItemButton>
-                </Tooltip>
-              </ListItem>
-            ))}
-          </List>
-        )}
-      </Box>
-    </Box>
+                </div>
+              )}
+              {allTags.map((tag) => (
+                <NavButton
+                  key={tag}
+                  item={{ text: tag, icon: <LabelIcon className="h-4 w-4" /> }}
+                  selected={activeTag === tag || (tag === 'All' && !activeTag)}
+                  onClick={() => handleTagClick(tag)}
+                  title={tag}
+                  className="h-9"
+                  collapsed={collapsed}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      </ScrollArea>
+    </div>
   );
 
   return (
-    <Box sx={{ display: 'flex' }}>
-      <CssBaseline />
-      <AppBar
-        position="fixed"
-        sx={{
-          zIndex: (theme) => theme.zIndex.drawer + 1,
-          transition: (theme) =>
-            theme.transitions.create(['width', 'margin'], {
-              easing: theme.transitions.easing.sharp,
-              duration: theme.transitions.duration.leavingScreen,
-            }),
-          ...(!collapsed ? {
-            width: { sm: `calc(100% - ${drawerWidth}px)` },
-            ml: { sm: `${drawerWidth}px` },
-          } : {
-            width: { sm: `calc(100% - ${collapsedWidth}px)` },
-            ml: { sm: `${collapsedWidth}px` },
-          })
-        }}
-      >
-        <Toolbar>
-          <IconButton
-            color="inherit"
-            aria-label="open drawer"
-            edge="start"
-            onClick={handleDrawerToggle}
-            sx={{ mr: 2, display: { sm: 'none' } }}
-          >
-            <MenuIcon />
-          </IconButton>
-          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            {activeTag ? `Registry: ${activeTag}` :
-              (location.pathname === '/' ? 'Registry Directory' :
-                sidebarItems.find((item) => item.path === location.pathname)?.text ||
-                accountMenuItems.find((item) => !item.divider && item.path === location.pathname)?.text ||
-                'Data Host')}
-          </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Tooltip title={`Switch to ${mode === 'light' ? 'dark' : 'light'} mode`}>
-              <IconButton onClick={toggleColorMode} color="inherit">
-                {mode === 'dark' ? <LightModeIcon /> : <DarkModeIcon />}
-              </IconButton>
-            </Tooltip>
-            <IconButton
-              size="large"
-              aria-label="account of current user"
-              aria-controls="menu-appbar"
-              aria-haspopup="true"
-              onClick={handleMenuOpen}
-              color="inherit"
-            >
-              <AccountCircle />
-            </IconButton>
-            <Menu
-              id="menu-appbar"
-              anchorEl={anchorEl}
-              anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-              keepMounted
-              transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-              open={Boolean(anchorEl)}
-              onClose={handleMenuClose}
-            >
-              {accountMenuItems.map((item, index) => (
-                item.divider ? (
-                  <Divider key={`divider-${index}`} />
-                ) : (
-                  <MenuItem
-                    key={item.text}
-                    onClick={() => handleMenuItemClick(item.path || '#', item.external)}
-                    sx={{ gap: 1.5, minWidth: 160 }}
-                  >
-                    <ListItemIcon sx={{ minWidth: 'auto !important' }}>
-                      {item.icon}
-                    </ListItemIcon>
-                    {item.text}
-                  </MenuItem>
-                )
-              ))}
-            </Menu>
-          </Box>
-        </Toolbar>
-      </AppBar>
+    <TooltipProvider delayDuration={0}>
+      <div className="flex h-screen w-full bg-background overflow-hidden">
+        {/* Mobile Sidebar (Sheet) */}
+        <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+          <SheetContent side="left" className="p-0 w-60">
+            <SheetHeader className="sr-only">
+              <SheetTitle>Navigation Menu</SheetTitle>
+            </SheetHeader>
+            {drawerContent}
+          </SheetContent>
+        </Sheet>
 
-      <Box component="nav" sx={{ width: { sm: currentWidth }, flexShrink: { sm: 0 }, transition: 'width 0.2s' }}>
-        <Drawer
-          variant="temporary"
-          open={mobileOpen}
-          onClose={handleDrawerToggle}
-          ModalProps={{ keepMounted: true }}
-          sx={{
-            display: { xs: 'block', sm: 'none' },
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
-          }}
-        >
+        {/* Desktop Sidebar (Persistent) */}
+        <aside className={cn(
+          "hidden sm:flex flex-col border-r transition-all duration-300 shrink-0",
+          currentWidthClass
+        )}>
           {drawerContent}
-        </Drawer>
-        <Drawer
-          variant="permanent"
-          sx={{
-            display: { xs: 'none', sm: 'block' },
-            '& .MuiDrawer-paper': {
-              boxSizing: 'border-box',
-              width: currentWidth,
-              transition: (theme) =>
-                theme.transitions.create('width', {
-                  easing: theme.transitions.easing.sharp,
-                  duration: theme.transitions.duration.enteringScreen,
-                }),
-              overflowX: 'hidden',
-            },
-          }}
-          open
-        >
-          {drawerContent}
-        </Drawer>
-      </Box>
+        </aside>
 
-      <Box
-        component="main"
-        sx={{
-          flexGrow: 1,
-          p: 3,
-          width: { sm: `calc(100% - ${currentWidth}px)` },
-          mt: '64px',
-          transition: (theme) =>
-            theme.transitions.create(['width', 'margin'], {
-              easing: theme.transitions.easing.sharp,
-              duration: theme.transitions.duration.leavingScreen,
-            }),
-        }}
-      >
-        <Outlet />
-      </Box>
-    </Box>
+        {/* Main Content Area */}
+        <div className="flex flex-col flex-grow overflow-hidden relative">
+          {/* Header */}
+          <header className="h-16 flex items-center justify-between px-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10 shrink-0">
+            <div className="flex items-center gap-4">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleDrawerToggle}
+                className="sm:hidden"
+              >
+                <MenuIcon className="h-5 w-5" />
+              </Button>
+              <h2 className="text-lg font-semibold tracking-tight">
+                {activeTag ? `Registry: ${activeTag}` :
+                  (location.pathname === '/' ? 'Registry Directory' :
+                    sidebarItems.find((item) => item.path === location.pathname)?.text ||
+                    accountMenuItems.find((item) => !item.divider && item.path === location.pathname)?.text ||
+                    'Data Host')}
+              </h2>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="icon" onClick={toggleColorMode}>
+                    {mode === 'dark' ? <LightModeIcon className="h-5 w-5" /> : <DarkModeIcon className="h-5 w-5" />}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  Switch to {mode === 'light' ? 'dark' : 'light'} mode
+                </TooltipContent>
+              </Tooltip>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="rounded-full">
+                    <AccountCircle className="h-6 w-6" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  {accountMenuItems.map((item, index) => (
+                    item.divider ? (
+                      <DropdownMenuSeparator key={`divider-${index}`} />
+                    ) : (
+                      <DropdownMenuItem
+                        key={item.text}
+                        onClick={() => handleMenuItemClick(item.path || '#', item.external)}
+                        className="gap-2 cursor-pointer"
+                      >
+                        {item.icon}
+                        <span>{item.text}</span>
+                      </DropdownMenuItem>
+                    )
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </header>
+
+          {/* Page Content */}
+          <main className="flex-grow overflow-auto p-4 sm:p-8">
+            <div className="max-w-7xl mx-auto h-full">
+              <Outlet />
+            </div>
+          </main>
+        </div>
+      </div>
+    </TooltipProvider>
   );
 };
 

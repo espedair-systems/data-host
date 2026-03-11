@@ -1,32 +1,37 @@
 import React, { useState, useEffect } from 'react';
 import {
-    Box,
-    Typography,
-    Paper,
+    Database as SchemaIcon,
+    CheckCircle as ValidIcon,
+    XCircle as MissingIcon,
+    AlertTriangle as WarningIcon,
+    Folder as PathIcon,
+    ChevronDown as ExpandMoreIcon,
+    ChevronUp as ExpandLessIcon,
+    AlertCircle as ErrorIcon,
+    Loader2
+} from 'lucide-react';
+import {
     Table,
     TableBody,
     TableCell,
-    TableContainer,
     TableHead,
+    TableHeader,
     TableRow,
-    Chip,
-    CircularProgress,
-    Tooltip,
-    IconButton,
-    Collapse,
-    Stack,
-    Alert
-} from '@mui/material';
+} from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import {
-    Storage as SchemaIcon,
-    CheckCircle as ValidIcon,
-    Cancel as MissingIcon,
-    Warning as WarningIcon,
-    FolderOpen as PathIcon,
-    KeyboardArrowDown as ExpandMoreIcon,
-    KeyboardArrowUp as ExpandLessIcon,
-    ErrorOutline as ErrorIcon
-} from '@mui/icons-material';
+    Collapsible,
+    CollapsibleContent,
+    CollapsibleTrigger,
+} from '@/components/ui/collapsible';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 interface SchemaStats {
     tables: number;
@@ -59,140 +64,166 @@ const Row: React.FC<{ schema: SchemaItem }> = ({ schema }) => {
     const [open, setOpen] = useState(false);
 
     return (
-        <>
-            <TableRow hover sx={{ '& > *': { borderBottom: 'unset' } }}>
-                <TableCell width="50">
-                    <IconButton size="small" onClick={() => setOpen(!open)}>
-                        {open ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                    </IconButton>
-                </TableCell>
-                <TableCell>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 600, textTransform: 'capitalize' }}>
+        <Collapsible
+            open={open}
+            onOpenChange={setOpen}
+            asChild
+        >
+            <>
+                <TableRow className="group">
+                    <TableCell className="w-[50px]">
+                        <CollapsibleTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                                {open ? <ExpandLessIcon className="h-4 w-4" /> : <ExpandMoreIcon className="h-4 w-4" />}
+                            </Button>
+                        </CollapsibleTrigger>
+                    </TableCell>
+                    <TableCell className="font-semibold capitalize">
                         {schema.name}
-                    </Typography>
-                </TableCell>
-                <TableCell>
-                    {schema.hasSchema ? (
-                        <Stack direction="row" spacing={1} alignItems="center">
-                            <Chip size="small" icon={<ValidIcon />} label="Available" color="success" variant="outlined" />
-                            {schema.validation && !schema.validation.valid && (
-                                <Tooltip title="JSON Schema Validation Failed">
-                                    <ErrorIcon color="error" fontSize="small" />
-                                </Tooltip>
-                            )}
-                        </Stack>
-                    ) : (
-                        <Chip size="small" icon={<MissingIcon />} label="Missing" color="error" variant="outlined" />
-                    )}
-                </TableCell>
-                <TableCell>
-                    {schema.hasCollections ? (
-                        <Chip size="small" icon={<ValidIcon />} label="Available" color="success" variant="outlined" />
-                    ) : (
-                        <Chip size="small" icon={<WarningIcon />} label="Missing" color="warning" variant="outlined" />
-                    )}
-                </TableCell>
-                <TableCell>
-                    {schema.hasSchema && schema.validation?.valid ? (
-                        <Typography variant="body2" color="success.main" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                            <ValidIcon fontSize="inherit" /> Fully Configured
-                        </Typography>
-                    ) : schema.hasSchema ? (
-                        <Typography variant="body2" color="error.main" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                            <ErrorIcon fontSize="inherit" /> Validation Failed
-                        </Typography>
-                    ) : (
-                        <Typography variant="body2" color="warning.main">
-                            Incomplete Data
-                        </Typography>
-                    )}
-                </TableCell>
-            </TableRow>
-            <TableRow>
-                <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
-                    <Collapse in={open} timeout="auto" unmountOnExit>
-                        <Box sx={{ margin: 2, p: 2, bgcolor: 'action.hover', borderRadius: 1 }}>
-                            <Stack spacing={3}>
-                                <Box>
-                                    <Typography variant="h6" gutterBottom component="div" sx={{ fontWeight: 700, fontSize: '0.9rem', color: 'text.secondary' }}>
+                    </TableCell>
+                    <TableCell>
+                        {schema.hasSchema ? (
+                            <div className="flex items-center gap-2">
+                                <Badge variant="secondary" className="bg-green-500/10 text-green-600 hover:bg-green-500/20 border-green-500/20 gap-1 px-2">
+                                    <ValidIcon className="h-3 w-3" /> Available
+                                </Badge>
+                                {schema.validation && !schema.validation.valid && (
+                                    <TooltipProvider>
+                                        <Tooltip>
+                                            <TooltipTrigger>
+                                                <ErrorIcon className="h-4 w-4 text-destructive" />
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                JSON Schema Validation Failed
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
+                                )}
+                            </div>
+                        ) : (
+                            <Badge variant="outline" className="text-destructive border-destructive/30 gap-1 px-2">
+                                <MissingIcon className="h-3 w-3" /> Missing
+                            </Badge>
+                        )}
+                    </TableCell>
+                    <TableCell>
+                        {schema.hasCollections ? (
+                            <Badge variant="secondary" className="bg-green-500/10 text-green-600 hover:bg-green-500/20 border-green-500/20 gap-1 px-2">
+                                <ValidIcon className="h-3 w-3" /> Available
+                            </Badge>
+                        ) : (
+                            <Badge variant="outline" className="text-warning border-warning/30 gap-1 px-2">
+                                <WarningIcon className="h-3 w-3 text-amber-500" /> Missing
+                            </Badge>
+                        )}
+                    </TableCell>
+                    <TableCell>
+                        {schema.hasSchema && schema.validation?.valid ? (
+                            <div className="flex items-center gap-1.5 text-sm text-green-600 font-medium">
+                                <ValidIcon className="h-4 w-4" /> Fully Configured
+                            </div>
+                        ) : schema.hasSchema ? (
+                            <div className="flex items-center gap-1.5 text-sm text-destructive font-medium">
+                                <ErrorIcon className="h-4 w-4" /> Validation Failed
+                            </div>
+                        ) : (
+                            <div className="text-sm text-amber-600 font-medium">
+                                Incomplete Data
+                            </div>
+                        )}
+                    </TableCell>
+                </TableRow>
+                <CollapsibleContent asChild>
+                    <TableRow className="bg-muted/30">
+                        <TableCell colSpan={5} className="p-0">
+                            <div className="p-6 space-y-8">
+                                <div className="space-y-3">
+                                    <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                                         FILESYSTEM INTEGRATION
-                                    </Typography>
-                                    <Stack direction="row" spacing={4}>
-                                        <Box>
-                                            <Typography variant="caption" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                                <PathIcon fontSize="inherit" /> Content Path
-                                            </Typography>
-                                            <Typography variant="body2" sx={{ fontFamily: 'monospace', mt: 0.5 }}>{schema.contentPath}</Typography>
-                                        </Box>
-                                        <Box>
-                                            <Typography variant="caption" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                                <PathIcon fontSize="inherit" /> Data Path
-                                            </Typography>
-                                            <Typography variant="body2" sx={{ fontFamily: 'monospace', mt: 0.5 }}>{schema.dataPath}</Typography>
-                                        </Box>
-                                    </Stack>
-                                </Box>
+                                    </h4>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                                        <div className="space-y-1.5">
+                                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                                <PathIcon className="h-3 w-3" /> Content Path
+                                            </div>
+                                            <code className="text-xs bg-muted px-2 py-1 rounded block truncate">
+                                                {schema.contentPath}
+                                            </code>
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                                <PathIcon className="h-3 w-3" /> Data Path
+                                            </div>
+                                            <code className="text-xs bg-muted px-2 py-1 rounded block truncate">
+                                                {schema.dataPath}
+                                            </code>
+                                        </div>
+                                    </div>
+                                </div>
 
-                                <Stack direction="row" spacing={8}>
-                                    <Box>
-                                        <Typography variant="h6" gutterBottom component="div" sx={{ fontWeight: 700, fontSize: '0.9rem', color: 'text.secondary' }}>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                                    <div className="space-y-3">
+                                        <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                                             SCHEMA STATISTICS
-                                        </Typography>
+                                        </h4>
                                         {schema.schemaStats ? (
-                                            <Stack direction="row" spacing={2}>
-                                                <Box>
-                                                    <Typography variant="h4" color="primary">{schema.schemaStats.tables}</Typography>
-                                                    <Typography variant="caption">Tables</Typography>
-                                                </Box>
-                                                <Box>
-                                                    <Typography variant="h4" color="primary">{schema.schemaStats.columns}</Typography>
-                                                    <Typography variant="caption">Columns</Typography>
-                                                </Box>
-                                                <Box>
-                                                    <Typography variant="h4" color="primary">{schema.schemaStats.indexes}</Typography>
-                                                    <Typography variant="caption">Indexes</Typography>
-                                                </Box>
-                                            </Stack>
+                                            <div className="flex gap-8">
+                                                <div className="space-y-0.5">
+                                                    <div className="text-2xl font-bold text-primary">{schema.schemaStats.tables}</div>
+                                                    <div className="text-[10px] text-muted-foreground uppercase">Tables</div>
+                                                </div>
+                                                <div className="space-y-0.5">
+                                                    <div className="text-2xl font-bold text-primary">{schema.schemaStats.columns}</div>
+                                                    <div className="text-[10px] text-muted-foreground uppercase">Columns</div>
+                                                </div>
+                                                <div className="space-y-0.5">
+                                                    <div className="text-2xl font-bold text-primary">{schema.schemaStats.indexes}</div>
+                                                    <div className="text-[10px] text-muted-foreground uppercase">Indexes</div>
+                                                </div>
+                                            </div>
                                         ) : (
-                                            <Typography variant="body2" color="text.secondary italic">No schema data found</Typography>
+                                            <p className="text-sm text-muted-foreground italic">No schema data found</p>
                                         )}
-                                    </Box>
+                                    </div>
 
-                                    <Box>
-                                        <Typography variant="h6" gutterBottom component="div" sx={{ fontWeight: 700, fontSize: '0.9rem', color: 'text.secondary' }}>
+                                    <div className="space-y-3">
+                                        <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                                             COLLECTION STATISTICS
-                                        </Typography>
+                                        </h4>
                                         {schema.collectionStats ? (
-                                            <Box>
-                                                <Typography variant="h4" color="secondary">{schema.collectionStats.count}</Typography>
-                                                <Typography variant="caption">Total Collections</Typography>
-                                            </Box>
+                                            <div className="space-y-0.5">
+                                                <div className="text-2xl font-bold text-secondary">{schema.collectionStats.count}</div>
+                                                <div className="text-[10px] text-muted-foreground uppercase">Total Collections</div>
+                                            </div>
                                         ) : (
-                                            <Typography variant="body2" color="text.secondary italic">No collections data found</Typography>
+                                            <p className="text-sm text-muted-foreground italic">No collections data found</p>
                                         )}
-                                    </Box>
-                                </Stack>
+                                    </div>
+                                </div>
 
                                 {schema.validation && !schema.validation.valid && (
-                                    <Box>
-                                        <Typography variant="h6" gutterBottom component="div" sx={{ fontWeight: 700, fontSize: '0.9rem', color: 'error.main' }}>
+                                    <div className="space-y-3">
+                                        <h4 className="text-[10px] font-bold text-destructive uppercase tracking-widest">
                                             VALIDATION ERRORS
-                                        </Typography>
-                                        <Stack spacing={1}>
+                                        </h4>
+                                        <div className="space-y-2">
                                             {schema.validation.errors.map((error, idx) => (
-                                                <Alert key={idx} severity="error" variant="outlined" sx={{ py: 0 }}>
-                                                    {error}
+                                                <Alert key={idx} variant="destructive" className="py-2">
+                                                    <ErrorIcon className="h-4 w-4" />
+                                                    <AlertDescription className="text-xs">
+                                                        {error}
+                                                    </AlertDescription>
                                                 </Alert>
                                             ))}
-                                        </Stack>
-                                    </Box>
+                                        </div>
+                                    </div>
                                 )}
-                            </Stack>
-                        </Box>
-                    </Collapse>
-                </TableCell>
-            </TableRow>
-        </>
+                            </div>
+                        </TableCell>
+                    </TableRow>
+                </CollapsibleContent>
+            </>
+        </Collapsible>
     );
 };
 
@@ -218,55 +249,62 @@ const SchemaDashboard: React.FC = () => {
     }, []);
 
     if (loading) return (
-        <Box sx={{ display: 'flex', justifyContent: 'center', p: 8 }}>
-            <CircularProgress />
-        </Box>
+        <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="text-sm text-muted-foreground">Analyzing schema health...</p>
+        </div>
     );
 
     if (error) return (
-        <Box sx={{ p: 4, textAlign: 'center' }}>
-            <Typography color="error">Error: {error}</Typography>
-        </Box>
+        <div className="p-8 text-center">
+            <Alert variant="destructive" className="max-w-md mx-auto">
+                <ErrorIcon className="h-4 w-4" />
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+            </Alert>
+        </div>
     );
 
     return (
-        <Box sx={{ p: 4 }}>
-            <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 2 }}>
-                <SchemaIcon color="primary" sx={{ fontSize: 40 }} />
-                <Box>
-                    <Typography variant="h4" sx={{ fontWeight: 700 }}>Schema Integrity & Health</Typography>
-                    <Typography variant="body1" color="text.secondary">
+        <div className="space-y-8 max-w-6xl mx-auto">
+            <div className="flex items-center gap-4">
+                <div className="p-3 rounded-2xl bg-primary/10">
+                    <SchemaIcon className="h-10 w-10 text-primary" />
+                </div>
+                <div>
+                    <h1 className="text-3xl font-bold tracking-tight">Schema Integrity & Health</h1>
+                    <p className="text-muted-foreground mt-1">
                         Validating JSON schema compliance and filesystem synchronization for data services
-                    </Typography>
-                </Box>
-            </Box>
+                    </p>
+                </div>
+            </div>
 
-            <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 2 }}>
+            <div className="rounded-xl border bg-card overflow-hidden">
                 <Table>
-                    <TableHead sx={{ bgcolor: 'action.hover' }}>
+                    <TableHeader className="bg-muted/50">
                         <TableRow>
-                            <TableCell />
-                            <TableCell sx={{ fontWeight: 700 }}>Schema Module</TableCell>
-                            <TableCell sx={{ fontWeight: 700 }}>File Integrity</TableCell>
-                            <TableCell sx={{ fontWeight: 700 }}>Data Collections</TableCell>
-                            <TableCell sx={{ fontWeight: 700 }}>Validation Status</TableCell>
+                            <TableHead className="w-[50px]"></TableHead>
+                            <TableHead className="font-bold">Schema Module</TableHead>
+                            <TableHead className="font-bold">File Integrity</TableHead>
+                            <TableHead className="font-bold">Data Collections</TableHead>
+                            <TableHead className="font-bold">Validation Status</TableHead>
                         </TableRow>
-                    </TableHead>
+                    </TableHeader>
                     <TableBody>
                         {schemas.map((s) => (
                             <Row key={s.name} schema={s} />
                         ))}
                         {schemas.length === 0 && (
                             <TableRow>
-                                <TableCell colSpan={5} align="center" sx={{ py: 8 }}>
-                                    <Typography color="text.secondary">No recursive 'schema' folders found in content.</Typography>
+                                <TableCell colSpan={5} className="h-40 text-center text-muted-foreground italic">
+                                    No recursive 'schema' folders found in content.
                                 </TableCell>
                             </TableRow>
                         )}
                     </TableBody>
                 </Table>
-            </TableContainer>
-        </Box>
+            </div>
+        </div>
     );
 };
 

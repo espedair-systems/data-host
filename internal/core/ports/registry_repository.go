@@ -8,6 +8,8 @@ type RegistryRepository interface {
 	// Schema operations
 	GetSchemaTree() ([]domain.SchemaNode, error)
 	GetSchemaDashboard(moduleName string) (domain.SchemaDashboard, error)
+	GetAllSchemaDashboards() ([]domain.SchemaDashboard, error)
+	GetBlueprintSchemas() ([]domain.BlueprintSchema, error)
 	UpdateTable(moduleName string, table domain.TableDetail) error
 
 	// Guidelines operations
