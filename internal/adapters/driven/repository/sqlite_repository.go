@@ -5,6 +5,8 @@ import (
 	"data-host/internal/core/ports"
 	"database/sql"
 	"encoding/json"
+
+	"github.com/rs/zerolog/log"
 )
 
 type SQLiteRepository struct {
@@ -14,38 +16,13 @@ type SQLiteRepository struct {
 }
 
 func NewSQLiteRepository(db *sql.DB, config domain.HostConfig) (ports.RegistryRepository, error) {
+	log.Debug().Msg("Initializing SQLite repository")
 	repo := &SQLiteRepository{
 		db:     db,
 		fsRepo: NewFilesystemRepository(config),
 		config: config,
 	}
-	if err := repo.initSchema(); err != nil {
-		return nil, err
-	}
 	return repo, nil
-}
-
-func (r *SQLiteRepository) initSchema() error {
-	queries := []string{
-		`CREATE TABLE IF NOT EXISTS site_config (
-			key TEXT PRIMARY KEY,
-			content TEXT
-		)`,
-		`CREATE TABLE IF NOT EXISTS table_details (
-			module TEXT,
-			name TEXT,
-			type TEXT,
-			description TEXT,
-			columns TEXT,
-			PRIMARY KEY (module, name)
-		)`,
-	}
-	for _, q := range queries {
-		if _, err := r.db.Exec(q); err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 func (r *SQLiteRepository) GetGuidelineSelection() (interface{}, error) {
@@ -65,9 +42,11 @@ func (r *SQLiteRepository) UpdateTrainingSelection(selection interface{}) error 
 }
 
 func (r *SQLiteRepository) getConfig(key string) (interface{}, error) {
+	log.Debug().Str("key", key).Msg("fetching config from database")
 	var content string
 	err := r.db.QueryRow("SELECT content FROM site_config WHERE key = ?", key).Scan(&content)
 	if err == sql.ErrNoRows {
+		log.Debug().Str("key", key).Msg("config not found in database, fetching from filesystem")
 		var selection interface{}
 		var errS error
 		if key == "guidelines" {
@@ -76,42 +55,56 @@ func (r *SQLiteRepository) getConfig(key string) (interface{}, error) {
 			selection, errS = r.fsRepo.GetTrainingSelection()
 		}
 		if errS != nil {
+			log.Error().Err(errS).Str("key", key).Msg("failed to fetch config from filesystem")
 			return nil, errS
 		}
 		r.saveConfig(key, selection)
 		return selection, nil
 	}
 	if err != nil {
+		log.Error().Err(err).Str("key", key).Msg("database error while fetching config")
 		return nil, err
 	}
 	var val interface{}
 	if err := json.Unmarshal([]byte(content), &val); err != nil {
+		log.Error().Err(err).Str("key", key).Msg("failed to unmarshal config content")
 		return nil, err
 	}
 	return val, nil
 }
 
 func (r *SQLiteRepository) saveConfig(key string, val interface{}) error {
+	log.Debug().Str("key", key).Msg("saving config to database")
 	data, err := json.Marshal(val)
 	if err != nil {
+		log.Error().Err(err).Str("key", key).Msg("failed to marshal config content for saving")
 		return err
 	}
 	_, err = r.db.Exec("INSERT OR REPLACE INTO site_config (key, content) VALUES (?, ?)", key, string(data))
+	if err != nil {
+		log.Error().Err(err).Str("key", key).Msg("failed to save config to database")
+	}
 	return err
 }
 
 func (r *SQLiteRepository) UpdateTable(moduleName string, table domain.TableDetail) error {
+	log.Debug().Str("module", moduleName).Str("table", table.Name).Msg("updating table details in database")
 	cols, _ := json.Marshal(table.Columns)
 	_, err := r.db.Exec(`INSERT OR REPLACE INTO table_details (module, name, type, description, columns) 
 		VALUES (?, ?, ?, ?, ?)`,
 		moduleName, table.Name, table.Type, table.Description, string(cols))
+	if err != nil {
+		log.Error().Err(err).Str("module", moduleName).Str("table", table.Name).Msg("failed to update table details")
+	}
 	return err
 }
 
 // Delegation to FS repo for things not yet fully in SQLite or read-only tree structures
 func (r *SQLiteRepository) GetBlueprintSchemas() ([]domain.BlueprintSchema, error) {
+	log.Debug().Msg("fetching blueprint schemas from database")
 	rows, err := r.db.Query("SELECT id, name, desc, created_at, updated_at FROM schemas ORDER BY name ASC")
 	if err != nil {
+		log.Error().Err(err).Msg("failed to query blueprint schemas")
 		return nil, err
 	}
 	defer rows.Close()
@@ -121,6 +114,7 @@ func (r *SQLiteRepository) GetBlueprintSchemas() ([]domain.BlueprintSchema, erro
 		var s domain.BlueprintSchema
 		var desc sql.NullString
 		if err := rows.Scan(&s.ID, &s.Name, &desc, &s.CreatedAt, &s.UpdatedAt); err != nil {
+			log.Error().Err(err).Msg("failed to scan blueprint schema row")
 			return nil, err
 		}
 		s.Desc = desc.String

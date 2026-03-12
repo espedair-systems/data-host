@@ -3,9 +3,9 @@ package services
 import (
 	"data-host/internal/core/domain"
 	"data-host/internal/core/ports"
-	"fmt"
 	"io"
-	"os"
+
+	"github.com/rs/zerolog/log"
 )
 
 type hostService struct {
@@ -19,21 +19,13 @@ func NewHostService(httpServer ports.HTTPServer) ports.HostService {
 	}
 }
 
-func (s *hostService) log(format string, args ...interface{}) {
-	w := s.logOutput
-	if w == nil {
-		w = os.Stdout
-	}
-	fmt.Fprintf(w, "[Service] "+format+"\n", args...)
-}
-
 func (s *hostService) Start(config domain.HostConfig, repo ports.RegistryRepository) error {
-	s.log("Starting host service with config: %+v", config)
+	log.Debug().Interface("config", config).Msg("Starting host service")
 	return s.httpServer.Start(config, repo)
 }
 
 func (s *hostService) Stop() error {
-	s.log("Stopping host service")
+	log.Debug().Msg("Stopping host service")
 	return s.httpServer.Stop()
 }
 

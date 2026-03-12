@@ -4,34 +4,44 @@ import (
 	configAdapter "data-host/internal/adapters/driven/config"
 	"data-host/internal/adapters/driven/repository"
 	"data-host/internal/adapters/driving/http"
+	"data-host/internal/adapters/driving/logger"
 	"data-host/internal/core/ports"
 	"data-host/internal/core/services"
 	"data-host/internal/database"
-	"fmt"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/rs/zerolog/log"
 )
 
 func main() {
+	// Initialize logger
+	debug := os.Getenv("DEBUG") == "true"
+	logger.Init(debug)
+
+	logLevel := os.Getenv("LOG_LEVEL")
+	if logLevel != "" {
+		logger.SetLogLevel(logLevel)
+	}
+
 	configLoader := configAdapter.NewViperAdapter("config", "yaml", ".")
 	config, err := configLoader.Load()
 	if err != nil {
-		log.Printf("Warning: error loading config file: %v\n", err)
+		log.Warn().Err(err).Msg("Error loading config file")
 	}
 
 	var repo ports.RegistryRepository
 	appEnv := os.Getenv("APP_ENV")
 	if appEnv == "production" || appEnv == "publish" {
-		fmt.Println("Running in PUBLISH mode (Filesystem Storage)")
+		log.Info().Msg("Running in PUBLISH mode (Filesystem Storage)")
 		repo = repository.NewFilesystemRepository(config)
 	} else {
-		fmt.Printf("Running in DEVELOPMENT mode (SQLite Storage: %s)\n", config.DatabaseURL)
+		log.Info().Str("database_url", config.DatabaseURL).Msg("Running in DEVELOPMENT mode (SQLite Storage)")
 		db := database.New(config.DatabaseURL)
 		repo, err = repository.NewSQLiteRepository(db.GetDB(), config)
 		if err != nil {
-			log.Fatalf("Failed to initialize SQLite repository: %v", err)
+			log.Fatal().Err(err).Msg("Failed to initialize SQLite repository")
 		}
 	}
 
@@ -45,18 +55,18 @@ func main() {
 
 	go func() {
 		sig := <-sigChan
-		fmt.Printf("\nReceived signal: %v. Shutting down...\n", sig)
+		log.Info().Interface("signal", sig).Msg("Received signal. Shutting down...")
 		if err := hostService.Stop(); err != nil {
-			log.Printf("Error during shutdown: %v", err)
+			log.Error().Err(err).Msg("Error during shutdown")
 		}
 		done <- true
 	}()
 
-	fmt.Printf("Starting API server on port %d...\n", config.Port)
+	log.Info().Int("port", config.Port).Msg("Starting API server")
 	if err := hostService.Start(config, repo); err != nil {
-		log.Fatalf("Server error: %v", err)
+		log.Fatal().Err(err).Msg("Server error")
 	}
 
 	<-done
-	fmt.Println("Server exited gracefully.")
+	log.Info().Msg("Server exited gracefully.")
 }

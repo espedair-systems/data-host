@@ -11,4 +11,8 @@ type HostConfig struct {
 	DataPath     string
 	DatabaseURL  string
 	Mounts       []MountPoint
+	Debug        bool
+	LogLevel     string
+	LogFormat    string
+	LogOutput    string
 }

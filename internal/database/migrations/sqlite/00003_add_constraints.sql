@@ -1,0 +1,11 @@
+-- +goose Up
+-- +goose StatementBegin
+-- Add foreign key constraints or checks if needed beyond what's in initial schema
+-- SQLite doesn't support adding FKs via ALTER TABLE, so this is for other possible constraints or data integrity checks
+-- e.g. enforcing non-empty names
+-- (Existing constraints are already in 00001_initial_schema.sql as part of CREATE TABLE)
+-- +goose StatementEnd
+
+-- +goose Down
+-- +goose StatementBegin
+-- +goose StatementEnd

@@ -4,6 +4,13 @@ port: 8080
 frontend_path: "./frontend/dist"
 data_path: "../data-services/dist"
 database_url: "blueprint.db"
+
+# Logging configuration
+debug: true
+log_level: "DEBUG"
+log_format: "pretty"
+log_output: "stdout"
+
 mounts:
   - path: "/registry"
     source_path: "../data-services/dist"

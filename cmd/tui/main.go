@@ -1,6 +1,7 @@
 package main
 
 import (
+	"archive/zip"
 	configAdapter "data-host/internal/adapters/driven/config"
 	"data-host/internal/adapters/driven/repository"
 	"data-host/internal/adapters/driving/http"
@@ -9,9 +10,11 @@ import (
 	"data-host/internal/core/services"
 	"data-host/internal/database"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
@@ -311,7 +314,69 @@ var (
 			Padding(0, 1)
 )
 
+func unzip(src string, dest string) error {
+	r, err := zip.OpenReader(src)
+	if err != nil {
+		return err
+	}
+	defer r.Close()
+
+	for _, f := range r.File {
+		fpath := filepath.Join(dest, f.Name)
+
+		// Check for ZipSlip vulnerability
+		if !strings.HasPrefix(fpath, filepath.Clean(dest)+string(os.PathSeparator)) {
+			return fmt.Errorf("%s: illegal file path", fpath)
+		}
+
+		if f.FileInfo().IsDir() {
+			os.MkdirAll(fpath, os.ModePerm)
+			continue
+		}
+
+		if err = os.MkdirAll(filepath.Dir(fpath), os.ModePerm); err != nil {
+			return err
+		}
+
+		outFile, err := os.OpenFile(fpath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
+		if err != nil {
+			return err
+		}
+
+		rc, err := f.Open()
+		if err != nil {
+			return err
+		}
+
+		_, err = io.Copy(outFile, rc)
+
+		outFile.Close()
+		rc.Close()
+
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func main() {
+	// Check for dist.zip in data-service or data-services
+	targets := []string{"./data-service/dist.zip", "./data-services/dist.zip"}
+	for _, zipPath := range targets {
+		if _, err := os.Stat(zipPath); err == nil {
+			dest := filepath.Dir(zipPath)
+			fmt.Printf("Found %s, unzipping to %s...\n", zipPath, dest)
+			if err := unzip(zipPath, dest); err != nil {
+				fmt.Printf("Error unzipping %s: %v\n", zipPath, err)
+			} else {
+				fmt.Printf("Successfully unzipped %s\n", zipPath)
+			}
+			// Only unzip the first one found
+			break
+		}
+	}
+
 	p := tea.NewProgram(initialModel(), tea.WithAltScreen(), tea.WithMouseCellMotion())
 	if _, err := p.Run(); err != nil {
 		fmt.Printf("Error running TUI: %v", err)

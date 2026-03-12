@@ -8,14 +8,57 @@ help: ## Display this help
 # Build the application
 all: build test ## Build and test the application
 
-build: build-frontend ## Build the API, CLI, and TUI
+build: build-frontend ## Build the API, CLI, and TUI for current platform
 	@mkdir -p dist
 	@echo "Building API..."
-	@CGO_ENABLED=1 GOOS=linux go build -o dist/data-host cmd/api/main.go
+	@CGO_ENABLED=1 go build -o dist/data-host cmd/api/main.go
 	@echo "Building CLI..."
 	@go build -o dist/data-host-cli cmd/cli/main.go
 	@echo "Building TUI..."
 	@go build -o dist/data-host-tui cmd/tui/main.go
+
+build-linux: build-linux-amd64 build-linux-arm64 ## Build for Linux (amd64 and arm64)
+
+build-linux-amd64: build-frontend
+	@mkdir -p dist/linux_amd64
+	@echo "Building for Linux (amd64)..."
+	@CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o dist/linux_amd64/data-host cmd/api/main.go
+	@CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o dist/linux_amd64/data-host-cli cmd/cli/main.go
+	@CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o dist/linux_amd64/data-host-tui cmd/tui/main.go
+
+build-linux-arm64: build-frontend
+	@mkdir -p dist/linux_arm64
+	@echo "Building for Linux (arm64)..."
+	@CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o dist/linux_arm64/data-host cmd/api/main.go
+	@CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o dist/linux_arm64/data-host-cli cmd/cli/main.go
+	@CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o dist/linux_arm64/data-host-tui cmd/tui/main.go
+
+build-windows: build-windows-amd64 ## Build for Windows (amd64)
+
+build-windows-amd64: build-frontend
+	@mkdir -p dist/windows_amd64
+	@echo "Building for Windows (amd64)..."
+	@CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o dist/windows_amd64/data-host.exe cmd/api/main.go
+	@CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o dist/windows_amd64/data-host-cli.exe cmd/cli/main.go
+	@CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o dist/windows_amd64/data-host-tui.exe cmd/tui/main.go
+
+build-mac: build-mac-amd64 build-mac-arm64 ## Build for macOS (Intel and Apple Silicon)
+
+build-mac-amd64: build-frontend
+	@mkdir -p dist/mac_amd64
+	@echo "Building for macOS (amd64)..."
+	@CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -o dist/mac_amd64/data-host cmd/api/main.go
+	@CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -o dist/mac_amd64/data-host-cli cmd/cli/main.go
+	@CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -o dist/mac_amd64/data-host-tui cmd/tui/main.go
+
+build-mac-arm64: build-frontend
+	@mkdir -p dist/mac_arm64
+	@echo "Building for macOS (arm64)..."
+	@CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -o dist/mac_arm64/data-host cmd/api/main.go
+	@CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -o dist/mac_arm64/data-host-cli cmd/cli/main.go
+	@CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -o dist/mac_arm64/data-host-tui cmd/tui/main.go
+
+build-all: build-linux build-windows build-mac ## Build for all supported platforms
 
 docker-bundle: docker-stage ## Build binary, UI, and package as Docker image
 	@echo "Creating Docker image..."
@@ -112,9 +155,9 @@ scan: ## Scan dependencies for vulnerabilities using osv-scanner
 
 # DB Migrations
 migrate-up: ## Run database migrations up
-	@goose -dir migrations/sqlite sqlite3 blueprint.db up
+	@goose -dir internal/database/migrations sqlite blueprint.db up
 
 migrate-down: ## Run database migrations down
-	@goose -dir migrations/sqlite sqlite3 blueprint.db down
+	@goose -dir internal/database/migrations sqlite blueprint.db down
 
-.PHONY: all build run test clean watch scan migrate-up migrate-down help docker-bundle docker-stage build-frontend run-cli run-tui run-frontend storybook build-storybook docker-run docker-down
+.PHONY: all build run test clean watch scan migrate-up migrate-down help docker-bundle docker-stage build-frontend run-cli run-tui run-frontend storybook build-storybook docker-run docker-down build-linux build-windows build-mac build-all build-linux-amd64 build-linux-arm64 build-windows-amd64 build-mac-amd64 build-mac-arm64

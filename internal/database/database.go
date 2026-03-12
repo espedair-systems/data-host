@@ -4,12 +4,13 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
+	"os"
 	"strconv"
 	"time"
 
 	_ "github.com/joho/godotenv/autoload"
-	_ "github.com/mattn/go-sqlite3"
+	"github.com/rs/zerolog/log"
+	_ "modernc.org/sqlite"
 )
 
 // Service represents a service that interacts with a database.
@@ -36,15 +37,26 @@ func New(url string) Service {
 		return dbInstance
 	}
 
-	db, err := sql.Open("sqlite3", url)
+	db, err := sql.Open("sqlite", url)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal().Err(err).Msg("failed to open database")
 	}
 
 	dbInstance = &service{
 		db:  db,
 		url: url,
 	}
+
+	// Automatic migrations
+	migrateOnStartup := os.Getenv("MIGRATE_ON_STARTUP") != "false"
+	if migrateOnStartup {
+		if err := RunMigrations(dbInstance.db); err != nil {
+			log.Fatal().Err(err).Msg("failed to run migrations")
+		}
+	} else {
+		log.Info().Msg("Database migrations skipped (MIGRATE_ON_STARTUP=false)")
+	}
+
 	return dbInstance
 }
 
@@ -87,6 +99,6 @@ func (s *service) Health() map[string]string {
 }
 
 func (s *service) Close() error {
-	log.Printf("Disconnected from database: %s", s.url)
+	log.Info().Str("url", s.url).Msg("Disconnected from database")
 	return s.db.Close()
 }

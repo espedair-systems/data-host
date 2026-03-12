@@ -2,16 +2,16 @@ package http
 
 import (
 	"context"
+	"data-host/internal/adapters/driving/logger"
 	"data-host/internal/core/domain"
 	"data-host/internal/core/ports"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
-
-	"io"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -23,12 +23,6 @@ type GinAdapter struct {
 	LogOutput io.Writer
 }
 
-func (a *GinAdapter) log(format string, args ...interface{}) {
-	if a.LogOutput != nil {
-		fmt.Fprintf(a.LogOutput, "[Router] "+format+"\n", args...)
-	}
-}
-
 func NewGinAdapter() *GinAdapter {
 	return &GinAdapter{
 		On404: make(chan string, 100),
@@ -36,11 +30,12 @@ func NewGinAdapter() *GinAdapter {
 }
 
 func (a *GinAdapter) Start(config domain.HostConfig, repo ports.RegistryRepository) error {
-	gin.DisableConsoleColor()
-	if a.LogOutput != nil {
-		gin.DefaultWriter = a.LogOutput
-	}
-	r := gin.Default()
+	gin.SetMode(gin.ReleaseMode)
+	r := gin.New()
+	r.Use(gin.Recovery())
+
+	// Use zerolog middleware
+	r.Use(logger.HTTPLoggingMiddleware())
 
 	// CORS Support
 	r.Use(cors.New(cors.Config{
@@ -169,11 +164,8 @@ func (a *GinAdapter) Start(config domain.HostConfig, repo ports.RegistryReposito
 
 	// Catch-all handler for everything else (Total Control - No Directory Listings)
 	r.NoRoute(func(c *gin.Context) {
+		log := logger.FromContext(c)
 		path := c.Request.URL.Path
-		// Only log non-static asset requests to avoid noise
-		if !strings.Contains(path, ".") {
-			a.log("Processing path: %s", path)
-		}
 
 		// PRIORITY 1: Registry Management App (at /home)
 		if path == "/home" || strings.HasPrefix(path, "/home/") {
@@ -190,7 +182,7 @@ func (a *GinAdapter) Start(config domain.HostConfig, repo ports.RegistryReposito
 
 			// SPA Fallback for /home
 			indexPath := filepath.Join(config.FrontendPath, "index.html")
-			a.log("Match: Registry UI -> %s", indexPath)
+			log.Debug().Str("index_path", indexPath).Msg("Match: Registry UI")
 			c.File(indexPath)
 			return
 		}
@@ -203,12 +195,12 @@ func (a *GinAdapter) Start(config domain.HostConfig, repo ports.RegistryReposito
 			if info.IsDir() {
 				indexPath := filepath.Join(sitePath, "index.html")
 				if _, errIdx := os.Stat(indexPath); errIdx == nil {
-					a.log("Match: Docs Index -> %s", indexPath)
+					log.Debug().Str("index_path", indexPath).Msg("Match: Docs Index")
 					c.File(indexPath)
 					return
 				}
 			} else {
-				a.log("Match: Docs File -> %s", sitePath)
+				log.Debug().Str("site_path", sitePath).Msg("Match: Docs File")
 				c.File(sitePath)
 				return
 			}
@@ -232,12 +224,12 @@ func (a *GinAdapter) Start(config domain.HostConfig, repo ports.RegistryReposito
 					if info.IsDir() {
 						indexPath := filepath.Join(targetPath, "index.html")
 						if _, errIdx := os.Stat(indexPath); errIdx == nil {
-							a.log("Match: Mount Index -> %s", indexPath)
+							log.Debug().Str("index_path", indexPath).Msg("Match: Mount Index")
 							c.File(indexPath)
 							return
 						}
 					} else {
-						a.log("Match: Mount File -> %s", targetPath)
+						log.Debug().Str("target_path", targetPath).Msg("Match: Mount File")
 						c.File(targetPath)
 						return
 					}
