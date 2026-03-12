@@ -122,9 +122,27 @@ docker-down: ## Stop the Docker containers
 	fi
 
 # Test the application
-test: ## Run tests
-	@echo "Testing..."
-	@go test ./... -v
+test: ## Run all tests
+	@echo "Running tests..."
+	@go test -v -race -timeout 30s ./...
+
+test-coverage: ## Run tests with coverage
+	@echo "Running tests with coverage..."
+	@go test -v -race -covermode=atomic -coverprofile=coverage.out ./...
+	@go tool cover -html=coverage.out -o coverage.html
+	@echo "Coverage report generated: coverage.html"
+
+test-unit: ## Run only unit tests
+	@echo "Running unit tests..."
+	@go test -v -short ./...
+
+test-integration: ## Run integration tests
+	@echo "Running integration tests..."
+	@go test -v ./internal/adapters/driving/http/...
+
+test-ci: ## Run tests in CI mode (fail fast, no cache)
+	@echo "Running tests (CI)..."
+	@go test -v -race -timeout 10s -count=1 ./...
 
 clean: ## Remove build artifacts
 	@echo "Cleaning dist and docker-staged directories..."

@@ -31,4 +31,40 @@ The main page has a series of cards to provide a starting point for navigation t
 - External system and sites 
 
 
+## Platforms
 
+Provide access to differnent platform in terms of 
+
+- Environment details 
+- Connection Management 
+- issues with the connections
+
+## Inspect 
+
+Provides the ability review the schema files on the site
+
+- View - Gives visability of the site
+- Guidelines - shows the selection criteria for the guidlines in action
+- - Allows the categories to be edited
+- Training - shows the selection criteria for the training in action 
+- - Allows the categories to be edited
+- Schema Health - gives a check as statistics on the schema json files
+- - Placeholder to view diagrams 
+
+## Ingestion
+
+## Schema Ingestion 
+
+### Big Query
+
+### Oracle
+
+### Postres
+
+### MS SQL
+
+### MySQL
+
+#### MongoDB
+
+### Cloud Storage
