@@ -2,10 +2,8 @@
 # For Docker, see docker/config.yaml or use environment variables
 port: 8080
 frontend_path: "./frontend/dist"
-data_path: "../data-services/dist"
+data_path: "/"
 database_url: "blueprint.db"
-
-# Logging configuration
 debug: true
 log_level: "DEBUG"
 log_format: "pretty"

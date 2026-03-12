@@ -5,6 +5,7 @@ import (
 	configAdapter "data-host/internal/adapters/driven/config"
 	"data-host/internal/adapters/driven/repository"
 	"data-host/internal/adapters/driving/http"
+	"data-host/internal/adapters/driving/logger"
 	"data-host/internal/core/domain"
 	"data-host/internal/core/ports"
 	"data-host/internal/core/services"
@@ -26,6 +27,7 @@ import (
 )
 
 type logMsg string
+type errorMsg string
 type route404Msg string
 
 type model struct {
@@ -43,6 +45,7 @@ type model struct {
 	width             int
 	height            int
 	logChan           chan string
+	errorChan         chan string
 }
 
 type chanWriter struct {
@@ -96,6 +99,7 @@ func initialModel() model {
 		viewport404:       vp404,
 		viewportLogs:      vpLogs,
 		logChan:           make(chan string, 100),
+		errorChan:         make(chan string, 100),
 	}
 }
 
@@ -125,6 +129,8 @@ func listenForEvents(m model) tea.Cmd {
 			return route404Msg(route)
 		case l := <-m.logChan:
 			return logMsg(l)
+		case e := <-m.errorChan:
+			return errorMsg(e)
 		}
 	}
 }
@@ -185,6 +191,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					FrontendPath: m.frontendPathInput.Value(),
 					DataPath:     m.dataPathInput.Value(),
 					DatabaseURL:  m.dbPathInput.Value(),
+					LogLevel:     "DEBUG",
+					LogFormat:    "json",
+					LogOutput:    "stdout",
 				}
 
 				var repo ports.RegistryRepository
@@ -196,7 +205,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					repo, _ = repository.NewSQLiteRepository(db.GetDB(), config)
 				}
 
-				m.hostService.SetLogOutput(&chanWriter{channel: m.logChan})
+				// Initialize TUI Logger with two windows
+				logger.InitTUI(&logger.TUIWriter{
+					TopWindow:    &chanWriter{channel: m.errorChan},
+					BottomWindow: &chanWriter{channel: m.logChan},
+				})
+
 				m.running = true
 				go func(lc chan string) {
 					if err := m.hostService.Start(config, repo); err != nil {
@@ -224,6 +238,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.viewportLogs.Height = vHeight
 
 	case route404Msg:
+		m.errors404 = append(m.errors404, string(msg))
+		m.viewport404.SetContent(strings.Join(m.errors404, "\n"))
+		m.viewport404.GotoBottom()
+		return m, listenForEvents(m)
+
+	case errorMsg:
 		m.errors404 = append(m.errors404, string(msg))
 		m.viewport404.SetContent(strings.Join(m.errors404, "\n"))
 		m.viewport404.GotoBottom()

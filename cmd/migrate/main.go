@@ -48,6 +48,12 @@ func main() {
 			log.Fatal().Err(err).Msg("Failed to get status")
 		}
 
+	case "reset":
+		if err := database.ResetMigrations(db); err != nil {
+			log.Fatal().Err(err).Msg("Reset failed")
+		}
+		fmt.Println("✓ Database reset successfully")
+
 	default:
 		fmt.Printf("Unknown command: %s\n", command)
 		printUsage()
@@ -60,6 +66,7 @@ func printUsage() {
 	fmt.Println("  migrate up [db_path]")
 	fmt.Println("  migrate down [db_path]")
 	fmt.Println("  migrate status [db_path]")
+	fmt.Println("  migrate reset [db_path]")
 	fmt.Println("")
 	fmt.Println("Defaults:")
 	fmt.Println("  db_path: blueprint.db")

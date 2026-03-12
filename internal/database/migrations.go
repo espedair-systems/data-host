@@ -23,7 +23,11 @@ func RunMigrations(db *sql.DB) error {
 		return err
 	}
 
-	if err := goose.Up(db, "migrations/sqlite"); err != nil {
+	// We allow missing migrations to handle transitions between different versioning schemes
+	// however this only works if migrations in DB but not on disk are okay.
+	// Out-of-order migrations are not directly supported via OptionsFunc in simple Up()?
+	// Actually, WithAllowMissing() helps if files are removed.
+	if err := goose.Up(db, "migrations/sqlite", goose.WithAllowMissing()); err != nil {
 		lg.Error().Err(err).Msg("Migration failed")
 		return err
 	}
@@ -39,7 +43,7 @@ func GetMigrationStatus(db *sql.DB) error {
 		return err
 	}
 
-	return goose.Status(db, "migrations/sqlite")
+	return goose.Status(db, "migrations/sqlite", goose.WithAllowMissing())
 }
 
 // RollbackMigration rolls back the last database migration.
@@ -51,11 +55,31 @@ func RollbackMigration(db *sql.DB) error {
 		return err
 	}
 
-	if err := goose.Down(db, "migrations/sqlite"); err != nil {
+	if err := goose.Down(db, "migrations/sqlite", goose.WithAllowMissing()); err != nil {
 		lg.Error().Err(err).Msg("Rollback failed")
 		return err
 	}
 
 	lg.Info().Msg("Rollback completed successfully")
+	return nil
+}
+
+// ResetMigrations rolls back all migrations.
+func ResetMigrations(db *sql.DB) error {
+	lg := log.With().Str("component", "migrations").Logger()
+
+	lg.Info().Msg("Resetting all database migrations")
+
+	goose.SetBaseFS(migrationsFS)
+	if err := goose.SetDialect("sqlite3"); err != nil {
+		return err
+	}
+
+	if err := goose.Reset(db, "migrations/sqlite"); err != nil {
+		lg.Error().Err(err).Msg("Reset failed")
+		return err
+	}
+
+	lg.Info().Msg("Reset completed successfully")
 	return nil
 }

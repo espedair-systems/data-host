@@ -1,13 +1,14 @@
 package main
 
 import (
-	configAdapter "data-host/internal/adapters/driven/config"
 	"data-host/internal/adapters/driven/repository"
+	"data-host/internal/adapters/driving/config"
 	"data-host/internal/adapters/driving/http"
 	"data-host/internal/adapters/driving/logger"
 	"data-host/internal/core/ports"
 	"data-host/internal/core/services"
 	"data-host/internal/database"
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -16,30 +17,32 @@ import (
 )
 
 func main() {
-	// Initialize logger
-	debug := os.Getenv("DEBUG") == "true"
-	logger.Init(debug)
-
-	logLevel := os.Getenv("LOG_LEVEL")
-	if logLevel != "" {
-		logger.SetLogLevel(logLevel)
-	}
-
-	configLoader := configAdapter.NewViperAdapter("config", "yaml", ".")
-	config, err := configLoader.Load()
+	// Load and validate configuration
+	cfg, err := config.Load()
 	if err != nil {
-		log.Warn().Err(err).Msg("Error loading config file")
+		fmt.Fprintf(os.Stderr, "Configuration error:\n%v\n", err)
+		os.Exit(1)
 	}
+
+	// Initialize logger
+	logger.Init(cfg.Debug)
+	logger.SetLogLevel(cfg.LogLevel)
+
+	log.Info().
+		Str("host", "0.0.0.0").
+		Int("port", cfg.Port).
+		Str("log_level", cfg.LogLevel).
+		Msg("Configuration loaded successfully")
 
 	var repo ports.RegistryRepository
 	appEnv := os.Getenv("APP_ENV")
 	if appEnv == "production" || appEnv == "publish" {
 		log.Info().Msg("Running in PUBLISH mode (Filesystem Storage)")
-		repo = repository.NewFilesystemRepository(config)
+		repo = repository.NewFilesystemRepository(*cfg)
 	} else {
-		log.Info().Str("database_url", config.DatabaseURL).Msg("Running in DEVELOPMENT mode (SQLite Storage)")
-		db := database.New(config.DatabaseURL)
-		repo, err = repository.NewSQLiteRepository(db.GetDB(), config)
+		log.Info().Str("database_url", cfg.DatabaseURL).Msg("Running in DEVELOPMENT mode (SQLite Storage)")
+		db := database.New(cfg.DatabaseURL)
+		repo, err = repository.NewSQLiteRepository(db.GetDB(), *cfg)
 		if err != nil {
 			log.Fatal().Err(err).Msg("Failed to initialize SQLite repository")
 		}
@@ -62,8 +65,8 @@ func main() {
 		done <- true
 	}()
 
-	log.Info().Int("port", config.Port).Msg("Starting API server")
-	if err := hostService.Start(config, repo); err != nil {
+	log.Info().Int("port", cfg.Port).Msg("Starting API server")
+	if err := hostService.Start(*cfg, repo); err != nil {
 		log.Fatal().Err(err).Msg("Server error")
 	}
 
