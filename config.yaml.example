@@ -9,6 +9,15 @@ log_level: "DEBUG"
 log_format: "pretty"
 log_output: "stdout"
 
+# Security Settings
+cors_allow_origins:
+  - "http://localhost:5173"
+  - "http://localhost:8080"
+rate_limits:
+  read_requests: 100
+  write_requests: 10
+jwt_secret: "your-very-secure-secret-key-at-least-32-chars"
+
 mounts:
   - path: "/registry"
     source_path: "../data-services/dist"

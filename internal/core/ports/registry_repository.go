@@ -24,4 +24,6 @@ type RegistryRepository interface {
 
 	// Service tree operations (typically only filesystem-based)
 	GetServiceTree() ([]domain.SchemaNode, error)
+
+	GetUserRepo() UserRepository
 }

@@ -13,7 +13,7 @@ import (
 
 // Load loads and validates the configuration.
 func Load() (*domain.HostConfig, error) {
-	config := getDefaults()
+	config := GetDefaults()
 
 	// 1. Load from YAML if exists
 	configPath := os.Getenv("CONFIG_FILE")
@@ -40,7 +40,7 @@ func Load() (*domain.HostConfig, error) {
 	return config, nil
 }
 
-func getDefaults() *domain.HostConfig {
+func GetDefaults() *domain.HostConfig {
 	return &domain.HostConfig{
 		Port:         8080,
 		FrontendPath: "./frontend/dist",
@@ -50,6 +50,15 @@ func getDefaults() *domain.HostConfig {
 		LogFormat:    "json",
 		LogOutput:    "stdout",
 		Debug:        false,
+		CORSAllowOrigins: []string{
+			"http://localhost:5173",
+			"http://localhost:8080",
+		},
+		RateLimits: domain.RateLimitConfig{
+			ReadRequests:  100,
+			WriteRequests: 10,
+		},
+		JWTSecret: "your-secret-key-must-be-at-least-32-chars-long",
 	}
 }
 
@@ -87,5 +96,21 @@ func loadFromEnv(config *domain.HostConfig) {
 	}
 	if val := os.Getenv("DATA_HOST_LOG_OUTPUT"); val != "" {
 		config.LogOutput = val
+	}
+	if val := os.Getenv("CORS_ALLOW_ORIGINS"); val != "" {
+		config.CORSAllowOrigins = strings.Split(val, ",")
+	}
+	if val := os.Getenv("RATE_LIMIT_READ"); val != "" {
+		if i, err := strconv.Atoi(val); err == nil {
+			config.RateLimits.ReadRequests = i
+		}
+	}
+	if val := os.Getenv("RATE_LIMIT_WRITE"); val != "" {
+		if i, err := strconv.Atoi(val); err == nil {
+			config.RateLimits.WriteRequests = i
+		}
+	}
+	if val := os.Getenv("JWT_SECRET"); val != "" {
+		config.JWTSecret = val
 	}
 }

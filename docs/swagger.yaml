@@ -1,0 +1,600 @@
+basePath: /api
+definitions:
+  domain.BlueprintSchema:
+    description: Blueprint schema record
+    properties:
+      createdAt:
+        example: "2026-03-12T00:00:00Z"
+        type: string
+      desc:
+        example: Base schema for accounting modules
+        type: string
+      id:
+        example: 1
+        type: integer
+      name:
+        example: Standard Accounting
+        type: string
+      updatedAt:
+        example: "2026-03-12T00:00:00Z"
+        type: string
+    type: object
+  domain.CollectionDetail:
+    description: Content collection detail
+    properties:
+      description:
+        example: End of year reports
+        type: string
+      emoji:
+        example: "\U0001F4B0"
+        type: string
+      id:
+        example: coll_001
+        type: string
+      tables:
+        example:
+        - '["reports"'
+        - ' "ledgers"]'
+        items:
+          type: string
+        type: array
+      title:
+        example: Financial Reports
+        type: string
+    type: object
+  domain.CollectionStats:
+    description: Collection statistics
+    properties:
+      count:
+        example: 12
+        type: integer
+    type: object
+  domain.ColumnDetail:
+    description: Column detail
+    properties:
+      name:
+        example: amount
+        maxLength: 100
+        type: string
+      type:
+        enum:
+        - string
+        - int
+        - float
+        - bool
+        example: float
+        type: string
+    required:
+    - name
+    - type
+    type: object
+  domain.ColumnInfo:
+    description: Column information
+    properties:
+      description:
+        example: Account balance
+        type: string
+      name:
+        example: balance
+        type: string
+      type:
+        example: float
+        type: string
+    type: object
+  domain.ErrorResponse:
+    description: Standardized error response
+    properties:
+      code:
+        example: 500
+        type: integer
+      error:
+        example: Internal Server Error
+        type: string
+      message:
+        example: An unexpected error occurred
+        type: string
+    type: object
+  domain.GuidelineSelectionRequest:
+    description: Guideline selection update
+    properties:
+      selection: {}
+    required:
+    - selection
+    type: object
+  domain.LoginRequest:
+    description: Login payload
+    properties:
+      password:
+        example: admin123
+        type: string
+      username:
+        example: admin
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  domain.MDXItem:
+    description: MDX Content Item
+    properties:
+      description:
+        example: Getting started with finance module
+        type: string
+      fileName:
+        example: index.mdx
+        type: string
+      title:
+        example: Quick Start
+        type: string
+    type: object
+  domain.RelationDetail:
+    description: Relation information between tables
+    properties:
+      columns:
+        example:
+        - '["account_id"]'
+        items:
+          type: string
+        type: array
+      def:
+        example: FOREIGN KEY (account_id) REFERENCES accounts(id)
+        type: string
+      parentColumns:
+        example:
+        - '["id"]'
+        items:
+          type: string
+        type: array
+      parentTable:
+        example: accounts
+        type: string
+      table:
+        example: transactions
+        type: string
+    type: object
+  domain.SchemaDashboard:
+    description: Aggregated dashboard for a schema module
+    properties:
+      collectionStats:
+        $ref: '#/definitions/domain.CollectionStats'
+      collections:
+        items:
+          $ref: '#/definitions/domain.CollectionDetail'
+        type: array
+      contentPath:
+        example: /content/finance
+        type: string
+      dataPath:
+        example: /data/finance
+        type: string
+      hasCollections:
+        example: false
+        type: boolean
+      hasSchema:
+        example: true
+        type: boolean
+      name:
+        example: finance
+        type: string
+      schemaStats:
+        $ref: '#/definitions/domain.SchemaStats'
+      validation:
+        $ref: '#/definitions/domain.ValidationResult'
+    type: object
+  domain.SchemaNode:
+    description: Schema node for tree structure
+    properties:
+      children:
+        items:
+          $ref: '#/definitions/domain.SchemaNode'
+        type: array
+      hasData:
+        example: false
+        type: boolean
+      isDir:
+        example: true
+        type: boolean
+      name:
+        example: finance
+        type: string
+      path:
+        example: /finance
+        type: string
+    type: object
+  domain.SchemaStats:
+    description: Schema statistics
+    properties:
+      relations:
+        items:
+          $ref: '#/definitions/domain.RelationDetail'
+        type: array
+      tableDetail:
+        items:
+          $ref: '#/definitions/domain.TableDetail'
+        type: array
+      tables:
+        example: 5
+        type: integer
+    type: object
+  domain.TableDetail:
+    description: Table detail information
+    properties:
+      columns:
+        items:
+          $ref: '#/definitions/domain.ColumnInfo'
+        type: array
+      constraints:
+        example: 1
+        type: integer
+      description:
+        example: List of bank accounts
+        type: string
+      indexes:
+        example: 2
+        type: integer
+      name:
+        example: accounts
+        type: string
+      type:
+        example: TABLE
+        type: string
+    type: object
+  domain.TrainingSelectionRequest:
+    description: Training selection update
+    properties:
+      selection: {}
+    required:
+    - selection
+    type: object
+  domain.UpdateTableRequest:
+    description: Table update payload
+    properties:
+      columns:
+        items:
+          $ref: '#/definitions/domain.ColumnDetail'
+        maxItems: 500
+        minItems: 1
+        type: array
+      description:
+        example: Financial transaction records
+        maxLength: 1000
+        type: string
+      module_name:
+        example: finance
+        maxLength: 100
+        type: string
+      table_name:
+        example: transactions
+        maxLength: 255
+        type: string
+    required:
+    - columns
+    - module_name
+    - table_name
+    type: object
+  domain.ValidationResult:
+    description: Result of a validation check
+    properties:
+      errors:
+        items:
+          type: string
+        type: array
+      valid:
+        example: true
+        type: boolean
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@example.com
+    name: API Support
+    url: http://www.example.com/support
+  description: REST API for data schema and table management
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: DataHost API
+  version: 1.0.0
+paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate with username and password to get a JWT token
+      parameters:
+      - description: Login credentials
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/domain.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      summary: System login
+      tags:
+      - Auth
+  /blueprint/schemas:
+    get:
+      description: Retrieve list of registered blueprint schemas
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.BlueprintSchema'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      summary: Get blueprint schemas
+      tags:
+      - Blueprint
+  /guidelines:
+    get:
+      description: Retrieve list of system guidelines
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.MDXItem'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      summary: Get guidelines
+      tags:
+      - Guidelines
+  /health:
+    get:
+      description: Get the current health status of the API
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Health check
+      tags:
+      - System
+  /schemas/tree:
+    get:
+      description: Retrieve the hierarchical structure of data schemas
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.SchemaNode'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      summary: Get schema tree
+      tags:
+      - Schemas
+  /services/tree:
+    get:
+      description: Retrieve the hierarchical structure of hosted services
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.SchemaNode'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      summary: Get service tree
+      tags:
+      - Services
+  /site/schemas:
+    get:
+      description: Retrieve dashboard metrics and metadata for all schema modules
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.SchemaDashboard'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      summary: Get site schema dashboards
+      tags:
+      - Site
+  /site/schemas/{module}/table:
+    post:
+      consumes:
+      - application/json
+      description: Update the structure and metadata of a specific table in a module
+      parameters:
+      - description: Module name
+        in: path
+        name: module
+        required: true
+        type: string
+      - description: Table update payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/domain.UpdateTableRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      summary: Update table schema
+      tags:
+      - Site
+  /site/selection:
+    get:
+      description: Retrieve the current user selection for guidelines
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      summary: Get guideline selection
+      tags:
+      - Site
+    post:
+      consumes:
+      - application/json
+      description: Update the current user selection for guidelines
+      parameters:
+      - description: Selection update
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/domain.GuidelineSelectionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      summary: Update guideline selection
+      tags:
+      - Site
+  /site/training-selection:
+    get:
+      description: Retrieve the current user selection for training items
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      summary: Get training selection
+      tags:
+      - Site
+    post:
+      consumes:
+      - application/json
+      description: Update the current user selection for training items
+      parameters:
+      - description: Selection update
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/domain.TrainingSelectionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      summary: Update training selection
+      tags:
+      - Site
+  /training:
+    get:
+      description: Retrieve list of available training modules
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.MDXItem'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      summary: Get training items
+      tags:
+      - Training
+schemes:
+- http
+- https
+securityDefinitions:
+  Bearer:
+    description: Type "Bearer" followed by a space and JWT token.
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

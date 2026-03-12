@@ -15,12 +15,22 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
+
+	_ "data-host/docs" // Load generated docs
+	"data-host/internal/adapters/driving/auth"
+	"data-host/internal/core/services"
 )
 
 type GinAdapter struct {
-	server    *http.Server
-	On404     chan string
-	LogOutput io.Writer
+	server       *http.Server
+	On404        chan string
+	LogOutput    io.Writer
+	repo         ports.RegistryRepository
+	config       domain.HostConfig
+	authProvider auth.AuthProvider
+	userService  *services.UserService
 }
 
 func NewGinAdapter() *GinAdapter {
@@ -30,137 +40,61 @@ func NewGinAdapter() *GinAdapter {
 }
 
 func (a *GinAdapter) Start(config domain.HostConfig, repo ports.RegistryRepository) error {
+	a.config = config
+	a.repo = repo
+	a.authProvider = auth.NewJWTProvider(config)
+	if repo.GetUserRepo() != nil {
+		a.userService = services.NewUserService(repo.GetUserRepo())
+	}
+
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
 	r.Use(gin.Recovery())
 
-	// Use zerolog middleware
+	// 1. Basic Security & Logging
 	r.Use(logger.HTTPLoggingMiddleware())
+	r.Use(SecurityHeadersMiddleware())
+	r.Use(RequestSizeLimiter(10 * 1024 * 1024)) // 10MB Limit
 
-	// CORS Support
+	// 2. Rate Limiting (IP based)
+	r.Use(NewRateLimiterMiddleware(config))
+
+	// 3. CORS Support (Configurable)
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:5173", "http://localhost:8080"},
+		AllowOrigins:     config.CORSAllowOrigins,
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
 		AllowHeaders:     []string{"Accept", "Authorization", "Content-Type"},
 		AllowCredentials: true,
 	}))
 
+	// Swagger UI
+	r.GET("/swagger", func(c *gin.Context) {
+		c.Redirect(http.StatusMovedPermanently, "/swagger/index.html")
+	})
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
 	// API endpoints for internal management
-	r.GET("/api/config", func(c *gin.Context) {
-		c.JSON(http.StatusOK, config)
-	})
+	api := r.Group("/api")
+	{
+		api.POST("/auth/login", a.Login)
+		api.GET("/health", a.Health)
+		api.GET("/schemas/tree", a.GetSchemaTree)
+		api.GET("/services/tree", a.GetServiceTree)
+		api.GET("/guidelines", a.GetGuidelines)
+		api.GET("/training", a.GetTraining)
+		api.GET("/site/schemas", a.GetSiteSchemas)
+		api.GET("/blueprint/schemas", a.GetBlueprintSchemas)
 
-	r.GET("/api/schemas/tree", func(c *gin.Context) {
-		tree, err := repo.GetSchemaTree()
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
+		site := api.Group("/site")
+		authMW := auth.AuthMiddleware(a.authProvider)
+		{
+			site.POST("/schemas/:module/table", authMW, auth.RequireRole(domain.RoleAdmin, domain.RoleEditor), a.UpdateTable)
+			site.GET("/selection", a.GetSelection)
+			site.POST("/selection", authMW, auth.RequireRole(domain.RoleAdmin), a.UpdateSelection)
+			site.GET("/training-selection", a.GetTrainingSelection)
+			site.POST("/training-selection", authMW, auth.RequireRole(domain.RoleAdmin), a.UpdateTrainingSelection)
 		}
-		c.JSON(http.StatusOK, tree)
-	})
-
-	r.GET("/api/services/tree", func(c *gin.Context) {
-		tree, err := repo.GetServiceTree()
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-		c.JSON(http.StatusOK, tree)
-	})
-
-	r.GET("/api/guidelines", func(c *gin.Context) {
-		items, err := repo.GetGuidelines()
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-		c.JSON(http.StatusOK, items)
-	})
-
-	r.GET("/api/training", func(c *gin.Context) {
-		items, err := repo.GetTrainingItems()
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-		c.JSON(http.StatusOK, items)
-	})
-
-	r.GET("/api/site/schemas", func(c *gin.Context) {
-		dashboards, err := repo.GetAllSchemaDashboards()
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-		c.JSON(http.StatusOK, dashboards)
-	})
-
-	r.GET("/api/blueprint/schemas", func(c *gin.Context) {
-		schemas, err := repo.GetBlueprintSchemas()
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-		c.JSON(http.StatusOK, schemas)
-	})
-
-	r.POST("/api/site/schemas/:module/table", func(c *gin.Context) {
-		moduleName := c.Param("module")
-		var update domain.TableDetail
-		if err := c.ShouldBindJSON(&update); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-		if err := repo.UpdateTable(moduleName, update); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-		c.JSON(http.StatusOK, gin.H{"status": "success"})
-	})
-
-	r.GET("/api/site/selection", func(c *gin.Context) {
-		selection, err := repo.GetGuidelineSelection()
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-		c.JSON(http.StatusOK, selection)
-	})
-
-	r.POST("/api/site/selection", func(c *gin.Context) {
-		var selection interface{}
-		if err := c.BindJSON(&selection); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON payload"})
-			return
-		}
-		if err := repo.UpdateGuidelineSelection(selection); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-		c.JSON(http.StatusOK, gin.H{"status": "success"})
-	})
-
-	r.GET("/api/site/training-selection", func(c *gin.Context) {
-		selection, err := repo.GetTrainingSelection()
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-		c.JSON(http.StatusOK, selection)
-	})
-
-	r.POST("/api/site/training-selection", func(c *gin.Context) {
-		var selection interface{}
-		if err := c.BindJSON(&selection); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON payload"})
-			return
-		}
-		if err := repo.UpdateTrainingSelection(selection); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-		c.JSON(http.StatusOK, gin.H{"status": "success"})
-	})
+	}
 
 	// Catch-all handler for everything else (Total Control - No Directory Listings)
 	r.NoRoute(func(c *gin.Context) {

@@ -10,19 +10,25 @@ import (
 )
 
 type SQLiteRepository struct {
-	db     *sql.DB
-	fsRepo ports.RegistryRepository
-	config domain.HostConfig
+	db       *sql.DB
+	fsRepo   ports.RegistryRepository
+	config   domain.HostConfig
+	userRepo ports.UserRepository
 }
 
 func NewSQLiteRepository(db *sql.DB, config domain.HostConfig) (ports.RegistryRepository, error) {
 	log.Debug().Msg("Initializing SQLite repository")
 	repo := &SQLiteRepository{
-		db:     db,
-		fsRepo: NewFilesystemRepository(config),
-		config: config,
+		db:       db,
+		fsRepo:   NewFilesystemRepository(config),
+		config:   config,
+		userRepo: NewSQLiteUserRepository(db),
 	}
 	return repo, nil
+}
+
+func (r *SQLiteRepository) GetUserRepo() ports.UserRepository {
+	return r.userRepo
 }
 
 func (r *SQLiteRepository) GetGuidelineSelection() (interface{}, error) {

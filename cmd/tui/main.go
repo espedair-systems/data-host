@@ -4,9 +4,9 @@ import (
 	"archive/zip"
 	configAdapter "data-host/internal/adapters/driven/config"
 	"data-host/internal/adapters/driven/repository"
+	appConfig "data-host/internal/adapters/driving/config"
 	"data-host/internal/adapters/driving/http"
 	"data-host/internal/adapters/driving/logger"
-	"data-host/internal/core/domain"
 	"data-host/internal/core/ports"
 	"data-host/internal/core/services"
 	"data-host/internal/database"
@@ -61,12 +61,7 @@ func initialModel() model {
 	configLoader := configAdapter.NewViperAdapter("config", "yaml", ".")
 	config, err := configLoader.Load()
 	if err != nil {
-		config = domain.HostConfig{
-			Port:         8080,
-			FrontendPath: "./frontend/dist",
-			DataPath:     "/",
-			DatabaseURL:  "blueprint.db",
-		}
+		config = *appConfig.GetDefaults()
 	}
 
 	p := textinput.New()
@@ -186,15 +181,18 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "enter":
 			if !m.running {
 				port, _ := strconv.Atoi(m.portInput.Value())
-				config := domain.HostConfig{
-					Port:         port,
-					FrontendPath: m.frontendPathInput.Value(),
-					DataPath:     m.dataPathInput.Value(),
-					DatabaseURL:  m.dbPathInput.Value(),
-					LogLevel:     "DEBUG",
-					LogFormat:    "json",
-					LogOutput:    "stdout",
-				}
+
+				// Start with system defaults to get all security fields (CORS, RateLimits, JWT)
+				config := *appConfig.GetDefaults()
+
+				// Apply user overrides from TUI
+				config.Port = port
+				config.FrontendPath = m.frontendPathInput.Value()
+				config.DataPath = m.dataPathInput.Value()
+				config.DatabaseURL = m.dbPathInput.Value()
+				config.LogLevel = "DEBUG"
+				config.LogFormat = "json"
+				config.LogOutput = "stdout"
 
 				var repo ports.RegistryRepository
 				appEnv := os.Getenv("APP_ENV")

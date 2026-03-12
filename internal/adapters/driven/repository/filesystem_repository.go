@@ -116,6 +116,10 @@ func (r *FilesystemRepository) GetBlueprintSchemas() ([]domain.BlueprintSchema, 
 	return []domain.BlueprintSchema{}, nil
 }
 
+func (r *FilesystemRepository) GetUserRepo() ports.UserRepository {
+	return nil
+}
+
 func (r *FilesystemRepository) getProjectRoot() string {
 	root := filepath.Clean(r.config.DataPath)
 	if filepath.Base(root) == "dist" {
