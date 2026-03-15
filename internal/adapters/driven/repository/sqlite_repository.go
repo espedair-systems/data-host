@@ -165,6 +165,52 @@ func (r *SQLiteRepository) SavePublishedFile(assetName, fileName string, content
 	return r.fsRepo.SavePublishedFile(assetName, fileName, content)
 }
 
+func (r *SQLiteRepository) GetDatabaseStats() (domain.DatabaseStats, error) {
+	stats := domain.DatabaseStats{}
+
+	// Get SQLite version
+	_ = r.db.QueryRow("SELECT sqlite_version()").Scan(&stats.Version)
+
+	// Get total file size using SQLite pragmas
+	var pageCount, pageSize int64
+	_ = r.db.QueryRow("PRAGMA page_count").Scan(&pageCount)
+	_ = r.db.QueryRow("PRAGMA page_size").Scan(&pageSize)
+	stats.Size = pageCount * pageSize
+
+	// Get all user tables
+	rows, err := r.db.Query(`
+		SELECT name FROM sqlite_master 
+		WHERE type='table' AND name NOT LIKE 'sqlite_%' 
+		AND name NOT LIKE 'goose_%'
+		ORDER BY name ASC
+	`)
+	if err != nil {
+		return stats, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var name string
+		if err := rows.Scan(&name); err != nil {
+			continue
+		}
+
+		var count int64
+		err := r.db.QueryRow("SELECT COUNT(*) FROM " + name).Scan(&count)
+		if err != nil {
+			// Might be a virtual table or something that doesn't support COUNT(*)
+			continue
+		}
+
+		stats.Tables = append(stats.Tables, domain.TableStats{
+			Name: name,
+			Rows: count,
+		})
+	}
+
+	return stats, nil
+}
+
 func (r *SQLiteRepository) GetAllSchemaDashboards() ([]domain.SchemaDashboard, error) {
 	dashes, err := r.fsRepo.GetAllSchemaDashboards()
 	if err != nil {

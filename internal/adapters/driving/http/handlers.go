@@ -3,6 +3,7 @@ package http
 import (
 	"data-host/internal/core/domain"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 
@@ -618,4 +619,56 @@ func (a *GinAdapter) GetMasterSchema(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, val)
+}
+
+// GetDatabaseStats godoc
+// @Summary      Get database statistics
+// @Description  Retrieve physical storage and table metrics for the internal SQLite database
+// @Tags         System
+// @Produce      json
+// @Success      200  {object}  domain.DatabaseStats
+// @Failure      500  {object}  domain.ErrorResponse
+// @Router       /database/stats [get]
+func (a *GinAdapter) GetDatabaseStats(c *gin.Context) {
+	stats, err := a.repo.GetDatabaseStats()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{
+			Error:   "Internal Server Error",
+			Message: err.Error(),
+			Code:    http.StatusInternalServerError,
+		})
+		return
+	}
+	c.JSON(http.StatusOK, stats)
+}
+
+// IngestToFolder saves a schema directly to the filesystem data folder
+func (a *GinAdapter) IngestToFolder(c *gin.Context) {
+	var schema domain.FileSchema
+	if err := c.ShouldBindJSON(&schema); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON format: " + err.Error()})
+		return
+	}
+
+	if schema.Name == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Schema name is required"})
+		return
+	}
+
+	content, err := json.MarshalIndent(schema, "", "  ")
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to serialize schema"})
+		return
+	}
+
+	err = a.repo.SavePublishedFile(schema.Name, "schema.json", content)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save file: " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":  "success",
+		"message": fmt.Sprintf("Schema '%s' saved to data-services folder.", schema.Name),
+	})
 }

@@ -30,6 +30,7 @@ type RegistryRepository interface {
 	GetPublishedAssets() ([]domain.PublishedAsset, error)
 	GetPublishedFile(assetName, fileName string) ([]byte, error)
 	SavePublishedFile(assetName, fileName string, content []byte) error
+	GetDatabaseStats() (domain.DatabaseStats, error)
 
 	GetUserRepo() UserRepository
 }

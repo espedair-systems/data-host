@@ -105,3 +105,16 @@ type PublishedAsset struct {
 	RelationCount  int      `json:"relationCount"`
 	ValidationErr  []string `json:"validationErrors,omitempty"`
 }
+
+// @Description SQLite Database Statistics
+type DatabaseStats struct {
+	Tables  []TableStats `json:"tables"`
+	Size    int64        `json:"size"` // Total database size in bytes
+	Version string       `json:"version"`
+}
+
+// @Description Statistics for a single database table
+type TableStats struct {
+	Name string `json:"name"`
+	Rows int64  `json:"rows"`
+}

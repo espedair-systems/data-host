@@ -7,6 +7,7 @@ import Schema from './pages/Schema';
 import Config from './pages/Config';
 import TableEditor from './pages/TableEditor';
 import IngestionPage from './pages/Ingestion';
+import LocalIngestion from './pages/LocalIngestion';
 import BigQueryDashboard from './pages/BigQueryDashboard';
 import GCPConnections from './pages/GCPConnections';
 import GCPProjects from './pages/GCPProjects';
@@ -37,6 +38,9 @@ import Publish from './pages/Publish';
 import PublishedSchema from './pages/PublishedSchema';
 import PublishedSchemaEditor from './pages/PublishedSchemaEditor';
 import Curate from './pages/Curate';
+import KnowledgeDashboard from './pages/KnowledgeDashboard';
+import Librarian from './pages/Librarian';
+import DesignDashboard from './pages/DesignDashboard';
 import PlaceholderPage from './pages/Placeholder';
 import Home from './pages/Home';
 import { ColorModeProvider } from './context/ColorModeContext';
@@ -78,6 +82,11 @@ function App() {
                   <Route path="tables-pages" element={<PlaceholderPage title="Publish - Tables Pages" description="Manage table pages generated from schema and collections data." />} />
                 </Route>
                 <Route path="curate" element={<Curate />} />
+                <Route path="knowledge">
+                  <Route index element={<KnowledgeDashboard />} />
+                  <Route path="librarian" element={<Librarian />} />
+                </Route>
+                <Route path="design" element={<DesignDashboard />} />
                 <Route path="site" element={<Site />} />
                 <Route path="schema">
                   <Route index element={<Schema />} />
@@ -85,6 +94,7 @@ function App() {
                   <Route path="map" element={<MapPage />} />
                 </Route>
                 <Route path="ingestion" element={<IngestionPage />} />
+                <Route path="ingestion/local" element={<LocalIngestion />} />
                 <Route path="ingestion/bigquery">
                   <Route index element={<BigQueryDashboard />} />
                   <Route path="connections" element={<GCPConnections />} />

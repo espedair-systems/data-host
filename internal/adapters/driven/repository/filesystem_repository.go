@@ -129,6 +129,10 @@ func (r *FilesystemRepository) GetUserRepo() ports.UserRepository {
 	return nil
 }
 
+func (r *FilesystemRepository) GetDatabaseStats() (domain.DatabaseStats, error) {
+	return domain.DatabaseStats{}, nil
+}
+
 func (r *FilesystemRepository) GetPublishedAssets() ([]domain.PublishedAsset, error) {
 	dataRoot := filepath.Join(r.config.DataPath, "data")
 	entries, err := os.ReadDir(dataRoot)

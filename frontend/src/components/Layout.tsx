@@ -20,7 +20,11 @@ import {
   Layers,
   ArrowRight,
   BookOpen,
-  ExternalLink
+  ExternalLink,
+  Globe,
+  Brain,
+  Palette,
+  Library
 } from 'lucide-react';
 import { useNavigate, useLocation, Outlet, Link } from 'react-router-dom';
 import {
@@ -99,6 +103,10 @@ const Layout: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [platformsOpen, setPlatformsOpen] = useState(true);
   const [publishOpen, setPublishOpen] = useState(true);
+  const [curateOpen, setCurateOpen] = useState(true);
+  const [knowledgeOpen, setKnowledgeOpen] = useState(false);
+  const [designOpen, setDesignOpen] = useState(false);
+  const [ingestOpen, setIngestOpen] = useState(true);
   const [onPremOpen, setOnPremOpen] = useState(false);
   const { mode, toggleColorMode } = useColorMode();
   const { content: sidebarContent } = useSidebar();
@@ -196,18 +204,169 @@ const Layout: React.FC = () => {
               </div>
             </CollapsibleContent>
           </Collapsible>
-          <NavButton
-            item={{ text: 'Curate', icon: <Layers className="h-5 w-5" />, path: '/curate' }}
-            selected={isActive('/curate')}
-            onClick={() => navigate('/curate')}
-            collapsed={collapsed}
-          />
-          <NavButton
-            item={{ text: 'Ingest', icon: <DatabaseIcon className="h-5 w-5" />, path: '/ingestion' }}
-            selected={isActive('/ingestion')}
-            onClick={() => navigate('/ingestion')}
-            collapsed={collapsed}
-          />
+          {/* Curate Collapsible */}
+          <Collapsible
+            open={!collapsed && curateOpen}
+            onOpenChange={setCurateOpen}
+            className="space-y-1"
+          >
+            <CollapsibleTrigger asChild>
+              <Button
+                variant="ghost"
+                className={cn(
+                  "w-full justify-start gap-4 px-3 h-10 text-muted-foreground",
+                  collapsed ? "justify-center px-0" : ""
+                )}
+              >
+                <div className="shrink-0">
+                  <Layers className={cn("h-5 w-5", isActive('/curate') ? "text-primary" : "")} />
+                </div>
+                {!collapsed && (
+                  <>
+                    <span className={cn("text-[10px] font-black uppercase tracking-widest flex-grow text-left", isActive('/curate') ? "text-primary" : "")}>Curate</span>
+                    <ChevronDown className={cn("h-4 w-4 transition-transform", curateOpen ? "" : "-rotate-90")} />
+                  </>
+                )}
+              </Button>
+            </CollapsibleTrigger>
+
+            <CollapsibleContent className="space-y-1">
+              <div className="ml-9 border-l border-muted pl-4 space-y-1">
+                <NavButton
+                  item={{ text: 'Control Dashboard', icon: <DashboardIcon className="h-4 w-4" /> }}
+                  selected={location.pathname === '/curate'}
+                  onClick={() => navigate('/curate')}
+                  className="h-8 text-xs"
+                />
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+
+          {/* Knowledge Collapsible */}
+          <Collapsible
+            open={!collapsed && knowledgeOpen}
+            onOpenChange={setKnowledgeOpen}
+            className="space-y-1"
+          >
+            <CollapsibleTrigger asChild>
+              <Button
+                variant="ghost"
+                className={cn(
+                  "w-full justify-start gap-4 px-3 h-10 text-muted-foreground",
+                  collapsed ? "justify-center px-0" : ""
+                )}
+              >
+                <div className="shrink-0">
+                  <Brain className={cn("h-5 w-5", isActive('/knowledge') ? "text-primary" : "")} />
+                </div>
+                {!collapsed && (
+                  <>
+                    <span className={cn("text-[10px] font-black uppercase tracking-widest flex-grow text-left", isActive('/knowledge') ? "text-primary" : "")}>Knowledge</span>
+                    <ChevronDown className={cn("h-4 w-4 transition-transform", knowledgeOpen ? "" : "-rotate-90")} />
+                  </>
+                )}
+              </Button>
+            </CollapsibleTrigger>
+
+            <CollapsibleContent className="space-y-1">
+              <div className="ml-9 border-l border-muted pl-4 space-y-1">
+                <NavButton
+                  item={{ text: 'Dashboard', icon: <DashboardIcon className="h-4 w-4" /> }}
+                  selected={location.pathname === '/knowledge'}
+                  onClick={() => navigate('/knowledge')}
+                  className="h-8 text-xs"
+                />
+                <NavButton
+                  item={{ text: 'Librarian', icon: <Library className="h-4 w-4" /> }}
+                  selected={location.pathname === '/knowledge/librarian'}
+                  onClick={() => navigate('/knowledge/librarian')}
+                  className="h-8 text-xs"
+                />
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+
+          {/* Design Collapsible */}
+          <Collapsible
+            open={!collapsed && designOpen}
+            onOpenChange={setDesignOpen}
+            className="space-y-1"
+          >
+            <CollapsibleTrigger asChild>
+              <Button
+                variant="ghost"
+                className={cn(
+                  "w-full justify-start gap-4 px-3 h-10 text-muted-foreground",
+                  collapsed ? "justify-center px-0" : ""
+                )}
+              >
+                <div className="shrink-0">
+                  <Palette className={cn("h-5 w-5", isActive('/design') ? "text-primary" : "")} />
+                </div>
+                {!collapsed && (
+                  <>
+                    <span className={cn("text-[10px] font-black uppercase tracking-widest flex-grow text-left", isActive('/design') ? "text-primary" : "")}>Design</span>
+                    <ChevronDown className={cn("h-4 w-4 transition-transform", designOpen ? "" : "-rotate-90")} />
+                  </>
+                )}
+              </Button>
+            </CollapsibleTrigger>
+
+            <CollapsibleContent className="space-y-1">
+              <div className="ml-9 border-l border-muted pl-4 space-y-1">
+                <NavButton
+                  item={{ text: 'Dashboard', icon: <DashboardIcon className="h-4 w-4" /> }}
+                  selected={location.pathname === '/design'}
+                  onClick={() => navigate('/design')}
+                  className="h-8 text-xs"
+                />
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+
+          {/* Ingest Collapsible */}
+          <Collapsible
+            open={!collapsed && ingestOpen}
+            onOpenChange={setIngestOpen}
+            className="space-y-1"
+          >
+            <CollapsibleTrigger asChild>
+              <Button
+                variant="ghost"
+                className={cn(
+                  "w-full justify-start gap-4 px-3 h-10 text-muted-foreground",
+                  collapsed ? "justify-center px-0" : ""
+                )}
+              >
+                <div className="shrink-0">
+                  <DatabaseIcon className={cn("h-5 w-5", isActive('/ingestion') ? "text-primary" : "")} />
+                </div>
+                {!collapsed && (
+                  <>
+                    <span className={cn("text-[10px] font-black uppercase tracking-widest flex-grow text-left", isActive('/ingestion') ? "text-primary" : "")}>Ingest</span>
+                    <ChevronDown className={cn("h-4 w-4 transition-transform", ingestOpen ? "" : "-rotate-90")} />
+                  </>
+                )}
+              </Button>
+            </CollapsibleTrigger>
+
+            <CollapsibleContent className="space-y-1">
+              <div className="ml-9 border-l border-muted pl-4 space-y-1">
+                <NavButton
+                  item={{ text: 'Local', icon: <Monitor className="h-4 w-4" /> }}
+                  selected={location.pathname === '/ingestion/local'}
+                  onClick={() => navigate('/ingestion/local')}
+                  className="h-8 text-xs"
+                />
+                <NavButton
+                  item={{ text: 'Registry', icon: <Globe className="h-4 w-4" /> }}
+                  selected={isActive('/ingestion') && location.pathname === '/ingestion'}
+                  onClick={() => navigate('/ingestion')}
+                  className="h-8 text-xs"
+                />
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
 
           <Separator className="my-3 mx-2 opacity-50" />
 

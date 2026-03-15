@@ -78,6 +78,7 @@ func (a *GinAdapter) Start(config domain.HostConfig, repo ports.RegistryReposito
 	{
 		api.POST("/auth/login", a.Login)
 		api.GET("/health", a.Health)
+		api.GET("/database/stats", a.GetDatabaseStats)
 		api.GET("/schemas/tree", a.GetSchemaTree)
 		api.GET("/services/tree", a.GetServiceTree)
 		api.GET("/guidelines", a.GetGuidelines)
@@ -104,6 +105,7 @@ func (a *GinAdapter) Start(config domain.HostConfig, repo ports.RegistryReposito
 		{
 			ingestion.POST("/validate", a.ValidateSchema)
 			ingestion.POST("/ingest", auth.RequireRole(domain.RoleAdmin), a.IngestSchema)
+			ingestion.POST("/ingest-to-local-folder", auth.RequireRole(domain.RoleAdmin), a.IngestToFolder)
 		}
 	}
 
