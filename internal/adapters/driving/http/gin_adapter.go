@@ -93,6 +93,10 @@ func (a *GinAdapter) Start(config domain.HostConfig, repo ports.RegistryReposito
 			site.POST("/selection", authMW, auth.RequireRole(domain.RoleAdmin), a.UpdateSelection)
 			site.GET("/training-selection", a.GetTrainingSelection)
 			site.POST("/training-selection", authMW, auth.RequireRole(domain.RoleAdmin), a.UpdateTrainingSelection)
+			site.GET("/published-data", a.GetPublishedAssets)
+			site.GET("/master-schema", a.GetMasterSchema)
+			site.GET("/published-data/:asset/:file", a.GetPublishedFile)
+			site.POST("/published-data/:asset/:file", authMW, auth.RequireRole(domain.RoleAdmin, domain.RoleEditor), a.SavePublishedFile)
 		}
 
 		ingestion := api.Group("/ingestion")

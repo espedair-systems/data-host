@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/xeipuuv/gojsonschema"
 )
@@ -128,6 +129,92 @@ func (r *FilesystemRepository) GetUserRepo() ports.UserRepository {
 	return nil
 }
 
+func (r *FilesystemRepository) GetPublishedAssets() ([]domain.PublishedAsset, error) {
+	dataRoot := filepath.Join(r.config.DataPath, "data")
+	entries, err := os.ReadDir(dataRoot)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return []domain.PublishedAsset{}, nil
+		}
+		return nil, err
+	}
+
+	// The master schema is in the data-host project root.
+	// Since r.config.DataPath points to data-services, the root is one level up.
+	hostRoot := filepath.Dir(filepath.Clean(r.config.DataPath))
+	masterPath := filepath.Join(hostRoot, "schema", "services.schema.json")
+	schemaLoader := gojsonschema.NewReferenceLoader("file://" + masterPath)
+
+	var assets []domain.PublishedAsset
+	for _, entry := range entries {
+		if entry.IsDir() {
+			name := entry.Name()
+			assetPath := filepath.Join(dataRoot, name)
+			asset := domain.PublishedAsset{
+				Name:           name,
+				SchemaPath:     filepath.Join(assetPath, "schema.json"),
+				CollectionPath: filepath.Join(assetPath, "collections.json"),
+				IsValid:        true,
+			}
+
+			if data, err := os.ReadFile(asset.SchemaPath); err == nil {
+				asset.HasSchema = true
+				info, _ := os.Stat(asset.SchemaPath)
+				asset.LastModified = info.ModTime().Format(time.RFC3339)
+
+				// Extract stats
+				var sData struct {
+					Tables    []interface{} `json:"tables"`
+					Relations []interface{} `json:"relations"`
+				}
+				if err := json.Unmarshal(data, &sData); err == nil {
+					asset.TableCount = len(sData.Tables)
+					asset.RelationCount = len(sData.Relations)
+				}
+
+				// Validation
+				documentLoader := gojsonschema.NewStringLoader(string(data))
+				result, err := gojsonschema.Validate(schemaLoader, documentLoader)
+				if err == nil {
+					asset.IsValid = result.Valid()
+					if !result.Valid() {
+						for _, desc := range result.Errors() {
+							asset.ValidationErr = append(asset.ValidationErr, desc.String())
+						}
+					}
+				} else {
+					asset.IsValid = false
+					asset.ValidationErr = []string{err.Error()}
+				}
+			} else {
+				asset.IsValid = false
+				asset.ValidationErr = []string{"schema.json missing or unreadable"}
+			}
+
+			if _, err := os.Stat(asset.CollectionPath); err == nil {
+				asset.HasCollections = true
+			}
+
+			assets = append(assets, asset)
+		}
+	}
+	return assets, nil
+}
+
+func (r *FilesystemRepository) GetPublishedFile(assetName, fileName string) ([]byte, error) {
+	path := filepath.Join(r.config.DataPath, "data", assetName, fileName)
+	return os.ReadFile(path)
+}
+
+func (r *FilesystemRepository) SavePublishedFile(assetName, fileName string, content []byte) error {
+	dir := filepath.Join(r.config.DataPath, "data", assetName)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return err
+	}
+	path := filepath.Join(dir, fileName)
+	return os.WriteFile(path, content, 0644)
+}
+
 func (r *FilesystemRepository) getProjectRoot() string {
 	root := filepath.Clean(r.config.DataPath)
 	if filepath.Base(root) == "dist" {
@@ -140,7 +227,11 @@ func (r *FilesystemRepository) GetAllSchemaDashboards() ([]domain.SchemaDashboar
 	projectRoot := r.getProjectRoot()
 	dataPath := filepath.Join(projectRoot, "data")
 	contentPath := filepath.Join(projectRoot, "src", "content", "docs", "registry")
-	return listSchemaDashboards(contentPath, dataPath)
+
+	hostRoot := filepath.Dir(filepath.Clean(r.config.DataPath))
+	masterPath := filepath.Join(hostRoot, "schema", "services.schema.json")
+
+	return listSchemaDashboards(contentPath, dataPath, masterPath)
 }
 
 func (r *FilesystemRepository) GetSchemaDashboard(moduleName string) (domain.SchemaDashboard, error) {
@@ -148,7 +239,10 @@ func (r *FilesystemRepository) GetSchemaDashboard(moduleName string) (domain.Sch
 	dataPath := filepath.Join(projectRoot, "data")
 	contentPath := filepath.Join(projectRoot, "src", "content", "docs", "registry")
 
-	dashboards, err := listSchemaDashboards(contentPath, dataPath)
+	hostRoot := filepath.Dir(filepath.Clean(r.config.DataPath))
+	masterPath := filepath.Join(hostRoot, "schema", "services.schema.json")
+
+	dashboards, err := listSchemaDashboards(contentPath, dataPath, masterPath)
 	if err != nil {
 		return domain.SchemaDashboard{}, err
 	}
@@ -162,10 +256,9 @@ func (r *FilesystemRepository) GetSchemaDashboard(moduleName string) (domain.Sch
 	return domain.SchemaDashboard{}, fmt.Errorf("module %s not found", moduleName)
 }
 
-func listSchemaDashboards(contentRoot, dataRoot string) ([]domain.SchemaDashboard, error) {
+func listSchemaDashboards(contentRoot, dataRoot, masterSchemaPath string) ([]domain.SchemaDashboard, error) {
 	var dashboards []domain.SchemaDashboard
 
-	masterSchemaPath := filepath.Join(dataRoot, "..", "schema", "schema.json_schema.json")
 	schemaLoader := gojsonschema.NewReferenceLoader("file://" + masterSchemaPath)
 
 	err := filepath.WalkDir(contentRoot, func(path string, d os.DirEntry, err error) error {

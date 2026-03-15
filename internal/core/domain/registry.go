@@ -90,3 +90,18 @@ type BlueprintSchema struct {
 	CreatedAt string `json:"createdAt" example:"2026-03-12T00:00:00Z"`
 	UpdatedAt string `json:"updatedAt" example:"2026-03-12T00:00:00Z"`
 }
+
+// @Description asset in the published data directory
+type PublishedAsset struct {
+	Name           string   `json:"name" example:"odoo"`
+	HasSchema      bool     `json:"hasSchema" example:"true"`
+	HasCollections bool     `json:"hasCollections" example:"false"`
+	SchemaPath     string   `json:"schemaPath"`
+	CollectionPath string   `json:"collectionPath"`
+	LastModified   string   `json:"lastModified"`
+	InDatabase     bool     `json:"inDatabase"`
+	IsValid        bool     `json:"isValid"`
+	TableCount     int      `json:"tableCount"`
+	RelationCount  int      `json:"relationCount"`
+	ValidationErr  []string `json:"validationErrors,omitempty"`
+}

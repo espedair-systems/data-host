@@ -140,6 +140,31 @@ func (r *SQLiteRepository) GetTrainingItems() ([]domain.MDXItem, error) {
 	return r.fsRepo.GetTrainingItems()
 }
 
+func (r *SQLiteRepository) GetPublishedAssets() ([]domain.PublishedAsset, error) {
+	assets, err := r.fsRepo.GetPublishedAssets()
+	if err != nil {
+		return nil, err
+	}
+
+	for i := range assets {
+		var exists int
+		err := r.db.QueryRow("SELECT COUNT(*) FROM schemas WHERE name = ?", assets[i].Name).Scan(&exists)
+		if err == nil && exists > 0 {
+			assets[i].InDatabase = true
+		}
+	}
+
+	return assets, nil
+}
+
+func (r *SQLiteRepository) GetPublishedFile(assetName, fileName string) ([]byte, error) {
+	return r.fsRepo.GetPublishedFile(assetName, fileName)
+}
+
+func (r *SQLiteRepository) SavePublishedFile(assetName, fileName string, content []byte) error {
+	return r.fsRepo.SavePublishedFile(assetName, fileName, content)
+}
+
 func (r *SQLiteRepository) GetAllSchemaDashboards() ([]domain.SchemaDashboard, error) {
 	dashes, err := r.fsRepo.GetAllSchemaDashboards()
 	if err != nil {

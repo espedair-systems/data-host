@@ -28,12 +28,17 @@ import MongoIngestion from './pages/MongoIngestion';
 import MongoProjects from './pages/MongoProjects';
 import MapPage from './pages/Map';
 import GCPPlatform from './pages/GCPPlatform';
-import AWSPlatform from './pages/AWSPlatform';
 import GCVEPlatform from './pages/GCVEPlatform';
 import SaaSPlatform from './pages/SaaSPlatform';
 import GCPIssues from './pages/GCPIssues';
 import Environments from './pages/Environments';
 import DirectoryPreferences from './pages/DirectoryPreferences';
+import Publish from './pages/Publish';
+import PublishedSchema from './pages/PublishedSchema';
+import PublishedSchemaEditor from './pages/PublishedSchemaEditor';
+import Curate from './pages/Curate';
+import PlaceholderPage from './pages/Placeholder';
+import Home from './pages/Home';
 import { ColorModeProvider } from './context/ColorModeContext';
 import { DirectoryPreferenceProvider } from './context/DirectoryPreferenceContext';
 const FilesPage = () => (
@@ -61,7 +66,16 @@ function App() {
         <BrowserRouter basename="/home">
           <Routes>
             <Route path="/" element={<Layout />}>
-              <Route index element={<Directory />} />
+              <Route index element={<Home />} />
+              <Route path="explore" element={<Directory />} />
+              <Route path="publish">
+                <Route index element={<Publish />} />
+                <Route path="dashboard" element={<Publish />} />
+                <Route path="schema-data" element={<PublishedSchema />} />
+                <Route path="schema-data/edit/:asset/:file" element={<PublishedSchemaEditor />} />
+                <Route path="tables-pages" element={<PlaceholderPage title="Publish - Tables Pages" description="Manage table pages generated from schema and collections data." />} />
+              </Route>
+              <Route path="curate" element={<Curate />} />
               <Route path="site" element={<Site />} />
               <Route path="schema">
                 <Route index element={<Schema />} />
@@ -107,16 +121,29 @@ function App() {
               <Route path="platforms">
                 <Route path="gcp">
                   <Route index element={<GCPPlatform />} />
+                  <Route path="agents" element={<PlaceholderPage title="GCP Agents" />} />
                   <Route path="environments" element={<Environments />} />
                   <Route path="connections" element={<GCPConnections />} />
                   <Route path="issues" element={<GCPIssues />} />
                 </Route>
                 <Route path="aws">
-                  <Route index element={<AWSPlatform />} />
-                  <Route path="environments" element={<Environments />} />
-                  <Route path="connections" element={<GCPConnections />} />
-                  <Route path="issues" element={<GCPIssues />} />
+                  <Route index element={<PlaceholderPage title="AWS Platform" description="AWS Integration is To Be Confirmed (TBC)." />} />
                 </Route>
+                <Route path="snowflake">
+                  <Route index element={<PlaceholderPage title="Snowflake" description="Snowflake Integration is To Be Confirmed (TBC)." />} />
+                </Route>
+                <Route path="on-premises">
+                  <Route path="databases">
+                    <Route path="oracle" element={<OracleDashboard />} />
+                    <Route path="mssql" element={<MSSQLDashboard />} />
+                    <Route path="mysql" element={<MySQLDashboard />} />
+                    <Route path="postgresql" element={<PostgresDashboard />} />
+                  </Route>
+                </Route>
+                <Route path="servicenow">
+                  <Route path="cmdb" element={<PlaceholderPage title="ServiceNow CMDB" />} />
+                </Route>
+                {/* Legacy routes for compatibility */}
                 <Route path="gcve">
                   <Route index element={<GCVEPlatform />} />
                   <Route path="environments" element={<Environments />} />

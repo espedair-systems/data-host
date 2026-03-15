@@ -37,7 +37,8 @@ type TrainingSelectionRequest struct {
 
 // @Description Standardized error response
 type ErrorResponse struct {
-	Error   string `json:"error" example:"Internal Server Error"`
-	Message string `json:"message" example:"An unexpected error occurred"`
-	Code    int    `json:"code" example:"500"`
+	Error   string   `json:"error" example:"Internal Server Error"`
+	Message string   `json:"message" example:"An unexpected error occurred"`
+	Details []string `json:"details,omitempty"`
+	Code    int      `json:"code" example:"500"`
 }

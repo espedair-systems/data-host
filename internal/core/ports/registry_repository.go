@@ -27,5 +27,9 @@ type RegistryRepository interface {
 	// Service tree operations (typically only filesystem-based)
 	GetServiceTree() ([]domain.SchemaNode, error)
 
+	GetPublishedAssets() ([]domain.PublishedAsset, error)
+	GetPublishedFile(assetName, fileName string) ([]byte, error)
+	SavePublishedFile(assetName, fileName string, content []byte) error
+
 	GetUserRepo() UserRepository
 }

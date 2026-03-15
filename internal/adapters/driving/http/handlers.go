@@ -2,7 +2,9 @@ package http
 
 import (
 	"data-host/internal/core/domain"
+	"encoding/json"
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
@@ -449,4 +451,171 @@ func (a *GinAdapter) UpdateTrainingSelection(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"status": "success"})
+}
+
+// GetPublishedAssets godoc
+// @Summary      Get published assets
+// @Description  Retrieve list of schema assets in the data-services/data directory
+// @Tags         Site
+// @Produce      json
+// @Success      200  {array}   domain.PublishedAsset
+// @Failure      500  {object}  domain.ErrorResponse
+// @Router       /site/published-data [get]
+func (a *GinAdapter) GetPublishedAssets(c *gin.Context) {
+	assets, err := a.repo.GetPublishedAssets()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{
+			Error:   "Internal Server Error",
+			Message: err.Error(),
+			Code:    http.StatusInternalServerError,
+		})
+		return
+	}
+	c.JSON(http.StatusOK, assets)
+}
+
+// GetPublishedFile godoc
+// @Summary      Get published file
+// @Description  Get content of schema.json or collections.json for an asset
+// @Tags         Site
+// @Produce      json
+// @Param        asset  path      string  true  "Asset name"
+// @Param        file   path      string  true  "File name (schema.json or collections.json)"
+// @Success      200  {object}  interface{}
+// @Failure      500  {object}  domain.ErrorResponse
+// @Router       /site/published-data/{asset}/{file} [get]
+func (a *GinAdapter) GetPublishedFile(c *gin.Context) {
+	asset := c.Param("asset")
+	file := c.Param("file")
+	content, err := a.repo.GetPublishedFile(asset, file)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{
+			Error:   "Internal Server Error",
+			Message: err.Error(),
+			Code:    http.StatusInternalServerError,
+		})
+		return
+	}
+	// Content is JSON, so we unmarshal it to return as JSON object
+	var val interface{}
+	if err := json.Unmarshal(content, &val); err != nil {
+		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{
+			Error:   "Internal Server Error",
+			Message: "failed to parse file content: " + err.Error(),
+			Code:    http.StatusInternalServerError,
+		})
+		return
+	}
+	c.JSON(http.StatusOK, val)
+}
+
+// SavePublishedFile godoc
+// @Summary      Save published file
+// @Description  Save content of schema.json or collections.json for an asset
+// @Tags         Site
+// @Accept       json
+// @Produce      json
+// @Param        asset  path      string  true  "Asset name"
+// @Param        file   path      string  true  "File name"
+// @Param        body   body      interface{}  true  "JSON content"
+// @Success      200  {object}  map[string]string
+// @Failure      500  {object}  domain.ErrorResponse
+// @Router       /site/published-data/{asset}/{file} [post]
+func (a *GinAdapter) SavePublishedFile(c *gin.Context) {
+	asset := c.Param("asset")
+	file := c.Param("file")
+
+	var content interface{}
+	if err := c.ShouldBindJSON(&content); err != nil {
+		c.JSON(http.StatusBadRequest, domain.ErrorResponse{
+			Error:   "Bad Request",
+			Message: err.Error(),
+			Code:    http.StatusBadRequest,
+		})
+		return
+	}
+
+	// If it's schema.json, validate it against master schema
+	if file == "schema.json" {
+		schemaPath := "schema/services.schema.json"
+		schemaLoader := gojsonschema.NewReferenceLoader("file://" + schemaPath)
+		documentLoader := gojsonschema.NewGoLoader(content)
+
+		result, err := gojsonschema.Validate(schemaLoader, documentLoader)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, domain.ErrorResponse{
+				Error:   "Validation System Error",
+				Message: "failed to run validation: " + err.Error(),
+				Code:    http.StatusInternalServerError,
+			})
+			return
+		}
+
+		if !result.Valid() {
+			var errors []string
+			for _, desc := range result.Errors() {
+				errors = append(errors, desc.String())
+			}
+			c.JSON(http.StatusBadRequest, domain.ErrorResponse{
+				Error:   "Validation Failed",
+				Message: "The provided schema does not match the master template",
+				Details: errors,
+				Code:    http.StatusBadRequest,
+			})
+			return
+		}
+	}
+
+	raw, err := json.MarshalIndent(content, "", "    ")
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{
+			Error:   "Internal Server Error",
+			Message: "failed to marshal content",
+			Code:    http.StatusInternalServerError,
+		})
+		return
+	}
+
+	if err := a.repo.SavePublishedFile(asset, file, raw); err != nil {
+		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{
+			Error:   "Internal Server Error",
+			Message: err.Error(),
+			Code:    http.StatusInternalServerError,
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": "success"})
+}
+
+// GetMasterSchema godoc
+// @Summary      Get master services schema
+// @Description  Retrieve the services.schema.json used for validation
+// @Tags         Site
+// @Produce      json
+// @Success      200  {object}  interface{}
+// @Failure      500  {object}  domain.ErrorResponse
+// @Router       /site/master-schema [get]
+func (a *GinAdapter) GetMasterSchema(c *gin.Context) {
+	schemaPath := "schema/services.schema.json"
+	data, err := os.ReadFile(schemaPath)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{
+			Error:   "Internal Server Error",
+			Message: "failed to read master schema: " + err.Error(),
+			Code:    http.StatusInternalServerError,
+		})
+		return
+	}
+
+	var val interface{}
+	if err := json.Unmarshal(data, &val); err != nil {
+		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{
+			Error:   "Internal Server Error",
+			Message: "failed to parse master schema: " + err.Error(),
+			Code:    http.StatusInternalServerError,
+		})
+		return
+	}
+	c.JSON(http.StatusOK, val)
 }
