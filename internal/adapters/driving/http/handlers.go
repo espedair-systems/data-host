@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
+	"github.com/xeipuuv/gojsonschema"
 )
 
 // Login godoc
@@ -290,6 +291,92 @@ func (a *GinAdapter) GetSelection(c *gin.Context) {
 // @Failure      400     {object}  domain.ErrorResponse
 // @Failure      500     {object}  domain.ErrorResponse
 // @Router       /site/selection [post]
+// ValidateSchema handles schema validation and pre-check
+// @Summary Validate and preview schema ingestion
+// @Description Validates a schema.json against the registry rules and returns diff if existing
+// @Tags Ingestion
+// @Accept json
+// @Produce json
+// @Param schema body domain.FileSchema true "Schema to validate"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Router /ingestion/validate [post]
+func (a *GinAdapter) ValidateSchema(c *gin.Context) {
+	var newSchema domain.FileSchema
+	if err := c.ShouldBindJSON(&newSchema); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON format: " + err.Error()})
+		return
+	}
+
+	// 1. JSON Schema Validation
+	schemaPath := "schema/services.schema.json"
+	schemaLoader := gojsonschema.NewReferenceLoader("file://" + schemaPath)
+	documentLoader := gojsonschema.NewGoLoader(newSchema)
+
+	result, err := gojsonschema.Validate(schemaLoader, documentLoader)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Validation system error: " + err.Error()})
+		return
+	}
+
+	if !result.Valid() {
+		var errors []string
+		for _, desc := range result.Errors() {
+			errors = append(errors, desc.String())
+		}
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Schema validation failed", "details": errors})
+		return
+	}
+
+	// 2. Check existence and build diff preview
+	existing, err := a.repo.GetFullSchema(newSchema.Name)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error: " + err.Error()})
+		return
+	}
+
+	if existing != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"status":   "conflict",
+			"message":  "Schema already exists. Review differences below.",
+			"existing": existing,
+			"new":      newSchema,
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":  "success",
+		"message": "Schema is valid and ready for ingestion.",
+		"new":     newSchema,
+	})
+}
+
+// IngestSchema performs the actual database ingestion
+// @Summary Confirm and ingest schema
+// @Description Saves the validated schema to the database
+// @Tags Ingestion
+// @Accept json
+// @Produce json
+// @Param schema body domain.FileSchema true "Schema to ingest"
+// @Success 200 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /ingestion/ingest [post]
+func (a *GinAdapter) IngestSchema(c *gin.Context) {
+	var schema domain.FileSchema
+	if err := c.ShouldBindJSON(&schema); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
+		return
+	}
+
+	if err := a.repo.SaveFullSchema(schema); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save schema: " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "Schema ingested successfully"})
+}
+
 func (a *GinAdapter) UpdateSelection(c *gin.Context) {
 	var req domain.GuidelineSelectionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

@@ -1,0 +1,36 @@
+
+under /home/ingestion change the schema ingestion to allow a user to add a schema.json  as per schema/services.schema.json, have the file vailidated and if valid save to the database, if the schema is already in the database then show the diffs and allow the user to select what is written to the database 
+
+make build                                                                                                                                                                                                                                               (base) 
+Building Frontend...
+
+up to date, audited 689 packages in 5s
+
+189 packages are looking for funding
+  run `npm fund` for details
+
+4 vulnerabilities (2 moderate, 2 high)
+
+To address all issues, run:
+  npm audit fix
+
+Run `npm audit` for details.
+
+> frontend@0.0.0 build
+> tsc -b && vite build
+
+src/pages/Ingestion.tsx:48:12 - error TS6133: 'selectedEnums' is declared but its value is never read.
+
+48     const [selectedEnums, setSelectedEnums] = useState<Record<string, boolean>>({});
+              ~~~~~~~~~~~~~
+
+src/pages/Ingestion.tsx:49:12 - error TS6133: 'selectedFunctions' is declared but its value is never read.
+
+49     const [selectedFunctions, setSelectedFunctions] = useState<Record<string, boolean>>({});
+              ~~~~~~~~~~~~~~~~~
+
+
+Found 2 errors.
+
+make: *** [Makefile:84: build-frontend] Error 2
+

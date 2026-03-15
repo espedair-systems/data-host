@@ -94,6 +94,13 @@ func (a *GinAdapter) Start(config domain.HostConfig, repo ports.RegistryReposito
 			site.GET("/training-selection", a.GetTrainingSelection)
 			site.POST("/training-selection", authMW, auth.RequireRole(domain.RoleAdmin), a.UpdateTrainingSelection)
 		}
+
+		ingestion := api.Group("/ingestion")
+		ingestion.Use(authMW)
+		{
+			ingestion.POST("/validate", a.ValidateSchema)
+			ingestion.POST("/ingest", auth.RequireRole(domain.RoleAdmin), a.IngestSchema)
+		}
 	}
 
 	// Catch-all handler for everything else (Total Control - No Directory Listings)

@@ -116,6 +116,14 @@ func (r *FilesystemRepository) GetBlueprintSchemas() ([]domain.BlueprintSchema, 
 	return []domain.BlueprintSchema{}, nil
 }
 
+func (r *FilesystemRepository) GetFullSchema(name string) (*domain.FileSchema, error) {
+	return nil, fmt.Errorf("GetFullSchema not implemented in filesystem mode")
+}
+
+func (r *FilesystemRepository) SaveFullSchema(schema domain.FileSchema) error {
+	return fmt.Errorf("SaveFullSchema not implemented in filesystem mode")
+}
+
 func (r *FilesystemRepository) GetUserRepo() ports.UserRepository {
 	return nil
 }

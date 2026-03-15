@@ -11,6 +11,8 @@ type RegistryRepository interface {
 	GetAllSchemaDashboards() ([]domain.SchemaDashboard, error)
 	GetBlueprintSchemas() ([]domain.BlueprintSchema, error)
 	UpdateTable(moduleName string, table domain.TableDetail) error
+	GetFullSchema(name string) (*domain.FileSchema, error)
+	SaveFullSchema(schema domain.FileSchema) error
 
 	// Guidelines operations
 	GetGuidelines() ([]domain.MDXItem, error)
