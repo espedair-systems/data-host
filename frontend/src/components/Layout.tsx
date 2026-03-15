@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/collapsible";
 import { Input } from '@/components/ui/input';
 import { useColorMode } from '../context/ColorModeContext';
+import { useSidebar } from '../context/SidebarContext';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -100,6 +101,7 @@ const Layout: React.FC = () => {
   const [publishOpen, setPublishOpen] = useState(true);
   const [onPremOpen, setOnPremOpen] = useState(false);
   const { mode, toggleColorMode } = useColorMode();
+  const { content: sidebarContent } = useSidebar();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -487,36 +489,42 @@ const Layout: React.FC = () => {
             <aside className="hidden xl:flex flex-col w-80 border-l bg-card/40 backdrop-blur-sm shrink-0 overflow-y-auto">
               <div className="p-6 space-y-8">
                 {/* Insights Section */}
-                <div className="space-y-4">
-                  <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">
-                    {location.pathname.includes('/publish/schema-data') ? 'Published Insights' : 'System Insights'}
-                  </h3>
-                  <div className="grid grid-cols-2 gap-3">
-                    {location.pathname.includes('/publish/schema-data') ? (
-                      <>
-                        <div className="p-4 rounded-2xl bg-indigo-500/5 border border-indigo-500/10">
-                          <div className="text-xl font-black text-indigo-600">Sync</div>
-                          <div className="text-[8px] font-bold uppercase text-muted-foreground/60">Status</div>
-                        </div>
-                        <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/10">
-                          <div className="text-xl font-black text-amber-600">Pending</div>
-                          <div className="text-[8px] font-bold uppercase text-muted-foreground/60">Updates</div>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10">
-                          <div className="text-xl font-black text-primary">1.2k</div>
-                          <div className="text-[8px] font-bold uppercase text-muted-foreground/60">Assets</div>
-                        </div>
-                        <div className="p-4 rounded-2xl bg-emerald-500/5 border border-emerald-500/10">
-                          <div className="text-xl font-black text-emerald-600">98%</div>
-                          <div className="text-[8px] font-bold uppercase text-muted-foreground/60">Health</div>
-                        </div>
-                      </>
-                    )}
+                {sidebarContent ? (
+                  <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-500">
+                    {sidebarContent}
                   </div>
-                </div>
+                ) : (
+                  <div className="space-y-4">
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">
+                      {location.pathname.includes('/publish/schema-data') ? 'Published Insights' : 'System Insights'}
+                    </h3>
+                    <div className="grid grid-cols-2 gap-3">
+                      {location.pathname.includes('/publish/schema-data') ? (
+                        <>
+                          <div className="p-4 rounded-2xl bg-indigo-500/5 border border-indigo-500/10">
+                            <div className="text-xl font-black text-indigo-600">Sync</div>
+                            <div className="text-[8px] font-bold uppercase text-muted-foreground/60">Status</div>
+                          </div>
+                          <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/10">
+                            <div className="text-xl font-black text-amber-600">Pending</div>
+                            <div className="text-[8px] font-bold uppercase text-muted-foreground/60">Updates</div>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10">
+                            <div className="text-xl font-black text-primary">1.2k</div>
+                            <div className="text-[8px] font-bold uppercase text-muted-foreground/60">Assets</div>
+                          </div>
+                          <div className="p-4 rounded-2xl bg-emerald-500/5 border border-emerald-500/10">
+                            <div className="text-xl font-black text-emerald-600">98%</div>
+                            <div className="text-[8px] font-bold uppercase text-muted-foreground/60">Health</div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {/* Resource Links / Training Section */}
                 <div className="space-y-4">

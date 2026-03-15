@@ -41,6 +41,7 @@ import PlaceholderPage from './pages/Placeholder';
 import Home from './pages/Home';
 import { ColorModeProvider } from './context/ColorModeContext';
 import { DirectoryPreferenceProvider } from './context/DirectoryPreferenceContext';
+import { SidebarProvider } from './context/SidebarContext';
 const FilesPage = () => (
   <div className="flex flex-col gap-6">
     <h1 className="text-3xl font-bold tracking-tight">Files</h1>
@@ -63,109 +64,111 @@ function App() {
   return (
     <ColorModeProvider>
       <DirectoryPreferenceProvider>
-        <BrowserRouter basename="/home">
-          <Routes>
-            <Route path="/" element={<Layout />}>
-              <Route index element={<Home />} />
-              <Route path="explore" element={<Directory />} />
-              <Route path="publish">
-                <Route index element={<Publish />} />
-                <Route path="dashboard" element={<Publish />} />
-                <Route path="schema-data" element={<PublishedSchema />} />
-                <Route path="schema-data/edit/:asset/:file" element={<PublishedSchemaEditor />} />
-                <Route path="tables-pages" element={<PlaceholderPage title="Publish - Tables Pages" description="Manage table pages generated from schema and collections data." />} />
-              </Route>
-              <Route path="curate" element={<Curate />} />
-              <Route path="site" element={<Site />} />
-              <Route path="schema">
-                <Route index element={<Schema />} />
-                <Route path="edit" element={<TableEditor />} />
-                <Route path="map" element={<MapPage />} />
-              </Route>
-              <Route path="ingestion" element={<IngestionPage />} />
-              <Route path="ingestion/bigquery">
-                <Route index element={<BigQueryDashboard />} />
-                <Route path="connections" element={<GCPConnections />} />
-                <Route path="projects" element={<GCPProjects />} />
-              </Route>
-              <Route path="ingestion/gcs">
-                <Route index element={<GCSDashboard />} />
-                <Route path="connections" element={<GCPConnections />} />
-                <Route path="projects" element={<GCPProjects />} />
-              </Route>
-              <Route path="ingestion/oracle">
-                <Route index element={<OracleDashboard />} />
-                <Route path="new" element={<OracleIngestion />} />
-                <Route path="projects" element={<OracleProjects />} />
-              </Route>
-              <Route path="ingestion/postgres">
-                <Route index element={<PostgresDashboard />} />
-                <Route path="connections" element={<PostgresConnections />} />
-                <Route path="schemas" element={<PostgresSchemas />} />
-              </Route>
-              <Route path="ingestion/mssql">
-                <Route index element={<MSSQLDashboard />} />
-                <Route path="new" element={<MSSQLIngestion />} />
-                <Route path="projects" element={<MSSQLProjects />} />
-              </Route>
-              <Route path="ingestion/mysql">
-                <Route index element={<MySQLDashboard />} />
-                <Route path="new" element={<MySQLIngestion />} />
-                <Route path="projects" element={<MySQLProjects />} />
-              </Route>
-              <Route path="ingestion/mongo">
-                <Route index element={<MongoDashboard />} />
-                <Route path="new" element={<MongoIngestion />} />
-                <Route path="projects" element={<MongoProjects />} />
-              </Route>
-              <Route path="platforms">
-                <Route path="gcp">
-                  <Route index element={<GCPPlatform />} />
-                  <Route path="agents" element={<PlaceholderPage title="GCP Agents" />} />
-                  <Route path="environments" element={<Environments />} />
+        <SidebarProvider>
+          <BrowserRouter basename="/home">
+            <Routes>
+              <Route path="/" element={<Layout />}>
+                <Route index element={<Home />} />
+                <Route path="explore" element={<Directory />} />
+                <Route path="publish">
+                  <Route index element={<Publish />} />
+                  <Route path="dashboard" element={<Publish />} />
+                  <Route path="schema-data" element={<PublishedSchema />} />
+                  <Route path="schema-data/edit/:asset/:file" element={<PublishedSchemaEditor />} />
+                  <Route path="tables-pages" element={<PlaceholderPage title="Publish - Tables Pages" description="Manage table pages generated from schema and collections data." />} />
+                </Route>
+                <Route path="curate" element={<Curate />} />
+                <Route path="site" element={<Site />} />
+                <Route path="schema">
+                  <Route index element={<Schema />} />
+                  <Route path="edit" element={<TableEditor />} />
+                  <Route path="map" element={<MapPage />} />
+                </Route>
+                <Route path="ingestion" element={<IngestionPage />} />
+                <Route path="ingestion/bigquery">
+                  <Route index element={<BigQueryDashboard />} />
                   <Route path="connections" element={<GCPConnections />} />
-                  <Route path="issues" element={<GCPIssues />} />
+                  <Route path="projects" element={<GCPProjects />} />
                 </Route>
-                <Route path="aws">
-                  <Route index element={<PlaceholderPage title="AWS Platform" description="AWS Integration is To Be Confirmed (TBC)." />} />
+                <Route path="ingestion/gcs">
+                  <Route index element={<GCSDashboard />} />
+                  <Route path="connections" element={<GCPConnections />} />
+                  <Route path="projects" element={<GCPProjects />} />
                 </Route>
-                <Route path="snowflake">
-                  <Route index element={<PlaceholderPage title="Snowflake" description="Snowflake Integration is To Be Confirmed (TBC)." />} />
+                <Route path="ingestion/oracle">
+                  <Route index element={<OracleDashboard />} />
+                  <Route path="new" element={<OracleIngestion />} />
+                  <Route path="projects" element={<OracleProjects />} />
                 </Route>
-                <Route path="on-premises">
-                  <Route path="databases">
-                    <Route path="oracle" element={<OracleDashboard />} />
-                    <Route path="mssql" element={<MSSQLDashboard />} />
-                    <Route path="mysql" element={<MySQLDashboard />} />
-                    <Route path="postgresql" element={<PostgresDashboard />} />
+                <Route path="ingestion/postgres">
+                  <Route index element={<PostgresDashboard />} />
+                  <Route path="connections" element={<PostgresConnections />} />
+                  <Route path="schemas" element={<PostgresSchemas />} />
+                </Route>
+                <Route path="ingestion/mssql">
+                  <Route index element={<MSSQLDashboard />} />
+                  <Route path="new" element={<MSSQLIngestion />} />
+                  <Route path="projects" element={<MSSQLProjects />} />
+                </Route>
+                <Route path="ingestion/mysql">
+                  <Route index element={<MySQLDashboard />} />
+                  <Route path="new" element={<MySQLIngestion />} />
+                  <Route path="projects" element={<MySQLProjects />} />
+                </Route>
+                <Route path="ingestion/mongo">
+                  <Route index element={<MongoDashboard />} />
+                  <Route path="new" element={<MongoIngestion />} />
+                  <Route path="projects" element={<MongoProjects />} />
+                </Route>
+                <Route path="platforms">
+                  <Route path="gcp">
+                    <Route index element={<GCPPlatform />} />
+                    <Route path="agents" element={<PlaceholderPage title="GCP Agents" />} />
+                    <Route path="environments" element={<Environments />} />
+                    <Route path="connections" element={<GCPConnections />} />
+                    <Route path="issues" element={<GCPIssues />} />
+                  </Route>
+                  <Route path="aws">
+                    <Route index element={<PlaceholderPage title="AWS Platform" description="AWS Integration is To Be Confirmed (TBC)." />} />
+                  </Route>
+                  <Route path="snowflake">
+                    <Route index element={<PlaceholderPage title="Snowflake" description="Snowflake Integration is To Be Confirmed (TBC)." />} />
+                  </Route>
+                  <Route path="on-premises">
+                    <Route path="databases">
+                      <Route path="oracle" element={<OracleDashboard />} />
+                      <Route path="mssql" element={<MSSQLDashboard />} />
+                      <Route path="mysql" element={<MySQLDashboard />} />
+                      <Route path="postgresql" element={<PostgresDashboard />} />
+                    </Route>
+                  </Route>
+                  <Route path="servicenow">
+                    <Route path="cmdb" element={<PlaceholderPage title="ServiceNow CMDB" />} />
+                  </Route>
+                  {/* Legacy routes for compatibility */}
+                  <Route path="gcve">
+                    <Route index element={<GCVEPlatform />} />
+                    <Route path="environments" element={<Environments />} />
+                    <Route path="connections" element={<GCPConnections />} />
+                    <Route path="issues" element={<GCPIssues />} />
+                  </Route>
+                  <Route path="saas">
+                    <Route index element={<SaaSPlatform />} />
+                    <Route path="environments" element={<Environments />} />
+                    <Route path="connections" element={<GCPConnections />} />
+                    <Route path="issues" element={<GCPIssues />} />
                   </Route>
                 </Route>
-                <Route path="servicenow">
-                  <Route path="cmdb" element={<PlaceholderPage title="ServiceNow CMDB" />} />
-                </Route>
-                {/* Legacy routes for compatibility */}
-                <Route path="gcve">
-                  <Route index element={<GCVEPlatform />} />
-                  <Route path="environments" element={<Environments />} />
-                  <Route path="connections" element={<GCPConnections />} />
-                  <Route path="issues" element={<GCPIssues />} />
-                </Route>
-                <Route path="saas">
-                  <Route index element={<SaaSPlatform />} />
-                  <Route path="environments" element={<Environments />} />
-                  <Route path="connections" element={<GCPConnections />} />
-                  <Route path="issues" element={<GCPIssues />} />
-                </Route>
+                <Route path="environments" element={<Environments />} />
+                <Route path="config" element={<Config />} />
+                <Route path="settings/directory" element={<DirectoryPreferences />} />
+                <Route path="mounts" element={<Mounts />} />
+                <Route path="files" element={<FilesPage />} />
+                <Route path="settings" element={<SettingsPage />} />
               </Route>
-              <Route path="environments" element={<Environments />} />
-              <Route path="config" element={<Config />} />
-              <Route path="settings/directory" element={<DirectoryPreferences />} />
-              <Route path="mounts" element={<Mounts />} />
-              <Route path="files" element={<FilesPage />} />
-              <Route path="settings" element={<SettingsPage />} />
-            </Route>
-          </Routes>
-        </BrowserRouter>
+            </Routes>
+          </BrowserRouter>
+        </SidebarProvider>
       </DirectoryPreferenceProvider>
     </ColorModeProvider>
   );

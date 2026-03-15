@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
     ArrowLeft,
     Save,
@@ -32,6 +32,7 @@ import {
     Activity
 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useSidebar } from '../context/SidebarContext';
 import { Card, CardContent, CardHeader, CardFooter, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -66,6 +67,7 @@ import {
 const PublishedSchemaEditor: React.FC = () => {
     const { asset, file } = useParams<{ asset: string, file: string }>();
     const navigate = useNavigate();
+    const { setContent } = useSidebar();
     const [jsonContent, setJsonContent] = useState('');
     const [data, setData] = useState<any>(null);
     const [masterSchema, setMasterSchema] = useState<any>(null);
@@ -76,7 +78,7 @@ const PublishedSchemaEditor: React.FC = () => {
     const [activeTab, setActiveTab] = useState('visual');
     const [visualSection, setVisualSection] = useState('tables');
 
-    const fetchAll = async () => {
+    const fetchAll = useCallback(async () => {
         if (!asset || !file) return;
         setLoading(true);
         try {
@@ -107,7 +109,7 @@ const PublishedSchemaEditor: React.FC = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [asset, file]);
 
     const handleSave = async () => {
         if (!asset || !file) return;
@@ -137,6 +139,85 @@ const PublishedSchemaEditor: React.FC = () => {
             setSaving(false);
         }
     };
+
+    useEffect(() => {
+        if (!data) return;
+
+        const sidebarElement = (
+            <div className="space-y-4">
+                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">
+                    Published Insights
+                </h3>
+                <div className="flex flex-col gap-6">
+                    <Card className="border-none shadow-2xl bg-primary/5 rounded-[40px] p-8 border border-primary/10 relative overflow-hidden backdrop-blur-xl">
+                        <div className="absolute -top-10 -right-10 w-32 h-32 bg-primary/10 rounded-full blur-[60px]" />
+                        <h3 className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary mb-6 flex items-center gap-3">
+                            <ShieldCheck className="h-4 w-4" /> Enforcement
+                        </h3>
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-4 p-4 bg-card/60 rounded-[24px] border border-white/10 shadow-sm">
+                                <div className="w-10 h-10 rounded-[14px] bg-orange-500/10 flex items-center justify-center text-orange-600">
+                                    <TableIcon className="h-5 w-5" />
+                                </div>
+                                <div className="space-y-0.5">
+                                    <p className="text-[11px] font-black uppercase leading-none tabular-nums text-foreground">{data?.tables?.length || 0} Entities</p>
+                                    <p className="text-[8px] text-muted-foreground uppercase tracking-widest font-bold">Graph Nodes</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-4 p-4 bg-card/60 rounded-[24px] border border-white/10 shadow-sm">
+                                <div className="w-10 h-10 rounded-[14px] bg-blue-500/10 flex items-center justify-center text-blue-600">
+                                    <Link2 className="h-5 w-5" />
+                                </div>
+                                <div className="space-y-0.5">
+                                    <p className="text-[11px] font-black uppercase leading-none tabular-nums text-foreground">{data?.relations?.length || 0} Links</p>
+                                    <p className="text-[8px] text-muted-foreground uppercase tracking-widest font-bold">Edge Topology</p>
+                                </div>
+                            </div>
+                        </div>
+                    </Card>
+
+                    <Card className="border-none shadow-2xl bg-card rounded-[40px] p-8 border border-white/5 flex flex-col gap-6">
+                        <div className="flex items-center justify-between">
+                            <h3 className="text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground/60 flex items-center gap-3">
+                                <ListFilter className="h-4 w-4 opacity-50" /> Context Map
+                            </h3>
+                            <Badge variant="outline" className="text-[9px] tabular-nums px-2 py-0.5 rounded-full bg-muted/50 border-white/10">v.1.2</Badge>
+                        </div>
+                        <ScrollArea className="h-[300px] pr-2">
+                            <div className="space-y-2">
+                                {(data?.tables || []).map((table: any, i: number) => (
+                                    <div key={i} className="flex items-center gap-3 py-3 px-4 rounded-[18px] hover:bg-muted cursor-pointer transition-all group border border-transparent hover:border-white/5 shadow-sm">
+                                        <div className="w-8 h-8 rounded-[10px] bg-muted/80 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                                            <Database className="h-3.5 w-3.5 text-muted-foreground/30 group-hover:text-primary transition-colors" />
+                                        </div>
+                                        <div className="flex flex-col min-w-0">
+                                            <span className="text-[11px] font-black text-foreground/80 truncate uppercase tracking-tight">{table.name}</span>
+                                            <span className="text-[8px] font-bold text-muted-foreground/40 uppercase tracking-widest">{table.columns?.length || 0} Attr</span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </ScrollArea>
+
+                        <Separator className="opacity-30" />
+
+                        <div className="grid grid-cols-2 gap-3">
+                            <Button variant="ghost" size="sm" onClick={fetchAll} className="rounded-[16px] text-[9px] font-black uppercase tracking-widest h-11 hover:bg-primary/10 transition-all border border-white/5 bg-muted/20">
+                                Reset
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={() => setData({ ...data, tables: [], relations: [] })} className="rounded-[16px] text-[9px] font-black uppercase tracking-widest h-11 text-red-500/60 hover:text-red-500 hover:bg-red-500/10 transition-all border border-white/5 bg-muted/20">
+                                Wipe
+                            </Button>
+                        </div>
+                    </Card>
+                </div>
+            </div>
+        );
+
+        setContent(sidebarElement);
+
+        return () => setContent(null);
+    }, [data, setContent, fetchAll]);
 
     const updateField = (field: string, value: any) => {
         setData((prev: any) => ({ ...prev, [field]: value }));
@@ -1148,89 +1229,10 @@ const PublishedSchemaEditor: React.FC = () => {
                 </div>
             )}
 
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-12">
+            <div className="grid grid-cols-1 gap-12">
                 {/* Editor Module */}
-                <div className="lg:col-span-3">
+                <div className="lg:col-span-1">
                     {activeTab === 'visual' ? <VisualEditor /> : <RawEditor />}
-                </div>
-
-                {/* Sidebar Info */}
-                <div className="hidden lg:flex flex-col gap-10">
-                    <Card className="border-none shadow-2xl bg-primary/5 rounded-[50px] p-10 border border-primary/10 relative overflow-hidden backdrop-blur-xl">
-                        <div className="absolute -top-10 -right-10 w-48 h-48 bg-primary/10 rounded-full blur-[80px]" />
-                        <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-blue-500/5 rounded-full blur-[60px]" />
-
-                        <h3 className="text-[11px] font-black uppercase tracking-[0.4em] text-primary mb-8 flex items-center gap-4">
-                            <ShieldCheck className="h-5 w-5" /> Enforcement
-                        </h3>
-                        <p className="text-[11px] font-bold text-slate-500/80 leading-relaxed italic mb-10 border-l-4 border-primary/30 pl-6 py-2">
-                            Every mutation is validated against the <span className="text-foreground underline decoration-primary/20 decoration-2 underline-offset-4">Draft 2020-12</span> JSON architecture protocol for strict integrity.
-                        </p>
-                        <div className="space-y-6">
-                            <div className="flex items-center gap-5 p-5 bg-card/60 rounded-[30px] border border-white/10 shadow-sm group hover:border-primary/40 transition-all cursor-default hover:shadow-xl hover:shadow-primary/5">
-                                <div className="w-12 h-12 rounded-[18px] bg-orange-500/10 flex items-center justify-center text-orange-600 group-hover:scale-110 transition-transform shadow-inner">
-                                    <TableIcon className="h-6 w-6" />
-                                </div>
-                                <div className="space-y-0.5">
-                                    <p className="text-[12px] font-black uppercase leading-none tabular-nums text-foreground">{data?.tables?.length || 0} Entities</p>
-                                    <p className="text-[9px] text-muted-foreground uppercase tracking-widest font-bold">Graph Nodes</p>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-5 p-5 bg-card/60 rounded-[30px] border border-white/10 shadow-sm group hover:border-blue-500/40 transition-all cursor-default hover:shadow-xl hover:shadow-blue-500/5">
-                                <div className="w-12 h-12 rounded-[18px] bg-blue-500/10 flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform shadow-inner">
-                                    <Link2 className="h-6 w-6" />
-                                </div>
-                                <div className="space-y-0.5">
-                                    <p className="text-[12px] font-black uppercase leading-none tabular-nums font-mono text-foreground">{data?.relations?.length || 0} Links</p>
-                                    <p className="text-[9px] text-muted-foreground uppercase tracking-widest font-bold">Edge Topology</p>
-                                </div>
-                            </div>
-                        </div>
-                    </Card>
-
-                    <Card className="border-none shadow-2xl bg-card rounded-[50px] p-10 border border-white/5 flex flex-col gap-8">
-                        <div className="flex items-center justify-between">
-                            <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-muted-foreground/40 flex items-center gap-4">
-                                <ListFilter className="h-5 w-5 opacity-50" /> Context Map
-                            </h3>
-                            <Badge variant="outline" className="text-[10px] tabular-nums px-3 py-1 rounded-full bg-muted/50 border-white/10">v.1.2.4</Badge>
-                        </div>
-                        <ScrollArea className="h-[440px] pr-4 -mr-4">
-                            <div className="space-y-2 p-1">
-                                <p className="text-[10px] font-black text-primary uppercase mb-4 pl-3 tracking-[0.2em] italic border-l-2 border-primary">Core Entities</p>
-                                {(data?.tables || []).map((table: any, i: number) => (
-                                    <div key={i} className="flex items-center gap-4 py-4 px-5 rounded-[22px] hover:bg-muted cursor-pointer transition-all group border border-transparent hover:border-white/10 shadow-sm hover:shadow-md">
-                                        <div className="w-10 h-10 rounded-[14px] bg-muted/80 flex items-center justify-center group-hover:bg-primary/15 transition-colors shadow-inner">
-                                            <Database className="h-4.5 w-4.5 text-muted-foreground/30 group-hover:text-primary transition-colors" />
-                                        </div>
-                                        <div className="flex flex-col min-w-0">
-                                            <span className="text-[12px] font-black text-foreground/80 truncate uppercase tracking-tight">{table.name}</span>
-                                            <span className="text-[8px] font-bold text-muted-foreground/40 uppercase tracking-widest">{table.columns?.length || 0} Attr</span>
-                                        </div>
-                                        <ChevronRight className="h-4 w-4 ml-auto opacity-0 group-hover:opacity-100 transition-all translate-x-2 group-hover:translate-x-0 text-primary" />
-                                    </div>
-                                ))}
-                                {(!data?.tables || data.tables.length === 0) && (
-                                    <div className="p-10 text-center border-2 border-dashed border-white/5 rounded-[30px] my-6">
-                                        <p className="text-[10px] italic text-muted-foreground/30 font-black uppercase tracking-[0.4em]">Scope Void</p>
-                                    </div>
-                                )}
-                            </div>
-                        </ScrollArea>
-
-                        <Separator className="opacity-30" />
-
-                        <div className="grid grid-cols-2 gap-4">
-                            <Button variant="ghost" className="rounded-[20px] text-[10px] font-black uppercase tracking-[0.2em] h-14 hover:bg-primary/10 hover:text-primary transition-all group border border-white/5 bg-muted/20">
-                                <RefreshCcw className="h-4 w-4 mr-2 group-hover:rotate-180 transition-transform duration-1000" />
-                                Reset
-                            </Button>
-                            <Button variant="ghost" className="rounded-[20px] text-[10px] font-black uppercase tracking-[0.2em] h-14 text-red-500/60 hover:text-red-500 hover:bg-red-500/10 transition-all group border border-white/5 bg-muted/20">
-                                <Trash2 className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" />
-                                Wipe
-                            </Button>
-                        </div>
-                    </Card>
                 </div>
             </div>
         </div>
