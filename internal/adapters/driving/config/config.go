@@ -59,6 +59,7 @@ func GetDefaults() *domain.HostConfig {
 			WriteRequests: 10,
 		},
 		JWTSecret: "your-secret-key-must-be-at-least-32-chars-long",
+		Deploy:    false,
 	}
 }
 
@@ -112,5 +113,8 @@ func loadFromEnv(config *domain.HostConfig) {
 	}
 	if val := os.Getenv("JWT_SECRET"); val != "" {
 		config.JWTSecret = val
+	}
+	if val := os.Getenv("DATA_HOST_DEPLOY"); val != "" {
+		config.Deploy = strings.ToLower(val) == "true"
 	}
 }

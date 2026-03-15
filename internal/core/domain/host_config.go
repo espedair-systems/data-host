@@ -23,4 +23,5 @@ type HostConfig struct {
 	CORSAllowOrigins []string        `yaml:"cors_allow_origins" validate:"required,min=1"`
 	RateLimits       RateLimitConfig `yaml:"rate_limits" validate:"required"`
 	JWTSecret        string          `yaml:"jwt_secret" validate:"required,min=32"`
+	Deploy           bool            `yaml:"deploy"`
 }

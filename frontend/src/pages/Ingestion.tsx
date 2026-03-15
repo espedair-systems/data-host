@@ -117,9 +117,11 @@ const IngestionPage: React.FC = () => {
 
         const payload = { ...result.new };
 
-        // If conflict, filter tables based on selection
+        // If conflict, filter elements based on selection
         if (result.status === 'conflict') {
-            payload.tables = result.new.tables.filter((t: any) => selectedTables[t.name]);
+            payload.tables = result.new.tables?.filter((t: any) => selectedTables[t.name]) || [];
+            payload.enums = result.new.enums?.filter((e: any) => selectedEnums[e.name]) || [];
+            payload.functions = result.new.functions?.filter((f: any) => selectedFunctions[f.name]) || [];
         }
 
         setIsUploading(true);
@@ -339,39 +341,123 @@ const IngestionPage: React.FC = () => {
                                 </div>
 
                                 <ScrollArea className="h-[400px] rounded-2xl border border-amber-500/20 bg-black/5">
-                                    <div className="p-4 space-y-4">
-                                        {result.new.tables.map((table: any) => {
-                                            const existingTable = result.existing.tables.find((t: any) => t.name === table.name);
-                                            const isNew = !existingTable;
-                                            const hasChanges = existingTable && JSON.stringify(existingTable) !== JSON.stringify(table);
+                                    <div className="p-4 space-y-8">
+                                        {/* Tables Section */}
+                                        {result.new.tables && result.new.tables.length > 0 && (
+                                            <div className="space-y-4">
+                                                <h5 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 px-2">Tables</h5>
+                                                {result.new.tables.map((table: any) => {
+                                                    const existingTable = result.existing.tables?.find((t: any) => t.name === table.name);
+                                                    const isNew = !existingTable;
+                                                    const hasChanges = existingTable && JSON.stringify(existingTable) !== JSON.stringify(table);
 
-                                            return (
-                                                <div
-                                                    key={table.name}
-                                                    className={`p-4 rounded-xl border flex items-center justify-between group transition-all cursor-pointer ${selectedTables[table.name] ? 'bg-amber-500/10 border-amber-500/30' : 'bg-transparent border-transparent grayscale'
-                                                        }`}
-                                                    onClick={() => setSelectedTables(prev => ({ ...prev, [table.name]: !prev[table.name] }))}
-                                                >
-                                                    <div className="flex items-center gap-4">
-                                                        <div className={`p-2 rounded-lg ${selectedTables[table.name] ? 'bg-amber-500/20 text-amber-600' : 'bg-muted text-muted-foreground'}`}>
-                                                            <Database className="h-5 w-5" />
-                                                        </div>
-                                                        <div>
-                                                            <div className="flex items-center gap-2">
-                                                                <span className="font-black text-sm">{table.name}</span>
-                                                                {isNew && <Badge className="bg-indigo-500 hover:bg-indigo-500 text-[9px] font-black px-1.5 h-4">NEW</Badge>}
-                                                                {hasChanges && <Badge className="bg-amber-500 hover:bg-amber-500 text-[9px] font-black px-1.5 h-4">CHANGED</Badge>}
+                                                    return (
+                                                        <div
+                                                            key={table.name}
+                                                            className={`p-4 rounded-xl border flex items-center justify-between group transition-all cursor-pointer ${selectedTables[table.name] ? 'bg-amber-500/10 border-amber-500/30' : 'bg-transparent border-transparent grayscale'
+                                                                }`}
+                                                            onClick={() => setSelectedTables(prev => ({ ...prev, [table.name]: !prev[table.name] }))}
+                                                        >
+                                                            <div className="flex items-center gap-4">
+                                                                <div className={`p-2 rounded-lg ${selectedTables[table.name] ? 'bg-amber-500/20 text-amber-600' : 'bg-muted text-muted-foreground'}`}>
+                                                                    <Database className="h-5 w-5" />
+                                                                </div>
+                                                                <div>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <span className="font-black text-sm">{table.name}</span>
+                                                                        {isNew && <Badge className="bg-indigo-500 hover:bg-indigo-500 text-[9px] font-black px-1.5 h-4">NEW</Badge>}
+                                                                        {hasChanges && <Badge className="bg-amber-500 hover:bg-amber-500 text-[9px] font-black px-1.5 h-4">CHANGED</Badge>}
+                                                                    </div>
+                                                                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight mt-0.5">{table.columns.length} columns</p>
+                                                                </div>
                                                             </div>
-                                                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight mt-0.5">{table.columns.length} columns</p>
+                                                            <Checkbox
+                                                                checked={selectedTables[table.name]}
+                                                                className="data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500 h-5 w-5 rounded-lg border-2"
+                                                            />
                                                         </div>
-                                                    </div>
-                                                    <Checkbox
-                                                        checked={selectedTables[table.name]}
-                                                        className="data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500 h-5 w-5 rounded-lg border-2"
-                                                    />
-                                                </div>
-                                            );
-                                        })}
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
+
+                                        {/* Enums Section */}
+                                        {result.new.enums && result.new.enums.length > 0 && (
+                                            <div className="space-y-4">
+                                                <h5 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 px-2">Enums</h5>
+                                                {result.new.enums.map((en: any) => {
+                                                    const existingEnum = result.existing.enums?.find((e: any) => e.name === en.name);
+                                                    const isNew = !existingEnum;
+                                                    const hasChanges = existingEnum && JSON.stringify(existingEnum) !== JSON.stringify(en);
+
+                                                    return (
+                                                        <div
+                                                            key={en.name}
+                                                            className={`p-4 rounded-xl border flex items-center justify-between group transition-all cursor-pointer ${selectedEnums[en.name] ? 'bg-amber-500/10 border-amber-500/30' : 'bg-transparent border-transparent grayscale'
+                                                                }`}
+                                                            onClick={() => setSelectedEnums(prev => ({ ...prev, [en.name]: !prev[en.name] }))}
+                                                        >
+                                                            <div className="flex items-center gap-4">
+                                                                <div className={`p-2 rounded-lg ${selectedEnums[en.name] ? 'bg-amber-500/20 text-amber-600' : 'bg-muted text-muted-foreground'}`}>
+                                                                    <FileJson className="h-5 w-5" />
+                                                                </div>
+                                                                <div>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <span className="font-black text-sm">{en.name}</span>
+                                                                        {isNew && <Badge className="bg-indigo-500 hover:bg-indigo-500 text-[9px] font-black px-1.5 h-4">NEW</Badge>}
+                                                                        {hasChanges && <Badge className="bg-amber-500 hover:bg-amber-500 text-[9px] font-black px-1.5 h-4">CHANGED</Badge>}
+                                                                    </div>
+                                                                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight mt-0.5">{en.values.length} values</p>
+                                                                </div>
+                                                            </div>
+                                                            <Checkbox
+                                                                checked={selectedEnums[en.name]}
+                                                                className="data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500 h-5 w-5 rounded-lg border-2"
+                                                            />
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
+
+                                        {/* Functions Section */}
+                                        {result.new.functions && result.new.functions.length > 0 && (
+                                            <div className="space-y-4">
+                                                <h5 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 px-2">Functions</h5>
+                                                {result.new.functions.map((fn: any) => {
+                                                    const existingFn = result.existing.functions?.find((f: any) => f.name === fn.name);
+                                                    const isNew = !existingFn;
+                                                    const hasChanges = existingFn && JSON.stringify(existingFn) !== JSON.stringify(fn);
+
+                                                    return (
+                                                        <div
+                                                            key={fn.name}
+                                                            className={`p-4 rounded-xl border flex items-center justify-between group transition-all cursor-pointer ${selectedFunctions[fn.name] ? 'bg-amber-500/10 border-amber-500/30' : 'bg-transparent border-transparent grayscale'
+                                                                }`}
+                                                            onClick={() => setSelectedFunctions(prev => ({ ...prev, [fn.name]: !prev[fn.name] }))}
+                                                        >
+                                                            <div className="flex items-center gap-4">
+                                                                <div className={`p-2 rounded-lg ${selectedFunctions[fn.name] ? 'bg-amber-500/20 text-amber-600' : 'bg-muted text-muted-foreground'}`}>
+                                                                    <Zap className="h-5 w-5" />
+                                                                </div>
+                                                                <div>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <span className="font-black text-sm">{fn.name}</span>
+                                                                        {isNew && <Badge className="bg-indigo-500 hover:bg-indigo-500 text-[9px] font-black px-1.5 h-4">NEW</Badge>}
+                                                                        {hasChanges && <Badge className="bg-amber-500 hover:bg-amber-500 text-[9px] font-black px-1.5 h-4">CHANGED</Badge>}
+                                                                    </div>
+                                                                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight mt-0.5">{fn.parameters?.length || 0} parameters</p>
+                                                                </div>
+                                                            </div>
+                                                            <Checkbox
+                                                                checked={selectedFunctions[fn.name]}
+                                                                className="data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500 h-5 w-5 rounded-lg border-2"
+                                                            />
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
                                     </div>
                                 </ScrollArea>
 
@@ -390,7 +476,7 @@ const IngestionPage: React.FC = () => {
                                 <Button
                                     className="bg-amber-600 hover:bg-amber-700 text-white rounded-xl px-10 h-14 font-black uppercase tracking-widest text-xs flex items-center gap-3 shadow-xl shadow-amber-600/20"
                                     onClick={handleConfirmIngestion}
-                                    disabled={isUploading || Object.values(selectedTables).every(v => !v)}
+                                    disabled={isUploading || (Object.values(selectedTables).every(v => !v) && Object.values(selectedEnums).every(v => !v) && Object.values(selectedFunctions).every(v => !v))}
                                 >
                                     {isUploading ? "Syncing..." : "Finalize Changes"}
                                     <Check className="h-4 w-4" />

@@ -8,6 +8,7 @@ debug: true
 log_level: "DEBUG"
 log_format: "pretty"
 log_output: "stdout"
+deploy: false
 
 # Security Settings
 cors_allow_origins:

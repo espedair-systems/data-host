@@ -7,6 +7,7 @@ import (
 	appConfig "data-host/internal/adapters/driving/config"
 	"data-host/internal/adapters/driving/http"
 	"data-host/internal/adapters/driving/logger"
+	"data-host/internal/core/domain"
 	"data-host/internal/core/ports"
 	"data-host/internal/core/services"
 	"data-host/internal/database"
@@ -57,12 +58,7 @@ func (w *chanWriter) Write(p []byte) (n int, err error) {
 	return len(p), nil
 }
 
-func initialModel() model {
-	configLoader := configAdapter.NewViperAdapter("config", "yaml", ".")
-	config, err := configLoader.Load()
-	if err != nil {
-		config = *appConfig.GetDefaults()
-	}
+func initialModel(config domain.HostConfig) model {
 
 	p := textinput.New()
 	p.SetValue(strconv.Itoa(config.Port))
@@ -379,23 +375,31 @@ func unzip(src string, dest string) error {
 }
 
 func main() {
-	// Check for dist.zip in data-service or data-services
-	targets := []string{"./data-service/dist.zip", "./data-services/dist.zip"}
-	for _, zipPath := range targets {
-		if _, err := os.Stat(zipPath); err == nil {
-			dest := filepath.Dir(zipPath)
-			fmt.Printf("Found %s, unzipping to %s...\n", zipPath, dest)
-			if err := unzip(zipPath, dest); err != nil {
-				fmt.Printf("Error unzipping %s: %v\n", zipPath, err)
-			} else {
-				fmt.Printf("Successfully unzipped %s\n", zipPath)
+	configLoader := configAdapter.NewViperAdapter("config", "yaml", ".")
+	config, err := configLoader.Load()
+	if err != nil {
+		config = *appConfig.GetDefaults()
+	}
+
+	if config.Deploy {
+		// Check for dist.zip in data-service or data-services
+		targets := []string{"./data-service/dist.zip", "./data-services/dist.zip"}
+		for _, zipPath := range targets {
+			if _, err := os.Stat(zipPath); err == nil {
+				dest := filepath.Dir(zipPath)
+				fmt.Printf("Found %s, unzipping to %s...\n", zipPath, dest)
+				if err := unzip(zipPath, dest); err != nil {
+					fmt.Printf("Error unzipping %s: %v\n", zipPath, err)
+				} else {
+					fmt.Printf("Successfully unzipped %s\n", zipPath)
+				}
+				// Only unzip the first one found
+				break
 			}
-			// Only unzip the first one found
-			break
 		}
 	}
 
-	p := tea.NewProgram(initialModel(), tea.WithAltScreen(), tea.WithMouseCellMotion())
+	p := tea.NewProgram(initialModel(config), tea.WithAltScreen(), tea.WithMouseCellMotion())
 	if _, err := p.Run(); err != nil {
 		fmt.Printf("Error running TUI: %v", err)
 		os.Exit(1)

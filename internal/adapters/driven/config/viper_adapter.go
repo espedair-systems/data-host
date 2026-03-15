@@ -43,6 +43,7 @@ func (v *ViperAdapter) Load() (domain.HostConfig, error) {
 	viper.SetDefault("log_level", "INFO")
 	viper.SetDefault("log_format", "json")
 	viper.SetDefault("log_output", "stdout")
+	viper.SetDefault("deploy", false)
 
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
@@ -65,6 +66,7 @@ func (v *ViperAdapter) Load() (domain.HostConfig, error) {
 	config.LogLevel = viper.GetString("log_level")
 	config.LogFormat = viper.GetString("log_format")
 	config.LogOutput = viper.GetString("log_output")
+	config.Deploy = viper.GetBool("deploy")
 
 	if err := viper.UnmarshalKey("mounts", &config.Mounts); err != nil {
 		return domain.HostConfig{}, fmt.Errorf("error unmarshaling mounts: %w", err)
