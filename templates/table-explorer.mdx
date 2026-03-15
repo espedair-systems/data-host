@@ -1,0 +1,16 @@
+---
+title: Table Explorer
+description: Browse and find tables in the {{.DisplayName}} data model using collections and search.
+---
+
+import TableDirectory from '../../../../../components/directory/TableDirectory.astro';
+import schemaData from '../../../../../../data/{{.AssetName}}/schema.json';
+{{if .HasCollections}}import collectionsData from '../../../../../../data/{{.AssetName}}/collections.json';{{end}}
+
+<div class="not-prose">
+  <TableDirectory 
+    schema={schemaData} 
+    {{if .HasCollections}}collections={collectionsData}{{else}}collections={[]}{{end}} 
+    baseRoute="../tables/" 
+  />
+</div>

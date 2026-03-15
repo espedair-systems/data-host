@@ -1,0 +1,24 @@
+---
+title: {{.Title}}
+description: {{.Description}}
+---
+
+import FocusGraph from '../../../../../components/graph/FocusGraph.astro';
+import schemaData from '../../../../../../data/{{.AssetName}}/schema.json';
+
+This interactive ERD shows the tables and relationships for the **{{.DisplayName}}**. 
+
+<div class="not-prose">
+  <FocusGraph schema={schemaData} />
+</div>
+
+:::tip[Interactive Explorer]
+Want to find specific tables or browse by collection (e.g. E-Commerce, User Management)? Try our [Table Explorer](/registry/schema/{{.AssetName}}/explorer/).
+:::
+
+### Table Overview
+
+{{range .Tables}}
+#### {{.Name}}
+{{.Description}}
+{{end}}

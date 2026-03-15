@@ -205,6 +205,126 @@ func (r *FilesystemRepository) GetPublishedAssets() ([]domain.PublishedAsset, er
 	return assets, nil
 }
 
+func (r *FilesystemRepository) GetTableAssets() ([]domain.PublishedAsset, error) {
+	dataRoot := filepath.Join(r.config.DataPath, "data")
+	registryRoot := filepath.Join(r.config.DataPath, "registry", "schema")
+
+	entries, err := os.ReadDir(registryRoot)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return []domain.PublishedAsset{}, nil
+		}
+		return nil, err
+	}
+
+	var assets []domain.PublishedAsset
+	for _, entry := range entries {
+		if entry.IsDir() {
+			name := entry.Name()
+			schemaPath := filepath.Join(dataRoot, name, "schema.json")
+
+			// Check if associated schema.json exists in data folder
+			if _, err := os.Stat(schemaPath); err == nil {
+				asset := domain.PublishedAsset{
+					Name:       name,
+					HasSchema:  true,
+					SchemaPath: schemaPath,
+					IsValid:    true,
+				}
+
+				// Basic stats
+				if data, err := os.ReadFile(schemaPath); err == nil {
+					info, _ := os.Stat(schemaPath)
+					asset.LastModified = info.ModTime().Format(time.RFC3339)
+
+					var sData struct {
+						Tables    []interface{} `json:"tables"`
+						Relations []interface{} `json:"relations"`
+					}
+					if err := json.Unmarshal(data, &sData); err == nil {
+						asset.TableCount = len(sData.Tables)
+						asset.RelationCount = len(sData.Relations)
+					}
+				}
+
+				assets = append(assets, asset)
+			}
+		}
+	}
+
+	return assets, nil
+}
+
+func (r *FilesystemRepository) GetRegistryTables(assetName string) ([]domain.RegistryTable, error) {
+	tablesRoot := filepath.Join(r.config.DataPath, "registry", "schema", assetName, "tables")
+	entries, err := os.ReadDir(tablesRoot)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return []domain.RegistryTable{}, nil
+		}
+		return nil, err
+	}
+
+	var tables []domain.RegistryTable
+	for _, entry := range entries {
+		if entry.IsDir() {
+			tables = append(tables, domain.RegistryTable{
+				Name: entry.Name(),
+				InFS: true,
+			})
+		}
+	}
+
+	return tables, nil
+}
+
+func (r *FilesystemRepository) getProjectRoot() string {
+	root := filepath.Clean(r.config.DataPath)
+	// If estamos en un subdirectorio como 'data-services', subimos un nivel para encontrar la raíz del host
+	if filepath.Base(root) == "data-services" || filepath.Base(root) == "dist" {
+		return filepath.Dir(root)
+	}
+	return root
+}
+
+func (r *FilesystemRepository) GetWorkflows() ([]domain.DesignFile, error) {
+	dir := filepath.Join(r.getProjectRoot(), "artifacts", "templates")
+	return r.listDesignFiles(dir)
+}
+
+func (r *FilesystemRepository) GetAstroTemplates() ([]domain.DesignFile, error) {
+	dir := filepath.Join(r.getProjectRoot(), "templates")
+	return r.listDesignFiles(dir)
+}
+
+func (r *FilesystemRepository) listDesignFiles(dir string) ([]domain.DesignFile, error) {
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		return []domain.DesignFile{}, nil
+	}
+
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return nil, err
+	}
+
+	var files []domain.DesignFile
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+		info, err := entry.Info()
+		if err != nil {
+			continue
+		}
+		files = append(files, domain.DesignFile{
+			Name:         entry.Name(),
+			Size:         info.Size(),
+			LastModified: info.ModTime().Format(time.RFC3339),
+		})
+	}
+	return files, nil
+}
+
 func (r *FilesystemRepository) GetPublishedFile(assetName, fileName string) ([]byte, error) {
 	path := filepath.Join(r.config.DataPath, "data", assetName, fileName)
 	return os.ReadFile(path)
@@ -217,14 +337,6 @@ func (r *FilesystemRepository) SavePublishedFile(assetName, fileName string, con
 	}
 	path := filepath.Join(dir, fileName)
 	return os.WriteFile(path, content, 0644)
-}
-
-func (r *FilesystemRepository) getProjectRoot() string {
-	root := filepath.Clean(r.config.DataPath)
-	if filepath.Base(root) == "dist" {
-		return filepath.Dir(root)
-	}
-	return root
 }
 
 func (r *FilesystemRepository) GetAllSchemaDashboards() ([]domain.SchemaDashboard, error) {

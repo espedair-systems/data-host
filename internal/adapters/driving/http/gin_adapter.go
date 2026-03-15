@@ -85,6 +85,8 @@ func (a *GinAdapter) Start(config domain.HostConfig, repo ports.RegistryReposito
 		api.GET("/training", a.GetTraining)
 		api.GET("/site/schemas", a.GetSiteSchemas)
 		api.GET("/blueprint/schemas", a.GetBlueprintSchemas)
+		api.GET("/design/workflows", a.GetWorkflows)
+		api.GET("/design/astro-templates", a.GetAstroTemplates)
 
 		site := api.Group("/site")
 		authMW := auth.AuthMiddleware(a.authProvider)
@@ -97,6 +99,9 @@ func (a *GinAdapter) Start(config domain.HostConfig, repo ports.RegistryReposito
 			site.GET("/published-data", a.GetPublishedAssets)
 			site.GET("/master-schema", a.GetMasterSchema)
 			site.GET("/published-data/:asset/:file", a.GetPublishedFile)
+			site.GET("/table-assets", a.GetTableAssets)
+			site.GET("/table-assets/:asset/tables", a.GetRegistryTables)
+			site.GET("/schema-definition/:file", a.GetSchemaDefinition)
 			site.POST("/published-data/:asset/:file", authMW, auth.RequireRole(domain.RoleAdmin, domain.RoleEditor), a.SavePublishedFile)
 		}
 

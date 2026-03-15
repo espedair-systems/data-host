@@ -118,3 +118,17 @@ type TableStats struct {
 	Name string `json:"name"`
 	Rows int64  `json:"rows"`
 }
+
+// @Description Table status in registry and database
+type RegistryTable struct {
+	Name       string `json:"name"`
+	InFS       bool   `json:"inFS"`
+	InDatabase bool   `json:"inDatabase"`
+}
+
+// @Description File in design directories
+type DesignFile struct {
+	Name         string `json:"name"`
+	Size         int64  `json:"size"`
+	LastModified string `json:"lastModified"`
+}

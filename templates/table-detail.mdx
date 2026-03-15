@@ -1,0 +1,35 @@
+---
+title: {{.Table.Name}}
+description: {{.Table.Description}}
+---
+
+import TableERD from '../../../../../../components/ERD/TableERD.astro';
+import schemaData from '../../../../../../../data/{{.AssetName}}/schema.json';
+
+# {{.Table.Name}}
+
+## Description
+
+{{.Table.Description}}
+
+<div class="not-prose">
+  <TableERD schema={schemaData} tableName="{{.Table.Name}}" />
+</div>
+
+## Columns
+
+| Name | Type | Default | Nullable |
+| ---- | ---- | ------- | -------- |
+{{range .Table.Columns}}| {{.Name}} | {{.Type}} | {{.Default}} | {{.Nullable}} |
+{{end}}
+## Constraints
+
+| Name | Type | Definition |
+| ---- | ---- | ---------- |
+{{range .Table.Constraints}}| {{.Name}} | {{.Type}} | {{.Definition}} |
+{{end}}
+## Relations
+
+The interactive ERD above shows how **{{.Table.Name}}** connects to its parent and child tables:
+- **Parent**: {{if .Table.Parents}}{{range $i, $p := .Table.Parents}}{{if $i}}, {{end}}`{{$p}}`{{end}}{{else}}None{{end}}
+- **Children**: {{if .Table.Children}}{{range $i, $c := .Table.Children}}{{if $i}}, {{end}}`{{$c}}`{{end}}{{else}}None{{end}}

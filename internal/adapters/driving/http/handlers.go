@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
@@ -475,6 +477,50 @@ func (a *GinAdapter) GetPublishedAssets(c *gin.Context) {
 	c.JSON(http.StatusOK, assets)
 }
 
+// GetTableAssets godoc
+// @Summary      Get matched table assets
+// @Description  Retrieve list of assets where registry schema matches data schema
+// @Tags         Site
+// @Produce      json
+// @Success      200  {array}   domain.PublishedAsset
+// @Failure      500  {object}  domain.ErrorResponse
+// @Router       /site/table-assets [get]
+func (a *GinAdapter) GetTableAssets(c *gin.Context) {
+	assets, err := a.repo.GetTableAssets()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{
+			Error:   "Internal Server Error",
+			Message: err.Error(),
+			Code:    http.StatusInternalServerError,
+		})
+		return
+	}
+	c.JSON(http.StatusOK, assets)
+}
+
+// GetRegistryTables godoc
+// @Summary      Get tables in registry and DB
+// @Description  Retrieve list of tables for an asset with FS and DB status
+// @Tags         Site
+// @Produce      json
+// @Param        asset  path      string  true  "Asset name"
+// @Success      200  {array}   domain.RegistryTable
+// @Failure      500  {object}  domain.ErrorResponse
+// @Router       /site/table-assets/{asset}/tables [get]
+func (a *GinAdapter) GetRegistryTables(c *gin.Context) {
+	asset := c.Param("asset")
+	tables, err := a.repo.GetRegistryTables(asset)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{
+			Error:   "Internal Server Error",
+			Message: err.Error(),
+			Code:    http.StatusInternalServerError,
+		})
+		return
+	}
+	c.JSON(http.StatusOK, tables)
+}
+
 // GetPublishedFile godoc
 // @Summary      Get published file
 // @Description  Get content of schema.json or collections.json for an asset
@@ -621,6 +667,52 @@ func (a *GinAdapter) GetMasterSchema(c *gin.Context) {
 	c.JSON(http.StatusOK, val)
 }
 
+// GetSchemaDefinition godoc
+// @Summary      Get schema definition
+// @Description  Retrieve a specific JSON schema file from the schema directory
+// @Tags         Site
+// @Produce      json
+// @Param        file   path      string  true  "File name"
+// @Success      200    {object}  interface{}
+// @Failure      403    {object}  domain.ErrorResponse
+// @Failure      404    {object}  domain.ErrorResponse
+// @Failure      500    {object}  domain.ErrorResponse
+// @Router       /site/schema-definition/{file} [get]
+func (a *GinAdapter) GetSchemaDefinition(c *gin.Context) {
+	file := c.Param("file")
+	// Safety check: only allow files ending in .schema.json and no path traversal
+	if !strings.HasSuffix(file, ".schema.json") || strings.Contains(file, "..") {
+		c.JSON(http.StatusForbidden, domain.ErrorResponse{
+			Error:   "Forbidden",
+			Message: "Invalid schema file requested",
+			Code:    http.StatusForbidden,
+		})
+		return
+	}
+
+	schemaPath := filepath.Join("schema", file)
+	data, err := os.ReadFile(schemaPath)
+	if err != nil {
+		c.JSON(http.StatusNotFound, domain.ErrorResponse{
+			Error:   "Not Found",
+			Message: "schema file not found: " + err.Error(),
+			Code:    http.StatusNotFound,
+		})
+		return
+	}
+
+	var val interface{}
+	if err := json.Unmarshal(data, &val); err != nil {
+		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{
+			Error:   "Internal Server Error",
+			Message: "failed to parse schema file: " + err.Error(),
+			Code:    http.StatusInternalServerError,
+		})
+		return
+	}
+	c.JSON(http.StatusOK, val)
+}
+
 // GetDatabaseStats godoc
 // @Summary      Get database statistics
 // @Description  Retrieve physical storage and table metrics for the internal SQLite database
@@ -671,4 +763,46 @@ func (a *GinAdapter) IngestToFolder(c *gin.Context) {
 		"status":  "success",
 		"message": fmt.Sprintf("Schema '%s' saved to data-services folder.", schema.Name),
 	})
+}
+
+// GetWorkflows godoc
+// @Summary      Get workflow files
+// @Description  Retrieve a list of workflow definition files from the artifacts directory
+// @Tags         Design
+// @Produce      json
+// @Success      200  {array}   domain.DesignFile
+// @Failure      500  {object}  domain.ErrorResponse
+// @Router       /design/workflows [get]
+func (a *GinAdapter) GetWorkflows(c *gin.Context) {
+	files, err := a.repo.GetWorkflows()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{
+			Error:   "Internal Server Error",
+			Message: err.Error(),
+			Code:    http.StatusInternalServerError,
+		})
+		return
+	}
+	c.JSON(http.StatusOK, files)
+}
+
+// GetAstroTemplates godoc
+// @Summary      Get Astro template files
+// @Description  Retrieve a list of Astro template files from the templates directory
+// @Tags         Design
+// @Produce      json
+// @Success      200  {array}   domain.DesignFile
+// @Failure      500  {object}  domain.ErrorResponse
+// @Router       /design/astro-templates [get]
+func (a *GinAdapter) GetAstroTemplates(c *gin.Context) {
+	files, err := a.repo.GetAstroTemplates()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{
+			Error:   "Internal Server Error",
+			Message: err.Error(),
+			Code:    http.StatusInternalServerError,
+		})
+		return
+	}
+	c.JSON(http.StatusOK, files)
 }

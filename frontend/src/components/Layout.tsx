@@ -24,7 +24,9 @@ import {
   Globe,
   Brain,
   Palette,
-  Library
+  Library,
+  Workflow,
+  Component
 } from 'lucide-react';
 import { useNavigate, useLocation, Outlet, Link } from 'react-router-dom';
 import {
@@ -286,44 +288,6 @@ const Layout: React.FC = () => {
             </CollapsibleContent>
           </Collapsible>
 
-          {/* Design Collapsible */}
-          <Collapsible
-            open={!collapsed && designOpen}
-            onOpenChange={setDesignOpen}
-            className="space-y-1"
-          >
-            <CollapsibleTrigger asChild>
-              <Button
-                variant="ghost"
-                className={cn(
-                  "w-full justify-start gap-4 px-3 h-10 text-muted-foreground",
-                  collapsed ? "justify-center px-0" : ""
-                )}
-              >
-                <div className="shrink-0">
-                  <Palette className={cn("h-5 w-5", isActive('/design') ? "text-primary" : "")} />
-                </div>
-                {!collapsed && (
-                  <>
-                    <span className={cn("text-[10px] font-black uppercase tracking-widest flex-grow text-left", isActive('/design') ? "text-primary" : "")}>Design</span>
-                    <ChevronDown className={cn("h-4 w-4 transition-transform", designOpen ? "" : "-rotate-90")} />
-                  </>
-                )}
-              </Button>
-            </CollapsibleTrigger>
-
-            <CollapsibleContent className="space-y-1">
-              <div className="ml-9 border-l border-muted pl-4 space-y-1">
-                <NavButton
-                  item={{ text: 'Dashboard', icon: <DashboardIcon className="h-4 w-4" /> }}
-                  selected={location.pathname === '/design'}
-                  onClick={() => navigate('/design')}
-                  className="h-8 text-xs"
-                />
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
-
           {/* Ingest Collapsible */}
           <Collapsible
             open={!collapsed && ingestOpen}
@@ -369,6 +333,62 @@ const Layout: React.FC = () => {
           </Collapsible>
 
           <Separator className="my-3 mx-2 opacity-50" />
+
+          {/* Design Collapsible */}
+          <Collapsible
+            open={!collapsed && designOpen}
+            onOpenChange={setDesignOpen}
+            className="space-y-1"
+          >
+            <CollapsibleTrigger asChild>
+              <Button
+                variant="ghost"
+                className={cn(
+                  "w-full justify-start gap-4 px-3 h-10 text-muted-foreground",
+                  collapsed ? "justify-center px-0" : ""
+                )}
+              >
+                <div className="shrink-0">
+                  <Palette className={cn("h-5 w-5", isActive('/design') ? "text-primary" : "")} />
+                </div>
+                {!collapsed && (
+                  <>
+                    <span className={cn("text-[10px] font-black uppercase tracking-widest flex-grow text-left", isActive('/design') ? "text-primary" : "")}>Design</span>
+                    <ChevronDown className={cn("h-4 w-4 transition-transform", designOpen ? "" : "-rotate-90")} />
+                  </>
+                )}
+              </Button>
+            </CollapsibleTrigger>
+
+            <CollapsibleContent className="space-y-1">
+              <div className="ml-9 border-l border-muted pl-4 space-y-1">
+                <NavButton
+                  item={{ text: 'Dashboard', icon: <DashboardIcon className="h-4 w-4" /> }}
+                  selected={location.pathname === '/design'}
+                  onClick={() => navigate('/design')}
+                  className="h-8 text-xs"
+                />
+                <NavButton
+                  item={{ text: 'Json Schema', icon: <FileJson className="h-4 w-4" /> }}
+                  selected={location.pathname === '/design/json-schema'}
+                  onClick={() => navigate('/design/json-schema')}
+                  className="h-8 text-xs"
+                />
+                <NavButton
+                  item={{ text: 'Workflows', icon: <Workflow className="h-4 w-4" /> }}
+                  selected={location.pathname === '/design/workflows'}
+                  onClick={() => navigate('/design/workflows')}
+                  className="h-8 text-xs"
+                />
+                <NavButton
+                  item={{ text: 'Astro Templates', icon: <Component className="h-4 w-4" /> }}
+                  selected={location.pathname === '/design/astro-templates'}
+                  onClick={() => navigate('/design/astro-templates')}
+                  className="h-8 text-xs"
+                />
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
 
           {/* Platforms Collapsible */}
           <Collapsible

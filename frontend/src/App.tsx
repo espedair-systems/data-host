@@ -37,10 +37,14 @@ import DirectoryPreferences from './pages/DirectoryPreferences';
 import Publish from './pages/Publish';
 import PublishedSchema from './pages/PublishedSchema';
 import PublishedSchemaEditor from './pages/PublishedSchemaEditor';
+import TablesPages from './pages/TablesPages';
 import Curate from './pages/Curate';
 import KnowledgeDashboard from './pages/KnowledgeDashboard';
 import Librarian from './pages/Librarian';
 import DesignDashboard from './pages/DesignDashboard';
+import JsonSchemaViewer from './pages/JsonSchemaViewer';
+import Workflows from './pages/Workflows';
+import AstroTemplates from './pages/AstroTemplates';
 import PlaceholderPage from './pages/Placeholder';
 import Home from './pages/Home';
 import { ColorModeProvider } from './context/ColorModeContext';
@@ -79,14 +83,19 @@ function App() {
                   <Route path="dashboard" element={<Publish />} />
                   <Route path="schema-data" element={<PublishedSchema />} />
                   <Route path="schema-data/edit/:asset/:file" element={<PublishedSchemaEditor />} />
-                  <Route path="tables-pages" element={<PlaceholderPage title="Publish - Tables Pages" description="Manage table pages generated from schema and collections data." />} />
+                  <Route path="tables-pages" element={<TablesPages />} />
                 </Route>
                 <Route path="curate" element={<Curate />} />
                 <Route path="knowledge">
                   <Route index element={<KnowledgeDashboard />} />
                   <Route path="librarian" element={<Librarian />} />
                 </Route>
-                <Route path="design" element={<DesignDashboard />} />
+                <Route path="design">
+                  <Route index element={<DesignDashboard />} />
+                  <Route path="json-schema" element={<JsonSchemaViewer />} />
+                  <Route path="workflows" element={<Workflows />} />
+                  <Route path="astro-templates" element={<AstroTemplates />} />
+                </Route>
                 <Route path="site" element={<Site />} />
                 <Route path="schema">
                   <Route index element={<Schema />} />

@@ -157,12 +157,85 @@ func (r *SQLiteRepository) GetPublishedAssets() ([]domain.PublishedAsset, error)
 	return assets, nil
 }
 
+func (r *SQLiteRepository) GetTableAssets() ([]domain.PublishedAsset, error) {
+	assets, err := r.fsRepo.GetTableAssets()
+	if err != nil {
+		return nil, err
+	}
+
+	for i := range assets {
+		var exists int
+		err := r.db.QueryRow("SELECT COUNT(*) FROM schemas WHERE name = ?", assets[i].Name).Scan(&exists)
+		if err == nil && exists > 0 {
+			assets[i].InDatabase = true
+		}
+	}
+
+	return assets, nil
+}
+
+func (r *SQLiteRepository) GetRegistryTables(assetName string) ([]domain.RegistryTable, error) {
+	fsTables, err := r.fsRepo.GetRegistryTables(assetName)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get tables from database for this schema
+	rows, err := r.db.Query(`
+		SELECT t.name 
+		FROM tables t
+		JOIN schemas s ON t.schema_id = s.id
+		WHERE s.name = ?`, assetName)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	dbTables := make(map[string]bool)
+	for rows.Next() {
+		var name string
+		if err := rows.Scan(&name); err == nil {
+			dbTables[name] = true
+		}
+	}
+
+	// Merge/Mark InDatabase
+	tableMap := make(map[string]*domain.RegistryTable)
+	for i := range fsTables {
+		t := &fsTables[i]
+		if dbTables[t.Name] {
+			t.InDatabase = true
+			delete(dbTables, t.Name)
+		}
+		tableMap[t.Name] = t
+	}
+
+	// Add tables that are in DB but not in FS
+	for name := range dbTables {
+		fsTables = append(fsTables, domain.RegistryTable{
+			Name:       name,
+			InFS:       false,
+			InDatabase: true,
+		})
+	}
+
+	return fsTables, nil
+}
+
 func (r *SQLiteRepository) GetPublishedFile(assetName, fileName string) ([]byte, error) {
 	return r.fsRepo.GetPublishedFile(assetName, fileName)
 }
 
 func (r *SQLiteRepository) SavePublishedFile(assetName, fileName string, content []byte) error {
 	return r.fsRepo.SavePublishedFile(assetName, fileName, content)
+}
+
+func (r *SQLiteRepository) GetWorkflows() ([]domain.DesignFile, error) {
+	return r.fsRepo.GetWorkflows()
+}
+
+func (r *SQLiteRepository) GetAstroTemplates() ([]domain.DesignFile, error) {
+	return r.fsRepo.GetAstroTemplates()
 }
 
 func (r *SQLiteRepository) GetDatabaseStats() (domain.DatabaseStats, error) {

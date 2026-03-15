@@ -28,9 +28,14 @@ type RegistryRepository interface {
 	GetServiceTree() ([]domain.SchemaNode, error)
 
 	GetPublishedAssets() ([]domain.PublishedAsset, error)
+	GetTableAssets() ([]domain.PublishedAsset, error)
+	GetRegistryTables(assetName string) ([]domain.RegistryTable, error)
 	GetPublishedFile(assetName, fileName string) ([]byte, error)
 	SavePublishedFile(assetName, fileName string, content []byte) error
 	GetDatabaseStats() (domain.DatabaseStats, error)
+
+	GetWorkflows() ([]domain.DesignFile, error)
+	GetAstroTemplates() ([]domain.DesignFile, error)
 
 	GetUserRepo() UserRepository
 }

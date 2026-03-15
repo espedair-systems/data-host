@@ -1,0 +1,14 @@
+---
+title: {{.DisplayName}} Tables Detail
+description: Detailed table definitions and individual ERDs for the {{.DisplayName}}.
+---
+
+import SchemaERD from '../../../../../../components/ERD/SchemaERD.astro';
+import schemaData from '../../../../../../../data/{{.AssetName}}/schema.json';
+{{if .HasCollections}}import collectionsData from '../../../../../../../data/{{.AssetName}}/collections.json';{{end}}
+
+This section provides a deep dive into each table within the **{{.DisplayName}}** schema. Use the interactive diagram below to explore the relationships, or click on a table name in the list to view its specific columns, constraints, and localized ERD.
+
+<div class="not-prose">
+  <SchemaERD schema={schemaData} />
+</div>
