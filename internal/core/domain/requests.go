@@ -35,10 +35,21 @@ type TrainingSelectionRequest struct {
 	Selection interface{} `json:"selection" validate:"required" binding:"required"`
 }
 
-// @Description Standardized error response
 type ErrorResponse struct {
 	Error   string   `json:"error" example:"Internal Server Error"`
 	Message string   `json:"message" example:"An unexpected error occurred"`
 	Details []string `json:"details,omitempty"`
 	Code    int      `json:"code" example:"500"`
+}
+
+// GithubSettingsRequest defines the input for updating github settings.
+type GithubSettingsRequest struct {
+	Org   string `json:"org"`
+	Token string `json:"token"`
+}
+
+// GithubSettingsResponse defines the output for github settings.
+type GithubSettingsResponse struct {
+	Org      string `json:"org"`
+	HasToken bool   `json:"has_token"`
 }

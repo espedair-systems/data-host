@@ -58,7 +58,7 @@ const CuratePage: React.FC = () => {
                             <span className="text-xs uppercase tracking-widest">Curation Engine</span>
                         </div>
                         <h1 className="text-4xl font-black tracking-tight text-foreground text-shadow-sm">System Insights</h1>
-                        <p className="text-muted-foreground text-lg">Monitoring internal SQLite state and data inventory.</p>
+                        <p className="text-muted-foreground text-lg">Monitoring internal system state and data inventory.</p>
                     </div>
                     <Button
                         onClick={fetchStats}
@@ -113,7 +113,7 @@ const CuratePage: React.FC = () => {
                                     <CardDescription className="text-[10px] font-bold uppercase tracking-widest">Internal database table metrics</CardDescription>
                                 </div>
                                 <Badge variant="outline" className="rounded-full px-4 py-1 bg-primary/10 text-primary border-primary/20 font-black text-[10px]">
-                                    SQLITE v{stats?.version || '3.x'}
+                                    CORE ENGINE v{stats?.version || '1.x'}
                                 </Badge>
                             </div>
                         </CardHeader>

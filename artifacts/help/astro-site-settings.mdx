@@ -1,0 +1,127 @@
+---
+title: "Astro Site Settings"
+description: "How to configure and manage Astro sites in DataHost"
+category: "Configuration"
+---
+
+# Astro Site Settings
+
+DataHost can manage one or more Astro documentation sites. Each site is defined in your
+`config.yaml` under the `sites` array and represents an independent content project with
+its own data directory, mount path, and build output.
+
+## Configuration
+
+### Single Site (Simple)
+
+If you only have one Astro project, you can use the legacy `data_path` field:
+
+```yaml
+data_path: "./data-services"
+```
+
+DataHost will automatically treat this as the default active site.
+
+### Multiple Sites
+
+To manage multiple Astro projects, use the `sites` array:
+
+```yaml
+sites:
+  - name: "data-services"
+    data_path: "./data-services"
+    mount_path: "/registry"
+    mount_source: "../data-services/dist"
+    active: true
+
+  - name: "marketing-docs"
+    data_path: "./marketing-docs"
+    mount_path: "/marketing"
+    mount_source: "../marketing-docs/dist"
+    active: false
+```
+
+Only **one** site can be `active: true` at any time. The active site is used for:
+
+- Schema discovery and ingestion
+- Published asset browsing
+- File serving and editing
+
+## Field Reference
+
+| Field          | Type    | Required | Description                                                    |
+|----------------|---------|----------|----------------------------------------------------------------|
+| `name`         | string  | Yes      | Unique identifier for the site (used in logs and UI)           |
+| `data_path`    | string  | Yes      | Path to the Astro project root containing `data/` and `src/`   |
+| `mount_path`   | string  | No       | URL path prefix where the built site is served (e.g. `/registry`) |
+| `mount_source` | string  | No       | Path to the Astro `dist/` output directory for static serving  |
+| `active`       | boolean | No       | Whether this is the currently active site (default: `false`)   |
+
+## Directory Structure
+
+Each site's `data_path` should point to an Astro project with this structure:
+
+```
+data-services/
+├── data/                  # Schema JSON files (one folder per asset)
+│   ├── blog/
+│   │   └── schema.json
+│   ├── odoo/
+│   │   └── schema.json
+│   └── data-host/
+│       └── schema.json
+├── src/
+│   ├── config/            # Guidelines and training selections
+│   │   ├── guidelines.json
+│   │   └── training.json
+│   └── content/
+│       └── docs/
+│           └── registry/  # MDX documentation pages
+└── dist/                  # Built static output (served via mount)
+```
+
+## Environment Variables
+
+You can override the legacy `data_path` via environment variable:
+
+```bash
+DATA_HOST_DATA_PATH="./my-custom-site"
+```
+
+For full sites configuration, use `config.yaml`.
+
+## Switching Active Sites
+
+To switch which site DataHost is working with, update the `active` flag in your
+`config.yaml` and restart the server:
+
+```yaml
+sites:
+  - name: "data-services"
+    data_path: "./data-services"
+    active: false          # ← was active
+
+  - name: "marketing-docs"
+    data_path: "./marketing-docs"
+    active: true           # ← now active
+```
+
+## Backward Compatibility
+
+- If no `sites` array is defined, DataHost falls back to the `data_path` field.
+- If neither is set, the default path is `/`.
+- Existing configurations with only `data_path` continue to work without changes.
+
+## Troubleshooting
+
+### No schemas appearing on Schema Manifest page
+
+1. Check that `data_path` points to the correct Astro project root.
+2. Verify the project has a `data/` subdirectory with at least one schema folder.
+3. Look for duplicate YAML keys in `config.yaml` — the last value wins silently.
+
+### Schema files not loading
+
+1. Each asset folder under `data/` must contain a `schema.json` file.
+2. The schema file must be valid JSON conforming to the services schema spec.
+3. Check server logs for validation errors: `log_level: "DEBUG"`.

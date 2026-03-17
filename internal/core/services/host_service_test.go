@@ -28,7 +28,12 @@ func (m *mockHTTPServer) GetOn404() <-chan string {
 	return make(chan string)
 }
 
-func (m *mockHTTPServer) SetLogOutput(w io.Writer) {}
+func (m *mockHTTPServer) GetOnRequest() <-chan struct{} {
+	return make(chan struct{})
+}
+
+func (m *mockHTTPServer) SetLogOutput(w io.Writer)    {}
+func (m *mockHTTPServer) BroadcastMessage(msg string) {}
 
 func TestHostService(t *testing.T) {
 	mockServer := &mockHTTPServer{}

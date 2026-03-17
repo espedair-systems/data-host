@@ -1,14 +1,14 @@
 package http
 
 import (
+	"data-host/artifacts"
 	"data-host/internal/core/domain"
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
-	"path/filepath"
 	"strings"
 
+	"github.com/coder/websocket"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
 	"github.com/xeipuuv/gojsonschema"
@@ -197,6 +197,47 @@ func (a *GinAdapter) GetSiteSchemas(c *gin.Context) {
 	c.JSON(http.StatusOK, dashboards)
 }
 
+// GetSites returns the list of configured sites
+func (a *GinAdapter) GetSites(c *gin.Context) {
+	sites, err := a.repo.GetSites()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{
+			Error:   "Internal Server Error",
+			Message: err.Error(),
+			Code:    http.StatusInternalServerError,
+		})
+		return
+	}
+	c.JSON(http.StatusOK, sites)
+}
+
+// SaveSiteConfig saves site details to the database
+func (a *GinAdapter) SaveSiteConfig(c *gin.Context) {
+	var site domain.SiteConfig
+	if err := c.ShouldBindJSON(&site); err != nil {
+		c.JSON(http.StatusBadRequest, domain.ErrorResponse{
+			Error:   "Invalid Request",
+			Message: err.Error(),
+			Code:    http.StatusBadRequest,
+		})
+		return
+	}
+
+	log.Info().Str("site", site.Name).Msg("Site registration request received")
+	if err := a.repo.SaveSiteConfig(site); err != nil {
+		log.Error().Err(err).Str("site", site.Name).Msg("Failed to save site config")
+		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{
+			Error:   "Internal Server Error",
+			Message: err.Error(),
+			Code:    http.StatusInternalServerError,
+		})
+		return
+	}
+
+	log.Info().Str("site", site.Name).Msg("Site registered successfully in database")
+	c.JSON(http.StatusOK, gin.H{"message": "Site registered successfully", "site": site.Name})
+}
+
 // GetBlueprintSchemas godoc
 // @Summary      Get blueprint schemas
 // @Description  Retrieve list of registered blueprint schemas
@@ -216,6 +257,52 @@ func (a *GinAdapter) GetBlueprintSchemas(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, schemas)
+}
+
+func (a *GinAdapter) GetBlueprintTables(c *gin.Context) {
+	criteria := make(map[string]string)
+	if schemaName := c.Query("schemaName"); schemaName != "" {
+		criteria["schemaName"] = schemaName
+	}
+	if search := c.Query("search"); search != "" {
+		criteria["search"] = search
+	}
+
+	tables, err := a.repo.GetBlueprintTables(criteria)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{
+			Error:   "Internal Server Error",
+			Message: err.Error(),
+			Code:    http.StatusInternalServerError,
+		})
+		return
+	}
+	c.JSON(http.StatusOK, tables)
+}
+
+func (a *GinAdapter) GetBlueprintSchema(c *gin.Context) {
+	name := c.Param("name")
+	schema, err := a.repo.GetFullSchema(name)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{
+			Error:   "Internal Server Error",
+			Message: err.Error(),
+			Code:    http.StatusInternalServerError,
+		})
+		return
+	}
+	if schema == nil {
+		c.JSON(http.StatusNotFound, domain.ErrorResponse{
+			Error:   "Not Found",
+			Message: "schema not found",
+			Code:    http.StatusNotFound,
+		})
+		return
+	}
+
+	// Transform to SchemaDashboard for frontend compatibility if needed
+	// Actually for now let's just return the FullSchema and fix frontend to handle both
+	c.JSON(http.StatusOK, schema)
 }
 
 // UpdateTable godoc
@@ -313,9 +400,13 @@ func (a *GinAdapter) ValidateSchema(c *gin.Context) {
 		return
 	}
 
-	// 1. JSON Schema Validation
-	schemaPath := "schema/services.schema.json"
-	schemaLoader := gojsonschema.NewReferenceLoader("file://" + schemaPath)
+	// 1. JSON Schema Validation from embedded FS
+	masterData, err := artifacts.Content.ReadFile("schema/services.schema.json")
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to read embedded master schema"})
+		return
+	}
+	schemaLoader := gojsonschema.NewBytesLoader(masterData)
 	documentLoader := gojsonschema.NewGoLoader(newSchema)
 
 	result, err := gojsonschema.Validate(schemaLoader, documentLoader)
@@ -372,6 +463,16 @@ func (a *GinAdapter) IngestSchema(c *gin.Context) {
 	if err := c.ShouldBindJSON(&schema); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
 		return
+	}
+
+	if len(schema.Tables) == 0 {
+		if schema.Name == "" {
+			schema.Name = "data-host"
+		}
+		extracted, err := a.repo.ExtractDatabaseSchema(schema.Name, schema.Desc)
+		if err == nil && extracted != nil {
+			schema = *extracted
+		}
 	}
 
 	if err := a.repo.SaveFullSchema(schema); err != nil {
@@ -582,10 +683,18 @@ func (a *GinAdapter) SavePublishedFile(c *gin.Context) {
 		return
 	}
 
-	// If it's schema.json, validate it against master schema
+	// If it's schema.json, validate it against embedded master schema
 	if file == "schema.json" {
-		schemaPath := "schema/services.schema.json"
-		schemaLoader := gojsonschema.NewReferenceLoader("file://" + schemaPath)
+		masterData, err := artifacts.Content.ReadFile("schema/services.schema.json")
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, domain.ErrorResponse{
+				Error:   "Validation System Error",
+				Message: "failed to read embedded master schema",
+				Code:    http.StatusInternalServerError,
+			})
+			return
+		}
+		schemaLoader := gojsonschema.NewBytesLoader(masterData)
 		documentLoader := gojsonschema.NewGoLoader(content)
 
 		result, err := gojsonschema.Validate(schemaLoader, documentLoader)
@@ -644,12 +753,11 @@ func (a *GinAdapter) SavePublishedFile(c *gin.Context) {
 // @Failure      500  {object}  domain.ErrorResponse
 // @Router       /site/master-schema [get]
 func (a *GinAdapter) GetMasterSchema(c *gin.Context) {
-	schemaPath := "schema/services.schema.json"
-	data, err := os.ReadFile(schemaPath)
+	data, err := artifacts.Content.ReadFile("schema/services.schema.json")
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{
 			Error:   "Internal Server Error",
-			Message: "failed to read master schema: " + err.Error(),
+			Message: "failed to read embedded master schema: " + err.Error(),
 			Code:    http.StatusInternalServerError,
 		})
 		return
@@ -690,12 +798,11 @@ func (a *GinAdapter) GetSchemaDefinition(c *gin.Context) {
 		return
 	}
 
-	schemaPath := filepath.Join("schema", file)
-	data, err := os.ReadFile(schemaPath)
+	data, err := artifacts.Content.ReadFile("schema/" + file)
 	if err != nil {
 		c.JSON(http.StatusNotFound, domain.ErrorResponse{
 			Error:   "Not Found",
-			Message: "schema file not found: " + err.Error(),
+			Message: "schema file not found in artifacts: " + err.Error(),
 			Code:    http.StatusNotFound,
 		})
 		return
@@ -745,6 +852,13 @@ func (a *GinAdapter) IngestToFolder(c *gin.Context) {
 	if schema.Name == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Schema name is required"})
 		return
+	}
+
+	if len(schema.Tables) == 0 {
+		extracted, err := a.repo.ExtractDatabaseSchema(schema.Name, schema.Desc)
+		if err == nil && extracted != nil {
+			schema = *extracted
+		}
 	}
 
 	content, err := json.MarshalIndent(schema, "", "  ")
@@ -805,4 +919,112 @@ func (a *GinAdapter) GetAstroTemplates(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, files)
+}
+
+// SystemEvents godoc
+// @Summary      System events SSE stream
+// @Description  Receive server-sent events like shutdown notifications
+// @Tags         System
+// @Produce      text/event-stream
+// @Success      200
+// @Router       /system/events [get]
+func (a *GinAdapter) SystemEvents(c *gin.Context) {
+	c.Writer.Header().Set("Content-Type", "text/event-stream")
+	c.Writer.Header().Set("Cache-Control", "no-cache")
+	c.Writer.Header().Set("Connection", "keep-alive")
+	c.Writer.Header().Set("Transfer-Encoding", "chunked")
+
+	// Flush headers immediately
+	c.Writer.Flush()
+
+	select {
+	case <-c.Request.Context().Done():
+		// Client disconnected
+		return
+	case <-a.shutdownNotify:
+		// Send shutdown event
+		c.Writer.Write([]byte("event: shutdown\ndata: {\"message\": \"Server is shutting down\"}\n\n"))
+		c.Writer.Flush()
+		return
+	}
+}
+
+// WebsocketHandler godoc
+// @Summary      System Websocket
+// @Description  Websocket connection for real-time broadcasts
+// @Tags         System
+// @Router       /ws [get]
+func (a *GinAdapter) WebsocketHandler(c *gin.Context) {
+	socket, err := websocket.Accept(c.Writer, c.Request, &websocket.AcceptOptions{
+		InsecureSkipVerify: true,
+	})
+	if err != nil {
+		log.Error().Err(err).Msg("Websocket accept failed")
+		return
+	}
+	defer socket.Close(websocket.StatusGoingAway, "server closing websocket")
+
+	ctx := c.Request.Context()
+	socketCtx := socket.CloseRead(ctx)
+
+	clientChan := make(chan string, 100)
+	a.clients.Store(clientChan, true)
+	defer a.clients.Delete(clientChan)
+
+	for {
+		select {
+		case <-socketCtx.Done():
+			return
+		case <-a.shutdownNotify:
+			return
+		case msg := <-clientChan:
+			err := socket.Write(socketCtx, websocket.MessageText, []byte(msg))
+			if err != nil {
+				return
+			}
+		}
+	}
+}
+
+// GetGithubSettings godoc
+// @Summary      Get GitHub Settings
+// @Description  Retrieve GitHub configuration without exposing the token
+// @Tags         Settings
+// @Produce      json
+// @Success      200  {object}  domain.GithubSettingsResponse
+// @Router       /settings/github [get]
+func (a *GinAdapter) GetGithubSettings(c *gin.Context) {
+	c.JSON(http.StatusOK, domain.GithubSettingsResponse{
+		Org:      a.config.Github.Org,
+		HasToken: a.config.Github.Token != "",
+	})
+}
+
+// UpdateGithubSettings godoc
+// @Summary      Update GitHub Settings
+// @Description  Update GitHub configuration
+// @Tags         Settings
+// @Accept       json
+// @Produce      json
+// @Param        request body      domain.GithubSettingsRequest  true  "GitHub Settings"
+// @Success      200     {object}  map[string]string
+// @Failure      400     {object}  domain.ErrorResponse
+// @Router       /settings/github [post]
+func (a *GinAdapter) UpdateGithubSettings(c *gin.Context) {
+	var req domain.GithubSettingsRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, domain.ErrorResponse{
+			Error:   "Bad Request",
+			Message: "invalid request body",
+			Code:    http.StatusBadRequest,
+		})
+		return
+	}
+
+	a.config.Github.Org = req.Org
+	if req.Token != "" {
+		a.config.Github.Token = req.Token
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": "success"})
 }

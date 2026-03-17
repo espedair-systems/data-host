@@ -5,6 +5,9 @@ import (
 	"data-host/internal/core/ports"
 	"database/sql"
 	"encoding/json"
+	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/rs/zerolog/log"
 )
@@ -129,6 +132,51 @@ func (r *SQLiteRepository) GetBlueprintSchemas() ([]domain.BlueprintSchema, erro
 	return results, nil
 }
 
+func (r *SQLiteRepository) GetBlueprintTables(criteria map[string]string) ([]domain.BlueprintTableSummary, error) {
+	query := `
+		SELECT 
+			t.name, 
+			s.name as schema_name, 
+			t.type, 
+			t.comment,
+			(SELECT COUNT(*) FROM columns c WHERE c.table_id = t.id) as column_count
+		FROM tables t
+		JOIN schemas s ON t.schema_id = s.id
+		WHERE 1=1
+	`
+	var args []interface{}
+
+	if val, ok := criteria["schemaName"]; ok && val != "" {
+		query += " AND s.name = ?"
+		args = append(args, val)
+	}
+
+	if val, ok := criteria["search"]; ok && val != "" {
+		query += " AND (t.name LIKE ? OR t.comment LIKE ?)"
+		args = append(args, "%"+val+"%", "%"+val+"%")
+	}
+
+	query += " ORDER BY s.name ASC, t.name ASC"
+
+	rows, err := r.db.Query(query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var results []domain.BlueprintTableSummary
+	for rows.Next() {
+		var t domain.BlueprintTableSummary
+		var desc sql.NullString
+		if err := rows.Scan(&t.Name, &t.SchemaName, &t.Type, &desc, &t.ColumnCount); err != nil {
+			return nil, err
+		}
+		t.Description = desc.String
+		results = append(results, t)
+	}
+	return results, nil
+}
+
 func (r *SQLiteRepository) GetSchemaTree() ([]domain.SchemaNode, error) {
 	return r.fsRepo.GetSchemaTree()
 }
@@ -148,9 +196,19 @@ func (r *SQLiteRepository) GetPublishedAssets() ([]domain.PublishedAsset, error)
 
 	for i := range assets {
 		var exists int
-		err := r.db.QueryRow("SELECT COUNT(*) FROM schemas WHERE name = ?", assets[i].Name).Scan(&exists)
+		// Check both directory name and internal schema name
+		query := "SELECT COUNT(*) FROM schemas WHERE name = ?"
+		err := r.db.QueryRow(query, assets[i].Name).Scan(&exists)
 		if err == nil && exists > 0 {
 			assets[i].InDatabase = true
+			continue
+		}
+
+		if assets[i].InternalName != "" && assets[i].InternalName != assets[i].Name {
+			err = r.db.QueryRow(query, assets[i].InternalName).Scan(&exists)
+			if err == nil && exists > 0 {
+				assets[i].InDatabase = true
+			}
 		}
 	}
 
@@ -165,9 +223,18 @@ func (r *SQLiteRepository) GetTableAssets() ([]domain.PublishedAsset, error) {
 
 	for i := range assets {
 		var exists int
-		err := r.db.QueryRow("SELECT COUNT(*) FROM schemas WHERE name = ?", assets[i].Name).Scan(&exists)
+		query := "SELECT COUNT(*) FROM schemas WHERE name = ?"
+		err := r.db.QueryRow(query, assets[i].Name).Scan(&exists)
 		if err == nil && exists > 0 {
 			assets[i].InDatabase = true
+			continue
+		}
+
+		if assets[i].InternalName != "" && assets[i].InternalName != assets[i].Name {
+			err = r.db.QueryRow(query, assets[i].InternalName).Scan(&exists)
+			if err == nil && exists > 0 {
+				assets[i].InDatabase = true
+			}
 		}
 	}
 
@@ -282,6 +349,102 @@ func (r *SQLiteRepository) GetDatabaseStats() (domain.DatabaseStats, error) {
 	}
 
 	return stats, nil
+}
+
+func (r *SQLiteRepository) ExtractDatabaseSchema(name, desc string) (*domain.FileSchema, error) {
+	schema := &domain.FileSchema{
+		Name:      name,
+		Desc:      desc,
+		Tables:    []domain.FileTable{},
+		Relations: []domain.FileRelation{},
+	}
+
+	// 1. Get all regular tables
+	rows, err := r.db.Query(`
+		SELECT name, sql FROM sqlite_master 
+		WHERE type='table' AND name NOT LIKE 'sqlite_%' 
+		AND name NOT LIKE 'goose_%'
+		ORDER BY name ASC
+	`)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query tables: %w", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var tableName, tableSQL string
+		if err := rows.Scan(&tableName, &tableSQL); err != nil {
+			continue
+		}
+
+		table := domain.FileTable{
+			Name: tableName,
+			Type: "table",
+			Def:  tableSQL,
+		}
+
+		// 2. Get columns
+		colRows, err := r.db.Query("PRAGMA table_info(" + tableName + ")")
+		if err == nil {
+			for colRows.Next() {
+				var cid int
+				var cname, ctype string
+				var notnull int
+				var dfltValue interface{}
+				var pk int
+
+				if err := colRows.Scan(&cid, &cname, &ctype, &notnull, &dfltValue, &pk); err == nil {
+					table.Columns = append(table.Columns, domain.FileColumn{
+						Name:     cname,
+						Type:     ctype,
+						Nullable: notnull == 0,
+					})
+				}
+			}
+			colRows.Close()
+		}
+
+		// 3. Get indexes
+		idxRows, err := r.db.Query("PRAGMA index_list(" + tableName + ")")
+		if err == nil {
+			for idxRows.Next() {
+				var seq int
+				var idxName string
+				var unique int
+				var origin string
+				var partial int
+				if err := idxRows.Scan(&seq, &idxName, &unique, &origin, &partial); err == nil {
+					table.Indexes = append(table.Indexes, domain.FileIndex{
+						Name:  idxName,
+						Table: tableName,
+					})
+				}
+			}
+			idxRows.Close()
+		}
+
+		// 4. Get relations (Foreign Keys)
+		fkRows, err := r.db.Query("PRAGMA foreign_key_list(" + tableName + ")")
+		if err == nil {
+			for fkRows.Next() {
+				var id, seq int
+				var targetTable, fromCol, toCol, onUpdate, onDelete, match string
+				if err := fkRows.Scan(&id, &seq, &targetTable, &fromCol, &toCol, &onUpdate, &onDelete, &match); err == nil {
+					schema.Relations = append(schema.Relations, domain.FileRelation{
+						Table:         tableName,
+						Columns:       []string{fromCol},
+						ParentTable:   targetTable,
+						ParentColumns: []string{toCol},
+					})
+				}
+			}
+			fkRows.Close()
+		}
+
+		schema.Tables = append(schema.Tables, table)
+	}
+
+	return schema, nil
 }
 
 func (r *SQLiteRepository) GetAllSchemaDashboards() ([]domain.SchemaDashboard, error) {
@@ -790,4 +953,85 @@ func (r *SQLiteRepository) applyOverrides(dash *domain.SchemaDashboard) {
 			}
 		}
 	}
+}
+
+func (r *SQLiteRepository) GetSites() ([]domain.SiteConfig, error) {
+	sites, err := r.fsRepo.GetSites()
+	if err != nil {
+		return nil, err
+	}
+
+	for i, site := range sites {
+		var desc, siteType string
+		err := r.db.QueryRow("SELECT description, type FROM sites WHERE name = ?", site.Name).Scan(&desc, &siteType)
+		if err == nil {
+			sites[i].InDatabase = true
+			if desc != "" {
+				sites[i].Description = desc
+			}
+			if siteType != "" {
+				sites[i].Type = siteType
+			}
+		}
+	}
+
+	return sites, nil
+}
+
+func (r *SQLiteRepository) SaveSiteConfig(site domain.SiteConfig) error {
+	log.Info().Str("site", site.Name).Msg("saving site configuration to database")
+	_, err := r.db.Exec(`
+		INSERT OR REPLACE INTO sites (name, type, description, data_path, mount_path, mount_source, mount_dist, active)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+	`, site.Name, site.Type, site.Description, site.DataPath, site.MountPath, site.MountSource, site.MountDist, site.Active)
+	if err != nil {
+		log.Error().Err(err).Str("site", site.Name).Msg("failed to save site config to database")
+		return err
+	}
+	log.Info().Str("site", site.Name).Msg("successfully saved site to database")
+
+	// Also attempt to ingest the site's schema if it exists
+	// Look in: site.DataPath/schema.json, site.DataPath/data/schema.json, and all subdirectories
+	var schemaPaths []string
+
+	possibleRoot := filepath.Join(site.DataPath, "schema.json")
+	if _, err := os.Stat(possibleRoot); err == nil {
+		schemaPaths = append(schemaPaths, possibleRoot)
+	}
+	possibleData := filepath.Join(site.DataPath, "data", "schema.json")
+	if _, err := os.Stat(possibleData); err == nil {
+		schemaPaths = append(schemaPaths, possibleData)
+	}
+
+	// Recursive scan if needed (e.g. site/data/blog/schema.json)
+	if len(schemaPaths) == 0 {
+		filepath.Walk(site.DataPath, func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return nil
+			}
+			if !info.IsDir() && info.Name() == "schema.json" {
+				schemaPaths = append(schemaPaths, path)
+			}
+			return nil
+		})
+	}
+
+	for _, schemaPath := range schemaPaths {
+		log.Info().Str("site", site.Name).Str("path", schemaPath).Msg("found schema.json, ingesting tables")
+		data, err := os.ReadFile(schemaPath)
+		if err == nil {
+			var schema domain.FileSchema
+			if err := json.Unmarshal(data, &schema); err == nil {
+				// Use the site name as the schema name if not provided
+				if schema.Name == "" {
+					schema.Name = site.Name
+				}
+				if err := r.SaveFullSchema(schema); err != nil {
+					log.Error().Err(err).Str("site", site.Name).Msg("failed to ingest site schema tables")
+				}
+			}
+		}
+	}
+
+	return nil
 }

@@ -1149,7 +1149,7 @@ const PublishedSchemaEditor: React.FC = () => {
             {/* Breadcrumbs / Header */}
             <div className="flex flex-col gap-5">
                 <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40 mb-1">
-                    <div className="hover:text-primary cursor-pointer transition-colors flex items-center gap-2" onClick={() => navigate('/publish/schema-data')}>
+                    <div className="hover:text-primary cursor-pointer transition-colors flex items-center gap-2" onClick={() => navigate('/publish/schema')}>
                         <TableIcon className="h-3 w-3" /> Inventory
                     </div>
                     <ChevronRight className="h-3 w-3 opacity-20" />
@@ -1166,7 +1166,7 @@ const PublishedSchemaEditor: React.FC = () => {
                             variant="outline"
                             size="icon"
                             className="rounded-[24px] h-16 w-16 border-white/10 hover:bg-muted shadow-2xl hover:shadow-primary/5 transition-all active:scale-90 group"
-                            onClick={() => navigate('/publish/schema-data')}
+                            onClick={() => navigate('/publish/schema')}
                         >
                             <ArrowLeft className="h-7 w-7 group-hover:-translate-x-1.5 transition-transform" />
                         </Button>

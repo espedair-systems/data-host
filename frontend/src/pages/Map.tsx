@@ -23,7 +23,7 @@ const MapPage: React.FC = () => {
             <nav className="flex items-center gap-2 text-sm text-muted-foreground font-medium shrink-0">
                 <Link to="/" className="hover:text-foreground transition-colors">Registry</Link>
                 <ChevronRight className="h-4 w-4" />
-                <Link to="/schema" className="hover:text-foreground transition-colors">Schema</Link>
+                <Link to="/curate/schema" className="hover:text-foreground transition-colors">Schema</Link>
                 <ChevronRight className="h-4 w-4" />
                 <span className="text-foreground font-bold capitalize">{moduleName} Map</span>
             </nav>

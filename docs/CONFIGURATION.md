@@ -23,15 +23,19 @@ Configuration is loaded in this order (later items override earlier ones):
 | `RATE_LIMIT_WRITE` | `rate_limits.write_requests` | int | `10` | `>0` | Write requests per minute per IP |
 | `JWT_SECRET` | `jwt_secret` | string | - | `min 32 chars` | Secret key for JWT signing |
 
-## Mount Points (YAML Only)
+## Sites (YAML Only)
 
-Mount points allow mapping additional file paths to the server.
+Sites allow you to host multiple Astro projects from separate directories.
 
 Example:
 ```yaml
-mounts:
-  - path: "/registry"
-    source_path: "../data-services/dist"
+sites:
+  - name: "my-site"
+    data_path: "./sites/my-site"
+    mount_path: "/host/my-site"
+    mount_source: "./sites/my-site"
+    mount_dist: "./sites/my-site/dist"
+    active: true
 ```
 
 ## Validation

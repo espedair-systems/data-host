@@ -87,7 +87,7 @@ const AstroTemplates: React.FC = () => {
                         </h1>
                     </div>
                     <p className="text-muted-foreground font-medium max-w-2xl pl-1">
-                        Manage UI blueprints and system templates stored in <code className="px-1.5 py-0.5 rounded bg-muted text-foreground text-xs font-bold">./templates</code>.
+                        Manage UI blueprints and system templates stored in <code className="px-1.5 py-0.5 rounded bg-muted text-foreground text-xs font-bold">./artifacts/templates</code>.
                     </p>
                 </div>
 

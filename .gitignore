@@ -50,3 +50,7 @@ dist/
 # OS X generated file
 .DS_Store
 
+TEST/
+data-service.tar.gz
+
+/log

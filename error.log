@@ -1,37 +1,32 @@
-Found ./data-services/dist.zip, unzipping to data-services...
-Successfully unzipped ./data-services/dist.zip
-[?25l[?1049h[2J[H[?25l[?2004h[?1002h[?1006h[H DATA-HOST 
-           
+[?25l[?1049h[2J[H[?25l[?2004h[?1002h[?1006h[H DATA-HOST - BOOT SEQUENCE 
+                           
 
-Configure and start the service:
+System Pre-flight Checks (Scroll with Arrows/PgUp/PgDn):
 
-> Port: > 8080 
-  Frontend Path: > ./frontend/dist 
-  Data Path: > ../data-services/dist 
-  Database Path: > blueprint.db 
+╭╮
+││
+╰╯
 
- STOPPED 
-
-Press Enter to START and launch browser
-Press Q or Ctrl+C to quit
-[15;H{"level":"info","component":"migrations","time":"2026-03-12T18:51:32+08:00","message":"Running database migrations"}
-2026/03/12 18:51:32 goose: no migrations to run. current version: 3
-{"level":"info","component":"migrations","time":"2026-03-12T18:51:32+08:00","message":"Migrations completed successfully"}
-{"level":"debug","time":"2026-03-12T18:51:32+08:00","message":"Initializing SQLite repository"}
+ ENTER START Service & Launch Browser
+ Q Quit
+[12;H{"level":"info","component":"migrations","time":"2026-03-15T18:58:49+08:00","message":"Running database migrations"}
+2026/03/15 18:58:49 goose: no migrations to run. current version: 5
+{"level":"info","component":"migrations","time":"2026-03-15T18:58:49+08:00","message":"Migrations completed successfully"}
+{"level":"debug","time":"2026-03-15T18:58:49+08:00","message":"Initializing SQLite repository"}
 panic: conflict settings: all origins disabled
 
-goroutine 84 [running]:
-github.com/gin-contrib/cors.newCors({0x0, {0x0, 0x0, 0x0}, 0x0, 0x0, {0x254118242180, 0x6, 0x6}, 0x0, ...})
+goroutine 33 [running]:
+github.com/gin-contrib/cors.newCors({0x0, {0x0, 0x0, 0x0}, 0x0, 0x0, {0x25d2ce2f0000, 0x6, 0x6}, 0x0, ...})
 	/home/jonk/go/pkg/mod/github.com/gin-contrib/cors@v1.7.6/config.go:45 +0x31c
-github.com/gin-contrib/cors.New({0x0, {0x0, 0x0, 0x0}, 0x0, 0x0, {0x254118242180, 0x6, 0x6}, 0x0, ...})
+github.com/gin-contrib/cors.New({0x0, {0x0, 0x0, 0x0}, 0x0, 0x0, {0x25d2ce2f0000, 0x6, 0x6}, 0x0, ...})
 	/home/jonk/go/pkg/mod/github.com/gin-contrib/cors@v1.7.6/cors.go:204 +0x65
-data-host/internal/adapters/driving/http.(*GinAdapter).Start(0x2541183be220, {0x1f90, {0x2541183e60a8, 0xf}, {0x2541183e60c0, 0x15}, {0x254118438300, 0xc}, {0x0, 0x0, ...}, ...}, ...)
-	/run/media/jonk/Workspace/astro/espedair/data-host/internal/adapters/driving/http/gin_adapter.go:46 +0x3d2
-data-host/internal/core/services.(*hostService).Start(0x2541183be580, {0x1f90, {0x2541183e60a8, 0xf}, {0x2541183e60c0, 0x15}, {0x254118438300, 0xc}, {0x0, 0x0, ...}, ...}, ...)
-	/run/media/jonk/Workspace/astro/espedair/data-host/internal/core/services/host_service.go:24 +0x107
-main.model.Update.func1(0x25411845e460)
-	/run/media/jonk/Workspace/astro/espedair/data-host/cmd/tui/main.go:216 +0x87
+data-host/internal/adapters/driving/http.(*GinAdapter).Start(_, {0x1f90, {0x25d2ce280c80, 0xf}, {0x0, 0x0}, {0x25d2ce280ca0, 0xc}, {0x25d2ce206e40, 0x1, ...}, ...}, ...)
+	/run/media/jonk/Workspace/astro/espedair/data-host/internal/adapters/driving/http/gin_adapter.go:67 +0x685
+data-host/internal/core/services.(*hostService).Start(_, {0x1f90, {0x25d2ce280c80, 0xf}, {0x0, 0x0}, {0x25d2ce280ca0, 0xc}, {0x25d2ce206e40, 0x1, ...}, ...}, ...)
+	/run/media/jonk/Workspace/astro/espedair/data-host/internal/core/services/host_service.go:24 +0x119
+main.model.Update.func1(0x25d2ce2d0f50)
+	/run/media/jonk/Workspace/astro/espedair/data-host/cmd/tui/main.go:330 +0x99
 created by main.model.Update in goroutine 1
-	/run/media/jonk/Workspace/astro/espedair/data-host/cmd/tui/main.go:215 +0xc6b
+	/run/media/jonk/Workspace/astro/espedair/data-host/cmd/tui/main.go:329 +0xc73
 exit status 2
 make: *** [Makefile:96: run-tui] Error 1

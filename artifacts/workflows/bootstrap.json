@@ -1,0 +1,50 @@
+{
+    "name": "Bootstrap Sequence",
+    "description": "Initial system startup and configuration discovery process",
+    "steps": [
+        {
+            "order": 1,
+            "task": "Config Discovery",
+            "description": "Check for existence of config.yaml",
+            "action": "FS_CHECK",
+            "target": "./config.yaml",
+            "next_on_success": "DATABASE_BOOTSTRAP"
+        },
+        {
+            "order": 2,
+            "task": "Database Bootstrap",
+            "description": "Initialize database connection and run pending migrations",
+            "action": "DB_MIGRATE",
+            "params": {
+                "auto_migrate": true
+            }
+        },
+        {
+            "order": 3,
+            "task": "Create Config File",
+            "description": "Generate a new config.yaml from defaults if required",
+            "action": "FS_WRITE",
+            "target": "./config.yaml",
+            "source": "DEFAULT_TEMPLATE"
+        },
+        {
+            "order": 4,
+            "task": "Site Synchronization",
+            "description": "Scan ./sites directory. If subdirectories are found, remove the example site and activate discovered sites.",
+            "logic": {
+                "condition": "count(./sites/*) > 0",
+                "actions": [
+                    {
+                        "op": "REMOVE",
+                        "target": "example-site"
+                    },
+                    {
+                        "op": "ADD_ACTIVE",
+                        "source": "./sites/*",
+                        "mount_pattern": "/host/{name}"
+                    }
+                ]
+            }
+        }
+    ]
+}

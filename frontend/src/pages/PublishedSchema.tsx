@@ -12,8 +12,11 @@ import {
     Layers,
     Check,
     X,
-    BarChart3
+    BarChart3,
+    Upload,
+    ExternalLink
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -51,17 +54,26 @@ const PublishedSchema: React.FC = () => {
     const [assets, setAssets] = useState<PublishedAsset[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [loadingAsset, setLoadingAsset] = useState<string | null>(null);
     const navigate = useNavigate();
 
     const fetchAssets = async () => {
         setLoading(true);
+        console.log('[DEBUG] PublishedSchema: Fetching assets from /api/site/published-data...');
         try {
             const resp = await fetch('/api/site/published-data');
-            if (!resp.ok) throw new Error('Failed to fetch published assets');
+            console.log('[DEBUG] PublishedSchema: Response status:', resp.status);
+            if (!resp.ok) {
+                const errorText = await resp.text();
+                console.error('[DEBUG] PublishedSchema: Fetch failed:', errorText);
+                throw new Error(`Failed to fetch published assets: ${resp.status} ${resp.statusText}`);
+            }
             const data = await resp.json();
-            setAssets(data);
+            console.log('[DEBUG] PublishedSchema: Data received:', data);
+            setAssets(data || []);
             setError(null);
         } catch (err: any) {
+            console.error('[DEBUG] PublishedSchema: Error:', err);
             setError(err.message);
         } finally {
             setLoading(false);
@@ -71,6 +83,49 @@ const PublishedSchema: React.FC = () => {
     useEffect(() => {
         fetchAssets();
     }, []);
+
+    const handleLoadToDb = async (assetName: string) => {
+        setLoadingAsset(assetName);
+        try {
+            // 1. Fetch the raw schema.json from the published data
+            const schemaResp = await fetch(`/api/site/published-data/${assetName}/schema.json`);
+            if (!schemaResp.ok) throw new Error(`Failed to fetch schema file (${schemaResp.status})`);
+            const schema = await schemaResp.json();
+
+            // 2. Post the schema to the ingestion endpoint
+            const token = localStorage.getItem('token');
+            const ingestResp = await fetch('/api/ingestion/ingest', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                },
+                body: JSON.stringify(schema)
+            });
+
+            if (!ingestResp.ok) {
+                let errorMsg = `Server returned ${ingestResp.status}`;
+                try {
+                    const data = await ingestResp.json();
+                    errorMsg = data.error || data.message || errorMsg;
+                } catch {
+                    // Response body is not JSON (e.g. plain 401)
+                }
+                throw new Error(errorMsg);
+            }
+
+            toast.success('Schema Loaded', {
+                description: `"${assetName}" has been ingested into the database.`
+            });
+
+            // Refresh the list so "inDatabase" status updates
+            await fetchAssets();
+        } catch (err: any) {
+            toast.error('Load Failed', { description: err.message });
+        } finally {
+            setLoadingAsset(null);
+        }
+    };
 
     const AssetTable = () => (
         <div className="rounded-xl border bg-card/50 overflow-hidden">
@@ -190,8 +245,33 @@ const PublishedSchema: React.FC = () => {
                                         <Button
                                             variant="outline"
                                             size="sm"
+                                            disabled={asset.inDatabase || loadingAsset === asset.name || !asset.hasSchema}
+                                            className="h-8 rounded-lg text-[10px] uppercase font-black tracking-widest gap-2 bg-card border-emerald-200 text-emerald-700 hover:bg-emerald-600 hover:text-white hover:border-emerald-600 transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed"
+                                            onClick={() => handleLoadToDb(asset.name)}
+                                        >
+                                            {loadingAsset === asset.name ? (
+                                                <RefreshCcw className="h-3.5 w-3.5 animate-spin" />
+                                            ) : asset.inDatabase ? (
+                                                <Check className="h-3.5 w-3.5" />
+                                            ) : (
+                                                <Upload className="h-3.5 w-3.5" />
+                                            )}
+                                            {asset.inDatabase ? 'Ingested' : 'Load'}
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
                                             className="h-8 rounded-lg text-[10px] uppercase font-black tracking-widest gap-2 bg-card border-slate-200 hover:bg-primary hover:text-white hover:border-primary transition-all duration-300"
-                                            onClick={() => navigate(`/publish/schema-data/edit/${asset.name}/schema.json`)}
+                                            onClick={() => navigate(`/publish/site/details?details=data/schema/${asset.name}`)}
+                                        >
+                                            <Layers className="h-3.5 w-3.5" />
+                                            Access
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="h-8 rounded-lg text-[10px] uppercase font-black tracking-widest gap-2 bg-card border-slate-200 hover:bg-primary hover:text-white hover:border-primary transition-all duration-300"
+                                            onClick={() => navigate(`/publish/schema/edit/${asset.name}/schema.json`)}
                                         >
                                             <Edit3 className="h-3.5 w-3.5" />
                                             Deep Edit
@@ -200,6 +280,17 @@ const PublishedSchema: React.FC = () => {
                                 </TableCell>
                             </TableRow>
                         ))}
+
+                        {assets.length === 0 && !loading && (
+                            <TableRow>
+                                <TableCell colSpan={7} className="h-32 text-center">
+                                    <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground italic">
+                                        <AlertCircle className="h-6 w-6 opacity-20" />
+                                        <span className="text-sm font-bold uppercase tracking-widest opacity-40">No orchestration assets found</span>
+                                    </div>
+                                </TableCell>
+                            </TableRow>
+                        )}
                     </TableBody>
                 </Table>
             </TooltipProvider>
@@ -217,8 +308,23 @@ const PublishedSchema: React.FC = () => {
                     <div>
                         <h1 className="text-4xl font-black tracking-tight text-foreground italic uppercase">SCHEMA MANIFEST</h1>
                         <p className="text-muted-foreground text-lg italic">Raw metadata control center for external site publication.</p>
+                        <div className="mt-2 flex items-center gap-4">
+                            <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 h-7 px-4 rounded-lg font-black uppercase tracking-tighter tabular-nums">
+                                {assets.length} Assets Loaded
+                            </Badge>
+                            {loading && (
+                                <span className="text-[10px] font-bold text-primary animate-pulse uppercase tracking-widest flex items-center gap-2">
+                                    <RefreshCcw className="h-3 w-3 animate-spin" />
+                                    Synchronizing...
+                                </span>
+                            )}
+                        </div>
                     </div>
                     <div className="flex gap-3">
+                        <Button variant="outline" className="gap-2 rounded-xl h-11 border-slate-200 bg-card hover:bg-muted font-bold text-xs" onClick={() => window.open('/api/site/published-data', '_blank')}>
+                            <ExternalLink className="h-4 w-4 text-muted-foreground" />
+                            Verify raw API
+                        </Button>
                         <Button variant="outline" className="gap-2 rounded-xl h-11 border-slate-200 bg-card hover:bg-muted font-bold text-xs" onClick={fetchAssets}>
                             <RefreshCcw className={loading ? "animate-spin h-4 w-4 text-primary" : "h-4 w-4 text-primary"} />
                             Re-Scan Repository

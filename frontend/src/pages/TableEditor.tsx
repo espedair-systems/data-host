@@ -165,9 +165,9 @@ const TableEditor: React.FC = () => {
             <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-4 font-medium italic">
                 <Link to="/" className="hover:text-foreground transition-colors uppercase tracking-widest text-[10px]">Registry</Link>
                 <ChevronRight className="h-3 w-3" />
-                <Link to="/schema" className="hover:text-foreground transition-colors uppercase tracking-widest text-[10px]">Schema</Link>
+                <Link to="/curate/schema" className="hover:text-foreground transition-colors uppercase tracking-widest text-[10px]">Schema</Link>
                 <ChevronRight className="h-3 w-3" />
-                <Link to={`/schema?details=data/schema/${moduleName}`} className="hover:text-foreground transition-colors uppercase tracking-widest text-[10px]">{moduleName}</Link>
+                <Link to={`/curate/schema?details=data/schema/${moduleName}`} className="hover:text-foreground transition-colors uppercase tracking-widest text-[10px]">{moduleName}</Link>
                 <ChevronRight className="h-3 w-3" />
                 <span className="text-foreground font-black uppercase tracking-widest text-[10px] italic">Edit {tableName}</span>
             </nav>

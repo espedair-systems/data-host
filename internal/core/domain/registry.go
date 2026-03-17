@@ -91,9 +91,20 @@ type BlueprintSchema struct {
 	UpdatedAt string `json:"updatedAt" example:"2026-03-12T00:00:00Z"`
 }
 
+// @Description Blueprint table summary for list view
+type BlueprintTableSummary struct {
+	Name        string `json:"name"`
+	SchemaName  string `json:"schemaName"`
+	Type        string `json:"type"`
+	Description string `json:"description"`
+	ColumnCount int    `json:"columnCount"`
+	RowCount    int64  `json:"rowCount"`
+}
+
 // @Description asset in the published data directory
 type PublishedAsset struct {
 	Name           string   `json:"name" example:"odoo"`
+	InternalName   string   `json:"internalName"` // Name field from schema.json
 	HasSchema      bool     `json:"hasSchema" example:"true"`
 	HasCollections bool     `json:"hasCollections" example:"false"`
 	SchemaPath     string   `json:"schemaPath"`

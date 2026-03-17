@@ -2,14 +2,19 @@ package logger
 
 import (
 	"bytes"
+	"data-host/internal/core/domain"
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
+	stdLog "log"
+
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 // TUIWriter routes logs to different TUI windows based on severity.
@@ -39,33 +44,91 @@ func (t *TUIWriter) Write(p []byte) (n int, err error) {
 // Init initializes the global logger.
 // If debug is true, it uses pretty console output for development.
 // Otherwise, it uses JSON output for production.
-func Init(debug bool) {
-	if debug {
-		// Pretty console output for development
-		output := zerolog.ConsoleWriter{
-			Out:        os.Stdout,
-			NoColor:    true,
-			TimeFormat: time.Kitchen,
-			// This allows \n and \t to be interpreted by the terminal
-			FormatMessage: func(i interface{}) string {
-				return fmt.Sprintf("%s", i)
-			},
-		}
-		log.Logger = log.Output(output).Level(zerolog.DebugLevel)
-	} else {
-		// JSON output for production
-		log.Logger = log.Output(os.Stdout).
-			Level(zerolog.InfoLevel)
-	}
+func Init(config domain.HostConfig) {
+	writers := getWriters(config)
+	multi := io.MultiWriter(writers...)
+	log.Logger = zerolog.New(multi).With().Timestamp().Logger()
+	stdLog.SetOutput(multi)
+
+	// Initial log level
+	SetLogLevel(config.LogLevel)
 }
 
 // InitTUI initializes the global logger with a TUI-specific writer.
-func InitTUI(writer *TUIWriter) {
-	log.Logger = zerolog.New(writer).
+func InitTUI(config domain.HostConfig, writer *TUIWriter) {
+	var writers []io.Writer
+
+	// File logging with rotation (Always use if enabled, even in TUI)
+	if config.LogFileEnabled && config.LogFilePath != "" {
+		logDir := filepath.Dir(config.LogFilePath)
+		if err := os.MkdirAll(logDir, 0755); err == nil {
+			fileLogger := &lumberjack.Logger{
+				Filename:   config.LogFilePath,
+				MaxSize:    config.LogMaxSize,
+				MaxBackups: config.LogMaxBackups,
+				MaxAge:     config.LogMaxAge,
+				Compress:   true,
+			}
+			writers = append(writers, fileLogger)
+		}
+	}
+
+	// UI logging: Only add TUI writer if file logging is NOT enabled
+	// as per user request to hide logger messages in the window when logging to file.
+	if !config.LogFileEnabled {
+		writers = append(writers, writer)
+	}
+
+	// NOTE: We do NOT use getWriters(config) here because we must avoid os.Stdout
+	// in TUI mode to prevent display corruption.
+
+	multi := io.MultiWriter(writers...)
+	log.Logger = zerolog.New(multi).
 		With().
 		Timestamp().
 		Logger().
 		Level(zerolog.DebugLevel)
+
+	stdLog.SetOutput(multi)
+}
+
+func getWriters(config domain.HostConfig) []io.Writer {
+	var writers []io.Writer
+
+	if config.Debug {
+		// Pretty console output for development
+		writers = append(writers, zerolog.ConsoleWriter{
+			Out:        os.Stdout,
+			NoColor:    false,
+			TimeFormat: time.Kitchen,
+			FormatMessage: func(i interface{}) string {
+				return fmt.Sprintf("%s", i)
+			},
+		})
+	} else {
+		// JSON output for production (Standard out)
+		writers = append(writers, os.Stdout)
+	}
+
+	// File logging with rotation
+	if config.LogFileEnabled && config.LogFilePath != "" {
+		// Ensure directory exists
+		logDir := filepath.Dir(config.LogFilePath)
+		if err := os.MkdirAll(logDir, 0755); err == nil {
+			fileLogger := &lumberjack.Logger{
+				Filename:   config.LogFilePath,
+				MaxSize:    config.LogMaxSize, // megabytes
+				MaxBackups: config.LogMaxBackups,
+				MaxAge:     config.LogMaxAge, // days
+				Compress:   true,             // disabled by default
+			}
+			writers = append(writers, fileLogger)
+		} else {
+			fmt.Printf("Warning: could not create log directory %s: %v\n", logDir, err)
+		}
+	}
+
+	return writers
 }
 
 // GetLogger returns the global logger.

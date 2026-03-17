@@ -52,14 +52,17 @@ const TablesPages: React.FC = () => {
 
     const fetchAssets = async () => {
         setLoading(true);
+        console.log('[DEBUG] TablesPages: Fetching assets...');
         try {
             const response = await fetch('/api/site/table-assets');
+            console.log('[DEBUG] TablesPages: Status:', response.status);
             if (!response.ok) throw new Error('Failed to fetch assets');
             const data = await response.json();
+            console.log('[DEBUG] TablesPages: Data received:', data);
             setAssets(data);
         } catch (error) {
+            console.error('[DEBUG] TablesPages: Error:', error);
             toast.error('Failed to load table assets');
-            console.error(error);
         } finally {
             setLoading(false);
         }

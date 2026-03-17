@@ -46,14 +46,21 @@ func main() {
 	}
 
 	// Initialize logger
-	logger.Init(cfg.Debug)
-	logger.SetLogLevel(cfg.LogLevel)
+	logger.Init(*cfg)
 
 	log.Info().
 		Str("host", "0.0.0.0").
 		Int("port", cfg.Port).
 		Str("log_level", cfg.LogLevel).
 		Msg("Configuration loaded successfully")
+
+	bootstrap := services.NewBootstrapService()
+	bootRes := bootstrap.ExtractTemplates(cfg)
+	if !bootRes.OK {
+		log.Warn().Msg(bootRes.Text)
+	} else {
+		log.Info().Msg(bootRes.Text)
+	}
 
 	var repo ports.RegistryRepository
 	appEnv := os.Getenv("APP_ENV")

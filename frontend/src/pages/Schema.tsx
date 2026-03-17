@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useSearchParams, useNavigate } from 'react-router-dom';
+import { Link, useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 import {
     Database,
     Grid,
     Pencil,
+    ArrowLeft,
     ChevronRight,
     Filter,
     Layers,
@@ -83,9 +84,11 @@ interface BlueprintSchema {
 const Schema: React.FC = () => {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
+    const location = useLocation();
     const detailsPath = searchParams.get('details');
     const [schemas, setSchemas] = useState<SchemaModule[]>([]);
     const [blueprintSchemas, setBlueprintSchemas] = useState<BlueprintSchema[]>([]);
+    const [blueprintDetails, setBlueprintDetails] = useState<Record<string, SchemaModule>>({});
     const [loading, setLoading] = useState(true);
     const [selectedCollectionId, setSelectedCollectionId] = useState<string | null>(null);
 
@@ -107,6 +110,33 @@ const Schema: React.FC = () => {
                 if (blueprintRes.ok && Array.isArray(blueprintData)) {
                     setBlueprintSchemas(blueprintData);
                 }
+
+                // If we have a details path and it's curate/publish mode, fetch full schema from DB
+                if (detailsPath && (location.pathname.startsWith('/curate') || location.pathname.startsWith('/publish'))) {
+                    const name = detailsPath.split('/').pop();
+                    if (name && !blueprintDetails[name]) {
+                        const detailRes = await fetch(`/api/blueprint/schemas/${name}`);
+                        if (detailRes.ok) {
+                            const detailData = await detailRes.json();
+                            const transformed: SchemaModule = {
+                                name: detailData.name,
+                                schemaStats: {
+                                    tableDetail: (detailData.tables || []).map((t: any) => ({
+                                        name: t.name,
+                                        type: t.type,
+                                        description: t.comment,
+                                        columns: (t.columns || []).map((c: any) => ({
+                                            name: c.name,
+                                            type: c.type,
+                                            description: c.comment
+                                        }))
+                                    }))
+                                }
+                            };
+                            setBlueprintDetails(prev => ({ ...prev, [detailData.name]: transformed }));
+                        }
+                    }
+                }
             } catch (error) {
                 console.error('Failed to fetch schemas:', error);
             } finally {
@@ -114,13 +144,20 @@ const Schema: React.FC = () => {
             }
         };
         fetchAll();
-    }, []);
+    }, [detailsPath, location.pathname, blueprintDetails]);
 
-    const selectedModule = schemas.find((s) => {
-        if (!detailsPath) return false;
-        const name = detailsPath.split('/').pop();
-        return s.name === name;
-    });
+    const isCurate = location.pathname.includes('/curate');
+    console.log('[DEBUG] Schema Path:', location.pathname, 'isCurate:', isCurate);
+
+    let selectedModule: SchemaModule | undefined;
+    if (detailsPath) {
+        const name = detailsPath.split('/').pop() || "";
+        if (isCurate) {
+            selectedModule = blueprintDetails[name];
+        } else {
+            selectedModule = schemas.find(s => s.name === name);
+        }
+    }
 
     const activeCollection = selectedModule?.collections?.find((c) => c.id === selectedCollectionId);
 
@@ -155,7 +192,7 @@ const Schema: React.FC = () => {
                 <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-4 font-medium italic">
                     <Link to="/" className="hover:text-foreground transition-colors uppercase tracking-widest text-[10px]">Registry</Link>
                     <ChevronRight className="h-3 w-3" />
-                    <Link to="/schema" className="hover:text-foreground transition-colors uppercase tracking-widest text-[10px]">Schema</Link>
+                    <Link to={isCurate ? "/curate/schema" : "/publish/site"} className="hover:text-foreground transition-colors uppercase tracking-widest text-[10px]">{isCurate ? "Schema" : "Site"}</Link>
                     <ChevronRight className="h-3 w-3" />
                     <span className="text-foreground font-black uppercase tracking-widest text-[10px] italic">
                         {detailsPath.split('/').pop()}
@@ -169,10 +206,25 @@ const Schema: React.FC = () => {
                         </div>
                         <div>
                             <h1 className="text-3xl font-black tracking-tight uppercase italic flex items-center gap-3">
-                                {detailsPath.split('/').pop()} <span className="text-muted-foreground/40 not-italic">Data Model</span>
+                                {detailsPath.split('/').pop()} <span className="text-muted-foreground/40 not-italic">{isCurate ? "Blueprint Model" : "Orchestration Data"}</span>
                             </h1>
-                            <p className="text-muted-foreground mt-1 font-medium italic tabular-nums">Namespace: <span className="text-foreground/80 font-bold">{detailsPath}</span></p>
+                            <p className="text-muted-foreground mt-1 font-medium italic tabular-nums capitalize opacity-60">Source: <span className="text-foreground/80 font-bold lowercase">{isCurate ? "Database Engine" : "Filesystem schema.json"}</span></p>
                         </div>
+                    </div>
+                    <div className="flex gap-3">
+                        <Button variant="outline" onClick={() => navigate(isCurate ? "/curate/schema" : "/publish/site")} className="h-11 px-6 rounded-xl font-black uppercase tracking-widest text-[10px] gap-2">
+                            <ArrowLeft className="h-3 w-3" />
+                            Return to Index
+                        </Button>
+                        {!isCurate && (
+                            <Button
+                                onClick={() => navigate(`/publish/schema/edit/${detailsPath.split('/').pop()}/schema.json`)}
+                                className="h-11 px-8 rounded-xl font-black uppercase tracking-widest text-[10px] gap-2 bg-primary text-primary-foreground shadow-lg shadow-primary/25"
+                            >
+                                <Pencil className="h-3.5 w-3.5" />
+                                Deep Edit JSON
+                            </Button>
+                        )}
                     </div>
                 </header>
 
@@ -260,11 +312,15 @@ const Schema: React.FC = () => {
                                                 className="h-9 px-4 rounded-[1rem] bg-card border-slate-200 dark:border-slate-800 shadow-sm font-black text-[9px] uppercase tracking-widest text-muted-foreground/80 hover:text-primary gap-2 transition-all active:scale-95 z-30 relative"
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    navigate(`/schema/edit?module=${selectedModule?.name}&table=${table.name}`);
+                                                    if (isCurate) {
+                                                        navigate(`/curate/schema/edit?module=${selectedModule?.name}&table=${table.name}`);
+                                                    } else {
+                                                        navigate(`/publish/schema-data/edit/${selectedModule?.name}/schema.json`);
+                                                    }
                                                 }}
                                             >
                                                 <Pencil className="h-3 w-3" />
-                                                Mutation
+                                                {isCurate ? "Mutation" : "Deep Edit"}
                                             </Button>
                                         </div>
                                         <AccordionContent className="p-0 border-t border-slate-200 dark:border-slate-800">
@@ -380,7 +436,7 @@ const Schema: React.FC = () => {
                     <Database className="h-10 w-10 shrink-0" />
                 </div>
                 <h1 className="text-4xl font-black tracking-tighter uppercase italic leading-none">
-                    Data Model <span className="text-muted-foreground/30 not-italic">Registry</span>
+                    {isCurate ? 'Blueprint' : 'Data Model'} <span className="text-muted-foreground/30 not-italic">Registry</span>
                 </h1>
             </header>
 
@@ -399,10 +455,88 @@ const Schema: React.FC = () => {
                         </Card>
                     ))}
                 </div>
-            ) : blueprintSchemas.length > 0 ? (
+            ) : isCurate ? (
+                <div className="rounded-[2rem] border border-slate-200 dark:border-slate-800 bg-card/60 backdrop-blur-sm shadow-xl overflow-hidden animate-in slide-in-from-bottom-4 duration-700">
+                    <Table>
+                        <TableHeader>
+                            <TableRow className="hover:bg-transparent border-slate-200 dark:border-slate-800">
+                                <TableHead className="w-[300px] font-black uppercase text-[10px] tracking-widest px-8">Blueprint Identifier</TableHead>
+                                <TableHead className="font-black uppercase text-[10px] tracking-widest">Description</TableHead>
+                                <TableHead className="w-[150px] font-black uppercase text-[10px] tracking-widest text-center">Last Mutation</TableHead>
+                                <TableHead className="w-[150px] text-right font-black uppercase text-[10px] tracking-widest px-8">Actions</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {blueprintSchemas.length > 0 ? (
+                                blueprintSchemas.map((s) => (
+                                    <TableRow key={s.id} className="group hover:bg-primary/5 transition-colors border-slate-200 dark:border-slate-800 border-b-none last:border-b-0">
+                                        <TableCell className="px-8 py-6">
+                                            <div className="flex items-center gap-4">
+                                                <div className="p-3 rounded-2xl bg-primary/10 text-primary group-hover:scale-110 transition-transform duration-500">
+                                                    <Database className="h-5 w-5" />
+                                                </div>
+                                                <div className="flex flex-col gap-1">
+                                                    <span className="text-base font-black uppercase tracking-tight italic group-hover:text-primary transition-colors">{s.name}</span>
+                                                    <div className="flex items-center gap-2">
+                                                        <Badge variant="outline" className="text-[8px] font-bold uppercase tracking-widest py-0 px-2 bg-muted/50 border-none shadow-none">DB Record</Badge>
+                                                        <span className="text-[9px] font-bold text-muted-foreground/40 tabular-nums">ID: {s.id}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            <p className="text-xs font-bold text-muted-foreground/60 italic line-clamp-2 max-w-md">
+                                                {s.desc || "No semantic definition provided for this architectural blueprint."}
+                                            </p>
+                                        </TableCell>
+                                        <TableCell className="text-center">
+                                            <div className="flex flex-col">
+                                                <span className="text-[10px] font-black tabular-nums">{new Date(s.updatedAt).toLocaleDateString()}</span>
+                                                <span className="text-[8px] font-black uppercase text-muted-foreground/40 tracking-widest mt-0.5">Commit Date</span>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="text-right px-8">
+                                            <div className="flex justify-end gap-2">
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="rounded-xl font-black uppercase text-[9px] tracking-widest h-9 px-4 border-slate-200 dark:border-slate-800 hover:bg-emerald-500 hover:text-white hover:border-emerald-500 transition-all active:scale-95"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        navigate(`/curate/schema/generate/${s.name}`);
+                                                    }}
+                                                >
+                                                    Gen
+                                                </Button>
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="rounded-xl font-black uppercase text-[9px] tracking-widest h-9 px-4 border-slate-200 dark:border-slate-800 hover:bg-primary hover:text-white hover:border-primary transition-all active:scale-95"
+                                                    onClick={() => navigate(`/curate/schema?details=${s.name}`)}
+                                                >
+                                                    Access
+                                                </Button>
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            ) : (
+                                <TableRow>
+                                    <TableCell colSpan={4} className="h-40 text-center">
+                                        <div className="flex flex-col items-center gap-2 text-muted-foreground/40">
+                                            <Database className="h-8 w-8 mb-2 opacity-20" />
+                                            <p className="text-[10px] font-black uppercase tracking-[0.2em]">No Database Schemas Found</p>
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
+                </div>
+            ) : schemas.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {blueprintSchemas.map((s) => (
-                        <Card key={s.id} className="rounded-3xl border-slate-200 dark:border-slate-800 bg-card/60 backdrop-blur-sm shadow-xl hover:shadow-2xl transition-all duration-500 group hover:-translate-y-1">
+                    {schemas.map((s) => (
+                        <Card key={s.name} className="rounded-[2.5rem] border-slate-200 dark:border-slate-800 bg-card/60 backdrop-blur-sm shadow-xl hover:shadow-2xl transition-all duration-500 group hover:-translate-y-1">
                             <CardContent className="p-8 space-y-6">
                                 <div className="flex items-center gap-4">
                                     <div className="p-3 rounded-2xl bg-primary/10 text-primary group-hover:scale-110 transition-transform duration-500">
@@ -411,20 +545,29 @@ const Schema: React.FC = () => {
                                     <h2 className="text-xl font-black uppercase tracking-tight italic">{s.name}</h2>
                                 </div>
 
-                                <p className="text-sm font-bold text-muted-foreground/60 italic leading-relaxed min-h-[3rem]">
-                                    {s.desc || "No comprehensive description provided for this blueprint schema definition."}
-                                </p>
+                                <div className="flex flex-wrap gap-2 min-h-[3rem]">
+                                    {s.collections?.slice(0, 3).map(c => (
+                                        <Badge key={c.id} variant="secondary" className="rounded-full px-3 py-1 font-black text-[9px] uppercase tracking-widest bg-muted/40 text-muted-foreground/80 border-none shadow-none">
+                                            {c.emoji} {c.title}
+                                        </Badge>
+                                    ))}
+                                    {s.collections && s.collections.length > 3 && (
+                                        <Badge variant="secondary" className="rounded-full px-3 py-1 font-black text-[9px] uppercase tracking-widest bg-muted/40 text-muted-foreground/80 border-none shadow-none">
+                                            +{s.collections.length - 3} More
+                                        </Badge>
+                                    )}
+                                </div>
 
                                 <div className="space-y-3">
                                     <Separator className="bg-slate-200/50 dark:bg-slate-800/50" />
                                     <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">
-                                        <div className="flex flex-col gap-1">
-                                            <span className="text-[8px] opacity-60">Created</span>
-                                            <span className="tabular-nums italic">{new Date(s.createdAt).toLocaleDateString()}</span>
+                                        <div className="flex items-center gap-2">
+                                            <Grid className="h-3 w-3" />
+                                            <span className="tabular-nums">{s.schemaStats?.tableDetail?.length || 0} Entities</span>
                                         </div>
-                                        <div className="flex flex-col items-end gap-1">
-                                            <span className="text-[8px] opacity-60">Updated</span>
-                                            <span className="tabular-nums italic">{new Date(s.updatedAt).toLocaleDateString()}</span>
+                                        <div className="flex items-center gap-2">
+                                            <Layout className="h-3 w-3" />
+                                            <span className="tabular-nums">{s.collections?.length || 0} Verticals</span>
                                         </div>
                                     </div>
                                 </div>
@@ -432,9 +575,9 @@ const Schema: React.FC = () => {
                                 <Button
                                     variant="outline"
                                     className="w-full rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] h-11 border-slate-200 dark:border-slate-800 hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-300"
-                                    onClick={() => navigate(`/schema?details=${s.name}`)}
+                                    onClick={() => navigate(`/publish/schema?details=data/schema/${s.name}`)}
                                 >
-                                    Access Blueprint
+                                    Access
                                 </Button>
                             </CardContent>
                         </Card>

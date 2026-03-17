@@ -1,24 +1,41 @@
 # Default configuration for local execution (outside Docker)
 # For Docker, see docker/config.yaml or use environment variables
 port: 8080
-frontend_path: "./frontend/dist"
-data_path: "/"
 database_url: "blueprint.db"
 debug: true
+
+# Logging configuration
 log_level: "DEBUG"
 log_format: "pretty"
 log_output: "stdout"
-deploy: false
+log_file_enabled: false
+log_file_path: "logs/data-host.log"
+log_max_size: 10 # megabytes
+log_max_backups: 3
+log_max_age: 28 # days
+
+# Deployment environment.
+deploy: "IDE" # Options: IDE, TEST, DOCKER, PROD
 
 # Security Settings
 cors_allow_origins:
   - "http://localhost:5173"
   - "http://localhost:8080"
 rate_limits:
-  read_requests: 100
-  write_requests: 10
+  read_requests: 1000
+  write_requests: 100
 jwt_secret: "your-very-secure-secret-key-at-least-32-chars"
 
-mounts:
-  - path: "/registry"
-    source_path: "../data-services/dist"
+sites:
+  - name: "example"
+    data_path: "./sites/example"
+    active: true
+  - name: "data-services"
+    active: "true"
+    type: "document"
+    publish_url: "/host/data-services"
+    description: "Core data platform."
+    site_path: "/run/media/jonk/Workspace/astro/espedair/sites/data-services"
+    data_path: "/run/media/jonk/Workspace/espedair/TEST/sites/data-services/data/"
+    schema_path: "/run/media/jonk/Workspace/espedair/TEST/sites/data-services/dist/registry/schema/"
+    site_dist: "/run/media/jonk/Workspace/astro/espedair/sites/data-services/dist"

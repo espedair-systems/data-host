@@ -5,6 +5,7 @@ import (
 	"embed"
 
 	"github.com/pressly/goose/v3"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
 
@@ -23,6 +24,9 @@ func RunMigrations(db *sql.DB) error {
 		return err
 	}
 
+	// Redirect goose output to our logger
+	goose.SetLogger(&gooseLogger{lg})
+
 	// We allow missing migrations to handle transitions between different versioning schemes
 	// however this only works if migrations in DB but not on disk are okay.
 	// Out-of-order migrations are not directly supported via OptionsFunc in simple Up()?
@@ -34,6 +38,18 @@ func RunMigrations(db *sql.DB) error {
 
 	lg.Info().Msg("Migrations completed successfully")
 	return nil
+}
+
+type gooseLogger struct {
+	lg zerolog.Logger
+}
+
+func (l *gooseLogger) Printf(format string, v ...interface{}) {
+	l.lg.Info().Msgf(format, v...)
+}
+
+func (l *gooseLogger) Fatalf(format string, v ...interface{}) {
+	l.lg.Fatal().Msgf(format, v...)
 }
 
 // GetMigrationStatus returns the status of database migrations.

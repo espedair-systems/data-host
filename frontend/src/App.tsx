@@ -1,6 +1,7 @@
+import { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
-import Directory from './pages/Directory';
+import Cortext from './pages/Cortext';
 import Mounts from './pages/Mounts';
 import Site from './pages/Site';
 import Schema from './pages/Schema';
@@ -36,8 +37,15 @@ import Environments from './pages/Environments';
 import DirectoryPreferences from './pages/DirectoryPreferences';
 import Publish from './pages/Publish';
 import PublishedSchema from './pages/PublishedSchema';
+import PublishedSites from './pages/PublishedSites';
 import PublishedSchemaEditor from './pages/PublishedSchemaEditor';
 import TablesPages from './pages/TablesPages';
+import Tables from './pages/Tables';
+import Steward from './pages/Steward';
+import Model from './pages/Model';
+import Secure from './pages/Secure';
+import MockPage from './pages/MockPage';
+import { BookMarked, Zap, UserCircle, Lock, BarChart3, Component, GitBranch, Key, Users as UsersIcon } from 'lucide-react';
 import Curate from './pages/Curate';
 import KnowledgeDashboard from './pages/KnowledgeDashboard';
 import Librarian from './pages/Librarian';
@@ -46,7 +54,11 @@ import JsonSchemaViewer from './pages/JsonSchemaViewer';
 import Workflows from './pages/Workflows';
 import AstroTemplates from './pages/AstroTemplates';
 import PlaceholderPage from './pages/Placeholder';
+import GithubRepos from './pages/GithubRepos';
+import Settings from './pages/Settings';
 import Home from './pages/Home';
+import SchemaGeneration from './pages/SchemaGeneration';
+const SwaggerPage = lazy(() => import('./pages/Integrate/Swagger'));
 import { ColorModeProvider } from './context/ColorModeContext';
 import { DirectoryPreferenceProvider } from './context/DirectoryPreferenceContext';
 import { SidebarProvider } from './context/SidebarContext';
@@ -55,15 +67,6 @@ const FilesPage = () => (
     <h1 className="text-3xl font-bold tracking-tight">Files</h1>
     <div className="p-6 border rounded-xl bg-card text-card-foreground shadow-sm">
       <p className="text-muted-foreground">File directory interface will go here.</p>
-    </div>
-  </div>
-);
-
-const SettingsPage = () => (
-  <div className="flex flex-col gap-6">
-    <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
-    <div className="p-6 border rounded-xl bg-card text-card-foreground shadow-sm">
-      <p className="text-muted-foreground">System settings will go here.</p>
     </div>
   </div>
 );
@@ -77,15 +80,50 @@ function App() {
             <Routes>
               <Route path="/" element={<Layout />}>
                 <Route index element={<Home />} />
-                <Route path="explore" element={<Directory />} />
+                <Route path="cortext" element={<Cortext />} />
                 <Route path="publish">
                   <Route index element={<Publish />} />
                   <Route path="dashboard" element={<Publish />} />
-                  <Route path="schema-data" element={<PublishedSchema />} />
-                  <Route path="schema-data/edit/:asset/:file" element={<PublishedSchemaEditor />} />
+                  <Route path="schema" element={<PublishedSchema />} />
+                  <Route path="site">
+                    <Route index element={<PublishedSites />} />
+                    <Route path="details" element={<Schema />} />
+                  </Route>
+                  <Route path="schema/edit/:asset/:file" element={<PublishedSchemaEditor />} />
                   <Route path="tables-pages" element={<TablesPages />} />
                 </Route>
-                <Route path="curate" element={<Curate />} />
+                <Route path="curate">
+                  <Route index element={<Curate />} />
+                  <Route path="schema" element={<Schema />} />
+                  <Route path="schema/generate/:asset" element={<SchemaGeneration />} />
+                  <Route path="tables" element={<Tables />} />
+                  <Route path="schema/edit" element={<TableEditor />} />
+                  <Route path="schema/map" element={<MapPage />} />
+                </Route>
+
+                <Route path="steward">
+                  <Route index element={<Steward />} />
+                  <Route path="dashboard" element={<Steward />} />
+                  <Route path="glossary" element={<MockPage title="Business Glossary" parent="Steward" icon={<BookMarked className="h-10 w-10" />} />} />
+                  <Route path="critical" element={<MockPage title="Critical Data Elements" parent="Steward" icon={<Zap className="h-10 w-10" />} />} />
+                  <Route path="owners" element={<MockPage title="Data Owners" parent="Steward" icon={<UserCircle className="h-10 w-10" />} />} />
+                  <Route path="privacy" element={<MockPage title="Privacy" parent="Steward" icon={<Lock className="h-10 w-10" />} />} />
+                </Route>
+
+                <Route path="model">
+                  <Route index element={<Model />} />
+                  <Route path="dashboard" element={<Model />} />
+                  <Route path="analysis" element={<MockPage title="Analysis" parent="Model" icon={<BarChart3 className="h-10 w-10" />} />} />
+                  <Route path="entities" element={<MockPage title="Entities" parent="Model" icon={<Component className="h-10 w-10" />} />} />
+                  <Route path="pipelines" element={<MockPage title="Pipelines" parent="Model" icon={<GitBranch className="h-10 w-10" />} />} />
+                </Route>
+
+                <Route path="secure">
+                  <Route index element={<Secure />} />
+                  <Route path="dashboard" element={<Secure />} />
+                  <Route path="access" element={<MockPage title="Access" parent="Secure" icon={<Key className="h-10 w-10" />} />} />
+                  <Route path="roles" element={<MockPage title="Roles" parent="Secure" icon={<UsersIcon className="h-10 w-10" />} />} />
+                </Route>
                 <Route path="knowledge">
                   <Route index element={<KnowledgeDashboard />} />
                   <Route path="librarian" element={<Librarian />} />
@@ -97,11 +135,6 @@ function App() {
                   <Route path="astro-templates" element={<AstroTemplates />} />
                 </Route>
                 <Route path="site" element={<Site />} />
-                <Route path="schema">
-                  <Route index element={<Schema />} />
-                  <Route path="edit" element={<TableEditor />} />
-                  <Route path="map" element={<MapPage />} />
-                </Route>
                 <Route path="ingestion" element={<IngestionPage />} />
                 <Route path="ingestion/local" element={<LocalIngestion />} />
                 <Route path="ingestion/bigquery">
@@ -150,6 +183,10 @@ function App() {
                   <Route path="aws">
                     <Route index element={<PlaceholderPage title="AWS Platform" description="AWS Integration is To Be Confirmed (TBC)." />} />
                   </Route>
+                  <Route path="github">
+                    <Route index element={<GithubRepos />} />
+                    <Route path="repos" element={<GithubRepos />} />
+                  </Route>
                   <Route path="snowflake">
                     <Route index element={<PlaceholderPage title="Snowflake" description="Snowflake Integration is To Be Confirmed (TBC)." />} />
                   </Route>
@@ -178,12 +215,23 @@ function App() {
                     <Route path="issues" element={<GCPIssues />} />
                   </Route>
                 </Route>
+                <Route path="integrate">
+                  <Route path="swagger" element={
+                    <Suspense fallback={
+                      <div className="flex h-full items-center justify-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                      </div>
+                    }>
+                      <SwaggerPage />
+                    </Suspense>
+                  } />
+                </Route>
                 <Route path="environments" element={<Environments />} />
                 <Route path="config" element={<Config />} />
                 <Route path="settings/directory" element={<DirectoryPreferences />} />
                 <Route path="mounts" element={<Mounts />} />
                 <Route path="files" element={<FilesPage />} />
-                <Route path="settings" element={<SettingsPage />} />
+                <Route path="settings" element={<Settings />} />
               </Route>
             </Routes>
           </BrowserRouter>

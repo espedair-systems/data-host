@@ -1,0 +1,872 @@
+{
+    "schemes": [
+        "http",
+        "https"
+    ],
+    "swagger": "2.0",
+    "info": {
+        "description": "REST API for data schema and table management",
+        "title": "DataHost API",
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "name": "API Support",
+            "url": "http://www.example.com/support",
+            "email": "support@example.com"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "1.0.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/api",
+    "paths": {
+        "/auth/login": {
+            "post": {
+                "description": "Authenticate with username and password to get a JWT token",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "System login",
+                "parameters": [
+                    {
+                        "description": "Login credentials",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.LoginRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/blueprint/schemas": {
+            "get": {
+                "description": "Retrieve list of registered blueprint schemas",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Blueprint"
+                ],
+                "summary": "Get blueprint schemas",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/domain.BlueprintSchema"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/guidelines": {
+            "get": {
+                "description": "Retrieve list of system guidelines",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Guidelines"
+                ],
+                "summary": "Get guidelines",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/domain.MDXItem"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/health": {
+            "get": {
+                "description": "Get the current health status of the API",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "System"
+                ],
+                "summary": "Health check",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/schemas/tree": {
+            "get": {
+                "description": "Retrieve the hierarchical structure of data schemas",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Schemas"
+                ],
+                "summary": "Get schema tree",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/domain.SchemaNode"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/services/tree": {
+            "get": {
+                "description": "Retrieve the hierarchical structure of hosted services",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Services"
+                ],
+                "summary": "Get service tree",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/domain.SchemaNode"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/site/schemas": {
+            "get": {
+                "description": "Retrieve dashboard metrics and metadata for all schema modules",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Site"
+                ],
+                "summary": "Get site schema dashboards",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/domain.SchemaDashboard"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/site/schemas/{module}/table": {
+            "post": {
+                "description": "Update the structure and metadata of a specific table in a module",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Site"
+                ],
+                "summary": "Update table schema",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Module name",
+                        "name": "module",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Table update payload",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.UpdateTableRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/site/selection": {
+            "get": {
+                "description": "Retrieve the current user selection for guidelines",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Site"
+                ],
+                "summary": "Get guideline selection",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Update the current user selection for guidelines",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Site"
+                ],
+                "summary": "Update guideline selection",
+                "parameters": [
+                    {
+                        "description": "Selection update",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.GuidelineSelectionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/site/training-selection": {
+            "get": {
+                "description": "Retrieve the current user selection for training items",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Site"
+                ],
+                "summary": "Get training selection",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Update the current user selection for training items",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Site"
+                ],
+                "summary": "Update training selection",
+                "parameters": [
+                    {
+                        "description": "Selection update",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.TrainingSelectionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/training": {
+            "get": {
+                "description": "Retrieve list of available training modules",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Training"
+                ],
+                "summary": "Get training items",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/domain.MDXItem"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "domain.BlueprintSchema": {
+            "description": "Blueprint schema record",
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string",
+                    "example": "2026-03-12T00:00:00Z"
+                },
+                "desc": {
+                    "type": "string",
+                    "example": "Base schema for accounting modules"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Standard Accounting"
+                },
+                "updatedAt": {
+                    "type": "string",
+                    "example": "2026-03-12T00:00:00Z"
+                }
+            }
+        },
+        "domain.CollectionDetail": {
+            "description": "Content collection detail",
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "example": "End of year reports"
+                },
+                "emoji": {
+                    "type": "string",
+                    "example": "💰"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "coll_001"
+                },
+                "tables": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "[\"reports\"",
+                        " \"ledgers\"]"
+                    ]
+                },
+                "title": {
+                    "type": "string",
+                    "example": "Financial Reports"
+                }
+            }
+        },
+        "domain.CollectionStats": {
+            "description": "Collection statistics",
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer",
+                    "example": 12
+                }
+            }
+        },
+        "domain.ColumnDetail": {
+            "description": "Column detail",
+            "type": "object",
+            "required": [
+                "name",
+                "type"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "example": "amount"
+                },
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "string",
+                        "int",
+                        "float",
+                        "bool"
+                    ],
+                    "example": "float"
+                }
+            }
+        },
+        "domain.ColumnInfo": {
+            "description": "Column information",
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "example": "Account balance"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "balance"
+                },
+                "type": {
+                    "type": "string",
+                    "example": "float"
+                }
+            }
+        },
+        "domain.ErrorResponse": {
+            "description": "Standardized error response",
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer",
+                    "example": 500
+                },
+                "error": {
+                    "type": "string",
+                    "example": "Internal Server Error"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "An unexpected error occurred"
+                }
+            }
+        },
+        "domain.GuidelineSelectionRequest": {
+            "description": "Guideline selection update",
+            "type": "object",
+            "required": [
+                "selection"
+            ],
+            "properties": {
+                "selection": {}
+            }
+        },
+        "domain.LoginRequest": {
+            "description": "Login payload",
+            "type": "object",
+            "required": [
+                "password",
+                "username"
+            ],
+            "properties": {
+                "password": {
+                    "type": "string",
+                    "example": "admin123"
+                },
+                "username": {
+                    "type": "string",
+                    "example": "admin"
+                }
+            }
+        },
+        "domain.MDXItem": {
+            "description": "MDX Content Item",
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "example": "Getting started with finance module"
+                },
+                "fileName": {
+                    "type": "string",
+                    "example": "index.mdx"
+                },
+                "title": {
+                    "type": "string",
+                    "example": "Quick Start"
+                }
+            }
+        },
+        "domain.RelationDetail": {
+            "description": "Relation information between tables",
+            "type": "object",
+            "properties": {
+                "columns": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "[\"account_id\"]"
+                    ]
+                },
+                "def": {
+                    "type": "string",
+                    "example": "FOREIGN KEY (account_id) REFERENCES accounts(id)"
+                },
+                "parentColumns": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "[\"id\"]"
+                    ]
+                },
+                "parentTable": {
+                    "type": "string",
+                    "example": "accounts"
+                },
+                "table": {
+                    "type": "string",
+                    "example": "transactions"
+                }
+            }
+        },
+        "domain.SchemaDashboard": {
+            "description": "Aggregated dashboard for a schema module",
+            "type": "object",
+            "properties": {
+                "collectionStats": {
+                    "$ref": "#/definitions/domain.CollectionStats"
+                },
+                "collections": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.CollectionDetail"
+                    }
+                },
+                "contentPath": {
+                    "type": "string",
+                    "example": "/content/finance"
+                },
+                "dataPath": {
+                    "type": "string",
+                    "example": "/data/finance"
+                },
+                "hasCollections": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "hasSchema": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "name": {
+                    "type": "string",
+                    "example": "finance"
+                },
+                "schemaStats": {
+                    "$ref": "#/definitions/domain.SchemaStats"
+                },
+                "validation": {
+                    "$ref": "#/definitions/domain.ValidationResult"
+                }
+            }
+        },
+        "domain.SchemaNode": {
+            "description": "Schema node for tree structure",
+            "type": "object",
+            "properties": {
+                "children": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.SchemaNode"
+                    }
+                },
+                "hasData": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "isDir": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "name": {
+                    "type": "string",
+                    "example": "finance"
+                },
+                "path": {
+                    "type": "string",
+                    "example": "/finance"
+                }
+            }
+        },
+        "domain.SchemaStats": {
+            "description": "Schema statistics",
+            "type": "object",
+            "properties": {
+                "relations": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.RelationDetail"
+                    }
+                },
+                "tableDetail": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.TableDetail"
+                    }
+                },
+                "tables": {
+                    "type": "integer",
+                    "example": 5
+                }
+            }
+        },
+        "domain.TableDetail": {
+            "description": "Table detail information",
+            "type": "object",
+            "properties": {
+                "columns": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.ColumnInfo"
+                    }
+                },
+                "constraints": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "description": {
+                    "type": "string",
+                    "example": "List of bank accounts"
+                },
+                "indexes": {
+                    "type": "integer",
+                    "example": 2
+                },
+                "name": {
+                    "type": "string",
+                    "example": "accounts"
+                },
+                "type": {
+                    "type": "string",
+                    "example": "TABLE"
+                }
+            }
+        },
+        "domain.TrainingSelectionRequest": {
+            "description": "Training selection update",
+            "type": "object",
+            "required": [
+                "selection"
+            ],
+            "properties": {
+                "selection": {}
+            }
+        },
+        "domain.UpdateTableRequest": {
+            "description": "Table update payload",
+            "type": "object",
+            "required": [
+                "columns",
+                "module_name",
+                "table_name"
+            ],
+            "properties": {
+                "columns": {
+                    "type": "array",
+                    "maxItems": 500,
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/domain.ColumnDetail"
+                    }
+                },
+                "description": {
+                    "type": "string",
+                    "maxLength": 1000,
+                    "example": "Financial transaction records"
+                },
+                "module_name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "example": "finance"
+                },
+                "table_name": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "transactions"
+                }
+            }
+        },
+        "domain.ValidationResult": {
+            "description": "Result of a validation check",
+            "type": "object",
+            "properties": {
+                "errors": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "valid": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "Bearer": {
+            "description": "Type \"Bearer\" followed by a space and JWT token.",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
+    }
+}

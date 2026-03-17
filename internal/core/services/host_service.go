@@ -33,7 +33,15 @@ func (s *hostService) GetOn404() <-chan string {
 	return s.httpServer.GetOn404()
 }
 
+func (s *hostService) GetOnRequest() <-chan struct{} {
+	return s.httpServer.GetOnRequest()
+}
+
 func (s *hostService) SetLogOutput(w io.Writer) {
 	s.logOutput = w
 	s.httpServer.SetLogOutput(w)
+}
+
+func (s *hostService) BroadcastMessage(msg string) {
+	s.httpServer.BroadcastMessage(msg)
 }

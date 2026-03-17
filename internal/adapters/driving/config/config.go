@@ -32,7 +32,10 @@ func Load() (*domain.HostConfig, error) {
 	// 2. Override with environment variables
 	loadFromEnv(config)
 
-	// 3. Validate
+	// 3. Resolve configuration state
+	// (DataPath is now site-specific)
+
+	// 4. Validate
 	if err := Validate(config); err != nil {
 		return nil, err
 	}
@@ -40,26 +43,147 @@ func Load() (*domain.HostConfig, error) {
 	return config, nil
 }
 
+// Save marshals the config to YAML and saves it to the specified path.
+func Save(path string, config *domain.HostConfig) error {
+	data, err := yaml.Marshal(config)
+	if err != nil {
+		return fmt.Errorf("failed to marshal config to YAML: %w", err)
+	}
+	return os.WriteFile(path, data, 0644)
+}
+
+// SaveWithComments generates a configuration file with helpful instructions for the user.
+func SaveWithComments(path string, config *domain.HostConfig) error {
+	var sb strings.Builder
+
+	sb.WriteString("# Data-Host Configuration\n")
+	sb.WriteString("# Generated automatically during bootstrap.\n\n")
+
+	sb.WriteString("# Port the backend service will listen on.\n")
+	sb.WriteString(fmt.Sprintf("port: %d\n\n", config.Port))
+
+	sb.WriteString("# SQLite database location.\n")
+	sb.WriteString(fmt.Sprintf("database_url: \"%s\"\n\n", config.DatabaseURL))
+
+	sb.WriteString("# Root directory for site discovery. Individual sites should have a site.json/site.yaml.\n")
+	sb.WriteString(fmt.Sprintf("site_path: \"%s\"\n\n", config.SitePath))
+
+	sb.WriteString("# Default directory for generated pages.\n")
+	sb.WriteString(fmt.Sprintf("generate_path: \"%s\"\n\n", config.GeneratePath))
+
+	sb.WriteString("# Directory for extracted artifacts (templates, schemas, etc.)\n")
+	sb.WriteString(fmt.Sprintf("local_artifacts_dir: \"%s\"\n\n", config.LocalArtifactsDir))
+
+	sb.WriteString("# Logging configuration.\n")
+	sb.WriteString(fmt.Sprintf("log_level: \"%s\" # DEBUG, INFO, WARN, ERROR, FATAL\n", config.LogLevel))
+	sb.WriteString(fmt.Sprintf("log_format: \"%s\" # json, pretty\n", config.LogFormat))
+	sb.WriteString(fmt.Sprintf("log_output: \"%s\" # stdout or file path\n", config.LogOutput))
+	sb.WriteString(fmt.Sprintf("log_file_enabled: %v\n", config.LogFileEnabled))
+	sb.WriteString(fmt.Sprintf("log_file_path: \"%s\"\n", config.LogFilePath))
+	sb.WriteString(fmt.Sprintf("log_max_size: %d # megabytes\n", config.LogMaxSize))
+	sb.WriteString(fmt.Sprintf("log_max_backups: %d\n", config.LogMaxBackups))
+	sb.WriteString(fmt.Sprintf("log_max_age: %d # days\n\n", config.LogMaxAge))
+
+	sb.WriteString("# Deployment environment.\n")
+	sb.WriteString(fmt.Sprintf("deploy: \"%s\" # Options: IDE, TEST, DOCKER, PROD\n\n", config.Deploy))
+
+	sb.WriteString("# Security Settings\n")
+	sb.WriteString("# Enable dev mode to bypass authentication requirements (DO NOT USE IN PRODUCTION)\n")
+	sb.WriteString(fmt.Sprintf("dev_mode: %v\n\n", config.DevMode))
+
+	sb.WriteString("# Security: JWT secret for API authentication.\n")
+	sb.WriteString("# IMPORTANT: Change this to a secure random string (min 32 chars).\n")
+	sb.WriteString(fmt.Sprintf("jwt_secret: \"%s\"\n\n", config.JWTSecret))
+
+	sb.WriteString("# Rate Limiting: Requests per IP per minute.\n")
+	sb.WriteString("rate_limits:\n")
+	sb.WriteString(fmt.Sprintf("  read_requests: %d\n", config.RateLimits.ReadRequests))
+	sb.WriteString(fmt.Sprintf("  write_requests: %d\n\n", config.RateLimits.WriteRequests))
+
+	sb.WriteString("# CORS allowed origins (comma separated).\n")
+	sb.WriteString("cors_allow_origins:\n")
+	for _, origin := range config.CORSAllowOrigins {
+		sb.WriteString(fmt.Sprintf("  - \"%s\"\n", origin))
+	}
+	sb.WriteString("\n")
+
+	sb.WriteString("# Site Registry: Maps your project directories to URI paths.\n")
+	sb.WriteString("# Note: Sites are also automatically discovered from 'site_path' if they contain a site.json file.\n")
+	sb.WriteString("sites:\n")
+	if len(config.Sites) == 0 {
+		sb.WriteString("  # Optional: Manual site entries can be added here if discovery is not used.\n")
+	}
+	for _, site := range config.Sites {
+		sb.WriteString(fmt.Sprintf("  - name: \"%s\"\n", site.Name))
+		sb.WriteString(fmt.Sprintf("    active: %v\n", site.Active))
+		sb.WriteString(fmt.Sprintf("    type: \"%s\"\n", site.Type))
+		sb.WriteString(fmt.Sprintf("    publish_url: \"%s\"\n", site.PublishURL))
+		sb.WriteString(fmt.Sprintf("    description: \"%s\"\n", site.Description))
+		sb.WriteString(fmt.Sprintf("    site_path: \"%s\"\n", site.SitePath))
+		sb.WriteString(fmt.Sprintf("    data_path: \"%s\"\n", site.DataPath))
+		sb.WriteString(fmt.Sprintf("    schema_path: \"%s\"\n", site.SchemaPath))
+		sb.WriteString(fmt.Sprintf("    site_dist: \"%s\"\n", site.SiteDist))
+		sb.WriteString(fmt.Sprintf("    mount_path: \"%s\"\n", site.MountPath))
+		if site.MountSource != "" {
+			sb.WriteString(fmt.Sprintf("    mount_source: \"%s\"\n", site.MountSource))
+		}
+		if site.MountDist != "" {
+			sb.WriteString(fmt.Sprintf("    mount_dist: \"%s\"\n", site.MountDist))
+		}
+	}
+
+	sb.WriteString("\n# Integration settings\n")
+	sb.WriteString("github:\n")
+	sb.WriteString(fmt.Sprintf("  org: \"%s\"\n", config.Github.Org))
+	sb.WriteString(fmt.Sprintf("  token: \"%s\"\n", config.Github.Token))
+
+	return os.WriteFile(path, []byte(sb.String()), 0644)
+}
+
 func GetDefaults() *domain.HostConfig {
 	return &domain.HostConfig{
-		Port:         8080,
-		FrontendPath: "./frontend/dist",
-		DataPath:     "/",
-		DatabaseURL:  "blueprint.db",
-		LogLevel:     "INFO",
-		LogFormat:    "json",
-		LogOutput:    "stdout",
-		Debug:        false,
+		Port:           8080,
+		DatabaseURL:    "blueprint.db",
+		LogLevel:       "INFO",
+		LogFormat:      "json",
+		LogOutput:      "stdout",
+		LogFileEnabled: false,
+		LogFilePath:    "logs/data-host.log",
+		LogMaxSize:     10,
+		LogMaxBackups:  3,
+		LogMaxAge:      28,
+		Debug:          false,
 		CORSAllowOrigins: []string{
 			"http://localhost:5173",
 			"http://localhost:8080",
 		},
 		RateLimits: domain.RateLimitConfig{
-			ReadRequests:  100,
-			WriteRequests: 10,
+			ReadRequests:  1000,
+			WriteRequests: 100,
 		},
-		JWTSecret: "your-secret-key-must-be-at-least-32-chars-long",
-		Deploy:    false,
+		JWTSecret:         "your-secret-key-must-be-at-least-32-chars-long",
+		Deploy:            "IDE",
+		LocalArtifactsDir: "./artifacts",
+		ExtractArtifacts:  false,
+		DevMode:           true,
+		SitePath:          "./sites",
+		GeneratePath:      "./generated",
+		Sites: []domain.SiteConfig{
+			{
+				Name:        "data-services",
+				Active:      true,
+				Type:        "document",
+				PublishURL:  "/host/data-services",
+				Description: "Core data platform.",
+				SitePath:    "/run/media/jonk/Workspace/astro/espedair/sites/data-services",
+				DataPath:    "/run/media/jonk/Workspace/espedair/TEST/sites/data-services/data/",
+				SchemaPath:  "/run/media/jonk/Workspace/espedair/TEST/sites/data-services/dist/registry/schema/",
+				SiteDist:    "/run/media/jonk/Workspace/astro/espedair/sites/data-services/dist",
+				MountPath:   "/host/data-services",
+				MountSource: "/run/media/jonk/Workspace/astro/espedair/sites/data-services",
+				MountDist:   "/run/media/jonk/Workspace/astro/espedair/sites/data-services/dist",
+			},
+		},
 	}
 }
 
@@ -77,14 +201,14 @@ func loadFromEnv(config *domain.HostConfig) {
 			config.Port = i
 		}
 	}
-	if val := os.Getenv("DATA_HOST_FRONTEND_PATH"); val != "" {
-		config.FrontendPath = val
-	}
-	if val := os.Getenv("DATA_HOST_DATA_PATH"); val != "" {
-		config.DataPath = val
-	}
 	if val := os.Getenv("DATA_HOST_DATABASE_URL"); val != "" {
 		config.DatabaseURL = val
+	}
+	if val := os.Getenv("DATA_HOST_SITE_PATH"); val != "" {
+		config.SitePath = val
+	}
+	if val := os.Getenv("DATA_HOST_GENERATE_PATH"); val != "" {
+		config.GeneratePath = val
 	}
 	if val := os.Getenv("DATA_HOST_DEBUG"); val != "" {
 		config.Debug = strings.ToLower(val) == "true"
@@ -97,6 +221,27 @@ func loadFromEnv(config *domain.HostConfig) {
 	}
 	if val := os.Getenv("DATA_HOST_LOG_OUTPUT"); val != "" {
 		config.LogOutput = val
+	}
+	if val := os.Getenv("DATA_HOST_LOG_FILE_ENABLED"); val != "" {
+		config.LogFileEnabled = strings.ToLower(val) == "true"
+	}
+	if val := os.Getenv("DATA_HOST_LOG_FILE_PATH"); val != "" {
+		config.LogFilePath = val
+	}
+	if val := os.Getenv("DATA_HOST_LOG_MAX_SIZE"); val != "" {
+		if i, err := strconv.Atoi(val); err == nil {
+			config.LogMaxSize = i
+		}
+	}
+	if val := os.Getenv("DATA_HOST_LOG_MAX_BACKUPS"); val != "" {
+		if i, err := strconv.Atoi(val); err == nil {
+			config.LogMaxBackups = i
+		}
+	}
+	if val := os.Getenv("DATA_HOST_LOG_MAX_AGE"); val != "" {
+		if i, err := strconv.Atoi(val); err == nil {
+			config.LogMaxAge = i
+		}
 	}
 	if val := os.Getenv("CORS_ALLOW_ORIGINS"); val != "" {
 		config.CORSAllowOrigins = strings.Split(val, ",")
@@ -115,6 +260,21 @@ func loadFromEnv(config *domain.HostConfig) {
 		config.JWTSecret = val
 	}
 	if val := os.Getenv("DATA_HOST_DEPLOY"); val != "" {
-		config.Deploy = strings.ToLower(val) == "true"
+		config.Deploy = val
+	}
+	if val := os.Getenv("DATA_HOST_LOCAL_ARTIFACTS_DIR"); val != "" {
+		config.LocalArtifactsDir = val
+	}
+	if val := os.Getenv("DATA_HOST_EXTRACT_ARTIFACTS"); val != "" {
+		config.ExtractArtifacts = strings.ToLower(val) == "true"
+	}
+	if val := os.Getenv("DATA_HOST_DEV_MODE"); val != "" {
+		config.DevMode = strings.ToLower(val) == "true"
+	}
+	if val := os.Getenv("GITHUB_ORG"); val != "" {
+		config.Github.Org = val
+	}
+	if val := os.Getenv("GITHUB_TOKEN"); val != "" {
+		config.Github.Token = val
 	}
 }

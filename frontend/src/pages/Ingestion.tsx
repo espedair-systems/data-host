@@ -49,10 +49,20 @@ const IngestionPage: React.FC = () => {
     const [selectedFunctions, setSelectedFunctions] = useState<Record<string, boolean>>({});
     const fileInputRef = useRef<HTMLInputElement>(null);
 
+    const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
+        event.preventDefault();
+        const file = event.dataTransfer.files?.[0];
+        if (!file) return;
+        await processFile(file);
+    };
+
     const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (!file) return;
+        await processFile(file);
+    };
 
+    const processFile = async (file: File) => {
         setIsUploading(true);
         setResult(null);
 
@@ -153,7 +163,7 @@ const IngestionPage: React.FC = () => {
     return (
         <div className="p-6 space-y-10 max-w-6xl mx-auto animate-in fade-in duration-500">
             <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-4 font-medium">
-                <Link to="/" className="hover:text-foreground transition-colors">Registry</Link>
+                <Link to="/" className="hover:text-foreground transition-colors">Schema</Link>
                 <ChevronRight className="h-4 w-4" />
                 <span className="text-foreground font-bold">Schema Ingestion</span>
             </nav>
@@ -191,6 +201,8 @@ const IngestionPage: React.FC = () => {
                             <div
                                 className="border-2 border-dashed border-muted-foreground/20 rounded-[2rem] p-12 text-center cursor-pointer hover:bg-muted/40 hover:border-primary/40 transition-all group/dropzone relative overflow-hidden"
                                 onClick={() => fileInputRef.current?.click()}
+                                onDragOver={(e) => e.preventDefault()}
+                                onDrop={handleDrop}
                             >
                                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover/dropzone:opacity-100 transition-opacity" />
                                 <div className="relative z-10 space-y-4">

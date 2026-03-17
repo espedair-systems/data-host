@@ -33,6 +33,11 @@ func NewRateLimiterMiddleware(config domain.HostConfig) gin.HandlerFunc {
 	writeMiddleware := mgin.NewMiddleware(writeLimiter)
 
 	return func(c *gin.Context) {
+		if config.DevMode {
+			c.Next()
+			return
+		}
+
 		if c.Request.Method == "GET" || c.Request.Method == "OPTIONS" || c.Request.Method == "HEAD" {
 			readMiddleware(c)
 		} else {

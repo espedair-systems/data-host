@@ -10,9 +10,11 @@ type RegistryRepository interface {
 	GetSchemaDashboard(moduleName string) (domain.SchemaDashboard, error)
 	GetAllSchemaDashboards() ([]domain.SchemaDashboard, error)
 	GetBlueprintSchemas() ([]domain.BlueprintSchema, error)
+	GetBlueprintTables(criteria map[string]string) ([]domain.BlueprintTableSummary, error)
 	UpdateTable(moduleName string, table domain.TableDetail) error
 	GetFullSchema(name string) (*domain.FileSchema, error)
 	SaveFullSchema(schema domain.FileSchema) error
+	ExtractDatabaseSchema(name, desc string) (*domain.FileSchema, error)
 
 	// Guidelines operations
 	GetGuidelines() ([]domain.MDXItem, error)
@@ -36,6 +38,9 @@ type RegistryRepository interface {
 
 	GetWorkflows() ([]domain.DesignFile, error)
 	GetAstroTemplates() ([]domain.DesignFile, error)
+
+	GetSites() ([]domain.SiteConfig, error)
+	SaveSiteConfig(site domain.SiteConfig) error
 
 	GetUserRepo() UserRepository
 }

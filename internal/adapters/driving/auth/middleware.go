@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"data-host/internal/core/domain"
 	"net/http"
 	"strings"
 
@@ -9,8 +10,20 @@ import (
 )
 
 // AuthMiddleware checks for a valid JWT token in the Authorization header.
-func AuthMiddleware(tokenProvider AuthProvider) gin.HandlerFunc {
+// When devMode is true, all requests are granted admin access automatically.
+func AuthMiddleware(tokenProvider AuthProvider, devMode ...bool) gin.HandlerFunc {
+	isDevMode := len(devMode) > 0 && devMode[0]
+
 	return func(c *gin.Context) {
+		if isDevMode {
+			// In dev mode, grant full admin access without a token
+			c.Set("claims", &Claims{UserID: "dev", Username: "dev", Role: domain.RoleAdmin})
+			c.Set("user_id", "dev")
+			c.Set("role", domain.RoleAdmin)
+			c.Next()
+			return
+		}
+
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "missing authorization header"})
