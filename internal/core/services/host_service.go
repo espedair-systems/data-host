@@ -1,3 +1,7 @@
+/*
+ * Application Layer: Business Use Cases.
+ * Coordinates domain objects to perform specific application tasks.
+ */
 package services
 
 import (

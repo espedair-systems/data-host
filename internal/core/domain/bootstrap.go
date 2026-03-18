@@ -1,3 +1,7 @@
+/*
+ * Domain Layer: Core business models and logic.
+ * This layer is independent of any external frameworks or infrastructure.
+ */
 package domain
 
 type CheckResult struct {

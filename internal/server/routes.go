@@ -1,3 +1,7 @@
+/*
+ * API Adapter Layer: Legacy or auxiliary server implementation.
+ * Handles the configuration and registration of API routes.
+ */
 package server
 
 import (

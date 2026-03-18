@@ -1,3 +1,7 @@
+/*
+ * Entry Point: Application Bootstrap.
+ * Responsible for initializing dependencies and starting the application.
+ */
 package main
 
 import (
@@ -39,29 +43,30 @@ type requestMsg struct{}
 type tickMsg time.Time
 
 type model struct {
-	state          state
-	portInput      textinput.Model
-	dataPathInput  textinput.Model
-	dbPathInput    textinput.Model
-	focusIndex     int
-	running        bool
-	hostService    ports.HostService
-	bootstrap      ports.BootstrapService
-	viewport404    viewport.Model
-	viewportLogs   viewport.Model
-	viewportBoot   viewport.Model
-	viewportDB     viewport.Model
-	viewportConfig viewport.Model
-	errors404      []string
-	logs           []string
-	validationRes  []domain.CheckResult
-	configRes      []domain.CheckResult
-	dbLogs         []string
-	width          int
-	height         int
-	logChan        chan string
-	errorChan      chan string
-	config         domain.HostConfig
+	state                  state
+	portInput              textinput.Model
+	dataPathInput          textinput.Model
+	dbPathInput            textinput.Model
+	focusIndex             int
+	running                bool
+	hostService            ports.HostService
+	bootstrap              ports.BootstrapService
+	viewport404            viewport.Model
+	viewportLogs           viewport.Model
+	viewportBoot           viewport.Model
+	viewportDB             viewport.Model
+	viewportConfig         viewport.Model
+	viewportConfigReadOnly viewport.Model
+	errors404              []string
+	logs                   []string
+	validationRes          []domain.CheckResult
+	configRes              []domain.CheckResult
+	dbLogs                 []string
+	width                  int
+	height                 int
+	logChan                chan string
+	errorChan              chan string
+	config                 domain.HostConfig
 
 	// Metrics
 	requestCount     int
@@ -107,22 +112,26 @@ func initialModel(config domain.HostConfig) model {
 	vpConfig := viewport.New(0, 0)
 	vpConfig.Style = lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color("39"))
 
+	vpConfigRO := viewport.New(0, 0)
+	vpConfigRO.Style = lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color("99"))
+
 	m := model{
-		state:          stateConfig,
-		portInput:      p,
-		dataPathInput:  d,
-		dbPathInput:    db,
-		running:        false,
-		hostService:    services.NewHostService(httpAdapter),
-		bootstrap:      services.NewBootstrapService(),
-		viewport404:    vp404,
-		viewportLogs:   vpLogs,
-		viewportBoot:   vpBoot,
-		viewportDB:     vpDB,
-		viewportConfig: vpConfig,
-		logChan:        make(chan string, 100),
-		errorChan:      make(chan string, 100),
-		config:         config,
+		state:                  stateConfig,
+		portInput:              p,
+		dataPathInput:          d,
+		dbPathInput:            db,
+		running:                false,
+		hostService:            services.NewHostService(httpAdapter),
+		bootstrap:              services.NewBootstrapService(),
+		viewport404:            vp404,
+		viewportLogs:           vpLogs,
+		viewportBoot:           vpBoot,
+		viewportDB:             vpDB,
+		viewportConfig:         vpConfig,
+		viewportConfigReadOnly: vpConfigRO,
+		logChan:                make(chan string, 100),
+		errorChan:              make(chan string, 100),
+		config:                 config,
 	}
 
 	m.runConfigDiscovery()
@@ -156,6 +165,33 @@ func (m *model) runConfigDiscovery() {
 		content.WriteString(res.Text + "\n")
 	}
 	m.viewportConfig.SetContent(content.String())
+	m.setReadOnlyConfig()
+}
+
+func (m *model) setReadOnlyConfig() {
+	var sb strings.Builder
+	c := m.config
+	sb.WriteString(fmt.Sprintf(" Database URL:      %s\n", c.DatabaseURL))
+	sb.WriteString(fmt.Sprintf(" Site Path:         %s\n", c.SitePath))
+	sb.WriteString(fmt.Sprintf(" Generate Path:     %s\n", c.GeneratePath))
+	sb.WriteString(fmt.Sprintf(" Local Artifacts:   %s\n", c.LocalArtifactsDir))
+	sb.WriteString(fmt.Sprintf(" Deploy Mode:       %s\n", c.Deploy))
+	sb.WriteString(fmt.Sprintf(" Port:              %d\n", c.Port))
+	sb.WriteString(fmt.Sprintf(" Rate Limits:       Read=%d, Write=%d\n", c.RateLimits.ReadRequests, c.RateLimits.WriteRequests))
+	sb.WriteString(fmt.Sprintf(" Log Settings:      Level=%s, Format=%s, Output=%s\n", c.LogLevel, c.LogFormat, c.LogOutput))
+	if c.LogFileEnabled {
+		sb.WriteString(fmt.Sprintf(" File Logging:      Path=%s, MaxSize=%dMB, MaxBackups=%d, MaxAge=%d days\n",
+			c.LogFilePath, c.LogMaxSize, c.LogMaxBackups, c.LogMaxAge))
+	}
+
+	if strings.ToUpper(c.Deploy) == "IDE" {
+		sb.WriteString("\n Configured Sites (IDE Mode):\n")
+		for _, site := range c.Sites {
+			sb.WriteString(fmt.Sprintf("  - %s (%s) -> %s\n", site.Name, site.Type, site.PublishURL))
+		}
+	}
+
+	m.viewportConfigReadOnly.SetContent(sb.String())
 }
 
 func (m model) allListeners() tea.Cmd {
@@ -303,7 +339,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 			if m.state == stateConfig {
 				m.viewportConfig, cmd = m.viewportConfig.Update(msg)
-				return m, cmd
+				cmds = append(cmds, cmd)
+				m.viewportConfigReadOnly, cmd = m.viewportConfigReadOnly.Update(msg)
+				cmds = append(cmds, cmd)
+				return m, tea.Batch(cmds...)
 			}
 
 		case "enter":
@@ -363,7 +402,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.viewportDB.Height = m.height - 12
 
 		m.viewportConfig.Width = m.width - 2
-		m.viewportConfig.Height = m.height - 12
+		m.viewportConfigReadOnly.Width = m.width - 2
+
+		vHeightConfig := (m.height - 14) / 2
+		if vHeightConfig < 1 {
+			vHeightConfig = 1
+		}
+		m.viewportConfig.Height = vHeightConfig
+		m.viewportConfigReadOnly.Height = vHeightConfig
 
 		// Adjusted for metrics bar and potential log window removal
 		reservedHeight := 10
@@ -479,11 +525,14 @@ func (m model) View() string {
 	case stateConfig:
 		s.WriteString(titleStyle.Render("DATA-HOST - CONFIG BUILD") + "\n\n")
 		s.WriteString(lipgloss.NewStyle().Foreground(lipgloss.Color("208")).Bold(true).Render(" [!] NOT RUNNING: Backend service will start after synchronization.") + "\n\n")
+
+		s.WriteString(lipgloss.NewStyle().Foreground(lipgloss.Color("99")).Bold(true).Render(" Active Configuration:") + "\n")
+		s.WriteString(m.viewportConfigReadOnly.View() + "\n\n")
+
+		s.WriteString(lipgloss.NewStyle().Foreground(lipgloss.Color("39")).Bold(true).Render(" Discovery Messages:") + "\n")
 		s.WriteString(m.viewportConfig.View() + "\n\n")
-		s.WriteString(fmt.Sprintf(" Generate Path: %s\n\n", m.config.GeneratePath))
-		s.WriteString(" " + helpStyle.Render("ENTER") + " PROCEED to Validation\n")
-		s.WriteString(" " + helpStyle.Render("L") + " Save config log\n")
-		s.WriteString(" " + helpStyle.Render("Q") + " Quit\n")
+
+		s.WriteString(" " + helpStyle.Render("ENTER") + " PROCEED to Validation | " + helpStyle.Render("L") + " Save Log | " + helpStyle.Render("Q") + " Quit\n")
 		return s.String()
 
 	case stateValidation:

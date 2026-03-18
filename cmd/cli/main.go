@@ -1,3 +1,7 @@
+/*
+ * Entry Point: Application Bootstrap.
+ * Responsible for initializing dependencies and starting the application.
+ */
 package main
 
 import (

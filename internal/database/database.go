@@ -1,3 +1,7 @@
+/*
+ * Infrastructure Layer: Database access and migrations.
+ * Provides the actual implementation for data persistence.
+ */
 package database
 
 import (

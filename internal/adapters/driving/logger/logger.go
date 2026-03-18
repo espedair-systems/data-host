@@ -1,3 +1,7 @@
+/*
+ * Driving Adapter: External API / Entry Point.
+ * Translates external requests (e.g., HTTP, Auth, Config) into core application calls.
+ */
 package logger
 
 import (

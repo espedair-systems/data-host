@@ -1,3 +1,7 @@
+/*
+ * Entry Point: Application Bootstrap.
+ * Responsible for initializing dependencies and starting the application.
+ */
 // @title           DataHost API
 // @version         1.0.0
 // @description     REST API for data schema and table management

@@ -1,3 +1,7 @@
+/*
+ * Driven Adapter: Infrastructure / Implementation.
+ * Implements outbound ports for external systems like databases or filesystems.
+ */
 package repository
 
 import (
