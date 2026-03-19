@@ -376,9 +376,11 @@ const IngestionPage: React.FC = () => {
                                                     {archive?.createdAt ? new Date(archive.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '---'}
                                                 </div>
                                             </div>
-                                            <Button variant="ghost" size="icon" className="rounded-2xl h-14 w-14 hover:bg-primary/10 hover:text-primary transition-all group-hover:translate-x-1">
-                                                <ChevronRight className="h-6 w-6" />
-                                            </Button>
+                                            <Link to={`/model/entities?schema=${archive?.name}`}>
+                                                <Button variant="ghost" size="icon" className="rounded-2xl h-14 w-14 hover:bg-primary/10 hover:text-primary transition-all group-hover:translate-x-1">
+                                                    <ChevronRight className="h-6 w-6" />
+                                                </Button>
+                                            </Link>
                                         </div>
                                     </Card>
                                 ))

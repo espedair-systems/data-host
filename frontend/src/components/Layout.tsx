@@ -32,8 +32,6 @@ import {
   Library,
   Workflow,
   Component,
-  Github as GithubIcon,
-  FolderGit2,
   BookMarked,
   Zap,
   UserCircle,
@@ -41,7 +39,9 @@ import {
   BarChart3,
   GitBranch,
   Key,
-  Users
+  Users,
+  Bot,
+  Sparkles
 } from 'lucide-react';
 import { useNavigate, useLocation, Outlet, Link } from 'react-router-dom';
 import {
@@ -119,14 +119,13 @@ const NavButton = ({ item, selected, onClick, title, className, collapsed, inden
 
 const Layout: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
-  const [platformsOpen, setPlatformsOpen] = useState(false);
   const [publishOpen, setPublishOpen] = useState(false);
   const [curateOpen, setCurateOpen] = useState(false);
   const [knowledgeOpen, setKnowledgeOpen] = useState(false);
   const [designOpen, setDesignOpen] = useState(false);
   const [ingestOpen, setIngestOpen] = useState(false);
-  const [onPremOpen, setOnPremOpen] = useState(false);
   const [stewardOpen, setStewardOpen] = useState(false);
+  const [aiStewardOpen, setAiStewardOpen] = useState(false);
   const [modelOpen, setModelOpen] = useState(false);
   const [secureOpen, setSecureOpen] = useState(false);
   const [integrateOpen, setIntegrateOpen] = useState(false);
@@ -355,7 +354,7 @@ const Layout: React.FC = () => {
                 </div>
                 {!collapsed && (
                   <>
-                    <span className={cn("text-[10px] font-black uppercase tracking-widest flex-grow text-left", isActive('/steward') ? "text-primary" : "")}>Steward</span>
+                    <span className={cn("text-[10px] font-black uppercase tracking-widest flex-grow text-left", isActive('/steward') ? "text-primary" : "")}>Data Steward</span>
                     <ChevronDown className={cn("h-4 w-4 transition-transform", stewardOpen ? "" : "-rotate-90")} />
                   </>
                 )}
@@ -392,6 +391,57 @@ const Layout: React.FC = () => {
                   item={{ text: 'Privacy', icon: <Lock className="h-4 w-4" /> }}
                   selected={location.pathname === '/steward/privacy'}
                   onClick={() => navigate('/steward/privacy')}
+                  className="h-8 text-xs"
+                />
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+
+          {/* AI Steward Collapsible */}
+          <Collapsible
+            open={!collapsed && aiStewardOpen}
+            onOpenChange={setAiStewardOpen}
+            className="space-y-1"
+          >
+            <CollapsibleTrigger asChild>
+              <Button
+                variant="ghost"
+                className={cn(
+                  "w-full justify-start h-12 gap-4 px-3 transition-all duration-300",
+                  collapsed ? "justify-center px-0" : "",
+                  isActive('/ai-steward') ? "bg-primary/10 border-r-2 border-primary" : "hover:bg-muted"
+                )}
+              >
+                <div className="shrink-0">
+                  <Bot className={cn("h-5 w-5", isActive('/ai-steward') ? "text-primary" : "")} />
+                </div>
+                {!collapsed && (
+                  <>
+                    <span className={cn("text-[10px] font-black uppercase tracking-widest flex-grow text-left", isActive('/ai-steward') ? "text-primary" : "")}>AI Steward</span>
+                    <ChevronDown className={cn("h-4 w-4 transition-transform", aiStewardOpen ? "" : "-rotate-90")} />
+                  </>
+                )}
+              </Button>
+            </CollapsibleTrigger>
+
+            <CollapsibleContent className="space-y-1">
+              <div className="ml-9 border-l border-muted pl-4 space-y-1">
+                <NavButton
+                  item={{ text: 'Dashboard', icon: <DashboardIcon className="h-4 w-4" /> }}
+                  selected={location.pathname === '/ai-steward'}
+                  onClick={() => navigate('/ai-steward')}
+                  className="h-8 text-xs"
+                />
+                <NavButton
+                  item={{ text: 'AI Agents', icon: <Cpu className="h-4 w-4" /> }}
+                  selected={location.pathname === '/ai-steward/agents'}
+                  onClick={() => navigate('/ai-steward/agents')}
+                  className="h-8 text-xs"
+                />
+                <NavButton
+                  item={{ text: 'Model Insights', icon: <Sparkles className="h-4 w-4" /> }}
+                  selected={location.pathname === '/ai-steward/insights'}
+                  onClick={() => navigate('/ai-steward/insights')}
                   className="h-8 text-xs"
                 />
               </div>
@@ -449,57 +499,6 @@ const Layout: React.FC = () => {
                   item={{ text: 'Pipelines', icon: <GitBranch className="h-4 w-4" /> }}
                   selected={location.pathname === '/model/pipelines'}
                   onClick={() => navigate('/model/pipelines')}
-                  className="h-8 text-xs"
-                />
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
-
-          {/* Secure Collapsible */}
-          <Collapsible
-            open={!collapsed && secureOpen}
-            onOpenChange={setSecureOpen}
-            className="space-y-1"
-          >
-            <CollapsibleTrigger asChild>
-              <Button
-                variant="ghost"
-                className={cn(
-                  "w-full justify-start h-12 gap-4 px-3 transition-all duration-300",
-                  collapsed ? "justify-center px-0" : "",
-                  isActive('/secure') ? "bg-primary/10 border-r-2 border-primary" : "hover:bg-muted"
-                )}
-              >
-                <div className="shrink-0">
-                  <Shield className={cn("h-5 w-5", isActive('/secure') ? "text-primary" : "")} />
-                </div>
-                {!collapsed && (
-                  <>
-                    <span className={cn("text-[10px] font-black uppercase tracking-widest flex-grow text-left", isActive('/secure') ? "text-primary" : "")}>Secure</span>
-                    <ChevronDown className={cn("h-4 w-4 transition-transform", secureOpen ? "" : "-rotate-90")} />
-                  </>
-                )}
-              </Button>
-            </CollapsibleTrigger>
-
-            <CollapsibleContent className="space-y-1">
-              <div className="ml-9 border-l border-muted pl-4 space-y-1">
-                <NavButton
-                  item={{ text: 'Dashboard', icon: <DashboardIcon className="h-4 w-4" /> }}
-                  selected={location.pathname === '/secure'}
-                  onClick={() => navigate('/secure')}
-                  className="h-8 text-xs"
-                />
-                <NavButton
-                  item={{ text: 'Access', icon: <Key className="h-4 w-4" /> }}
-                  selected={location.pathname === '/secure/access'}
-                  onClick={() => navigate('/secure/access')}
-                  className="h-8 text-xs"
-                />
-                <NavButton
-                  item={{ text: 'Roles', icon: <Users className="h-4 w-4" /> }}
-                  selected={location.pathname === '/secure/roles'}
-                  onClick={() => navigate('/secure/roles')}
                   className="h-8 text-xs"
                 />
               </div>
@@ -594,27 +593,30 @@ const Layout: React.FC = () => {
             </CollapsibleContent>
           </Collapsible>
 
-          {/* Integrate Collapsible */}
+          <Separator className="my-3 mx-2 opacity-50" />
+
+          {/* Secure Collapsible */}
           <Collapsible
-            open={!collapsed && integrateOpen}
-            onOpenChange={setIntegrateOpen}
+            open={!collapsed && secureOpen}
+            onOpenChange={setSecureOpen}
             className="space-y-1"
           >
             <CollapsibleTrigger asChild>
               <Button
                 variant="ghost"
                 className={cn(
-                  "w-full justify-start gap-4 px-3 h-10 text-muted-foreground",
-                  collapsed ? "justify-center px-0" : ""
+                  "w-full justify-start h-12 gap-4 px-3 transition-all duration-300",
+                  collapsed ? "justify-center px-0" : "",
+                  isActive('/secure') ? "bg-primary/10 border-r-2 border-primary" : "hover:bg-muted"
                 )}
               >
                 <div className="shrink-0">
-                  <CableIcon className={cn("h-5 w-5", isActive('/integrate') ? "text-primary" : "")} />
+                  <Shield className={cn("h-5 w-5", isActive('/secure') ? "text-primary" : "")} />
                 </div>
                 {!collapsed && (
                   <>
-                    <span className={cn("text-[10px] font-black uppercase tracking-widest flex-grow text-left", isActive('/integrate') ? "text-primary" : "")}>Integrate</span>
-                    <ChevronDown className={cn("h-4 w-4 transition-transform", integrateOpen ? "" : "-rotate-90")} />
+                    <span className={cn("text-[10px] font-black uppercase tracking-widest flex-grow text-left", isActive('/secure') ? "text-primary" : "")}>Secure</span>
+                    <ChevronDown className={cn("h-4 w-4 transition-transform", secureOpen ? "" : "-rotate-90")} />
                   </>
                 )}
               </Button>
@@ -623,9 +625,21 @@ const Layout: React.FC = () => {
             <CollapsibleContent className="space-y-1">
               <div className="ml-9 border-l border-muted pl-4 space-y-1">
                 <NavButton
-                  item={{ text: 'Swagger', icon: <BookOpen className="h-4 w-4" /> }}
-                  selected={location.pathname === '/integrate/swagger'}
-                  onClick={() => navigate('/integrate/swagger')}
+                  item={{ text: 'Dashboard', icon: <DashboardIcon className="h-4 w-4" /> }}
+                  selected={location.pathname === '/secure'}
+                  onClick={() => navigate('/secure')}
+                  className="h-8 text-xs"
+                />
+                <NavButton
+                  item={{ text: 'Access', icon: <Key className="h-4 w-4" /> }}
+                  selected={location.pathname === '/secure/access'}
+                  onClick={() => navigate('/secure/access')}
+                  className="h-8 text-xs"
+                />
+                <NavButton
+                  item={{ text: 'Roles', icon: <Users className="h-4 w-4" /> }}
+                  selected={location.pathname === '/secure/roles'}
+                  onClick={() => navigate('/secure/roles')}
                   className="h-8 text-xs"
                 />
               </div>
@@ -690,10 +704,10 @@ const Layout: React.FC = () => {
             </CollapsibleContent>
           </Collapsible>
 
-          {/* Platforms Collapsible */}
+          {/* Integrate Collapsible */}
           <Collapsible
-            open={!collapsed && platformsOpen}
-            onOpenChange={setPlatformsOpen}
+            open={!collapsed && integrateOpen}
+            onOpenChange={setIntegrateOpen}
             className="space-y-1"
           >
             <CollapsibleTrigger asChild>
@@ -705,141 +719,37 @@ const Layout: React.FC = () => {
                 )}
               >
                 <div className="shrink-0">
-                  <Cloud className="h-5 w-5" />
+                  <CableIcon className={cn("h-5 w-5", isActive('/integrate') ? "text-primary" : "")} />
                 </div>
                 {!collapsed && (
                   <>
-                    <span className="text-[10px] font-black uppercase tracking-widest flex-grow text-left">Platforms</span>
-                    <ChevronDown className={cn("h-4 w-4 transition-transform", platformsOpen ? "" : "-rotate-90")} />
+                    <span className={cn("text-[10px] font-black uppercase tracking-widest flex-grow text-left", isActive('/integrate') ? "text-primary" : "")}>Integrate</span>
+                    <ChevronDown className={cn("h-4 w-4 transition-transform", integrateOpen ? "" : "-rotate-90")} />
                   </>
                 )}
               </Button>
             </CollapsibleTrigger>
 
             <CollapsibleContent className="space-y-1">
-              {/* GCP */}
-              <div className="space-y-1">
+              <div className="ml-9 border-l border-muted pl-4 space-y-1">
                 <NavButton
-                  item={{ text: 'Google Cloud (GCP)', icon: <div className="w-2 h-2 rounded-full bg-blue-500" /> }}
-                  selected={isActive('/platforms/gcp')}
-                  onClick={() => navigate('/platforms/gcp')}
-                  collapsed={collapsed}
-                  className="h-8 pl-9"
+                  item={{ text: 'Swagger', icon: <BookOpen className="h-4 w-4" /> }}
+                  selected={location.pathname === '/integrate/swagger'}
+                  onClick={() => navigate('/integrate/swagger')}
+                  className="h-8 text-xs"
                 />
-                {!collapsed && (
-                  <div className="ml-9 border-l border-muted pl-4 space-y-1">
-                    <NavButton
-                      item={{ text: 'Agents', icon: <Cpu className="h-4 w-4" /> }}
-                      selected={location.pathname === '/platforms/gcp/agents'}
-                      onClick={() => navigate('/platforms/gcp/agents')}
-                      className="h-8 text-xs"
-                    />
-                    <NavButton
-                      item={{ text: 'Connections', icon: <CableIcon className="h-4 w-4" /> }}
-                      selected={location.pathname === '/platforms/gcp/connections'}
-                      onClick={() => navigate('/platforms/gcp/connections')}
-                      className="h-8 text-xs"
-                    />
-                  </div>
-                )}
-              </div>
-
-              {/* AWS */}
-              <NavButton
-                item={{ text: 'AWS', icon: <div className="w-2 h-2 rounded-full bg-orange-500" /> }}
-                selected={isActive('/platforms/aws')}
-                onClick={() => navigate('/platforms/aws')}
-                collapsed={collapsed}
-                className="h-8 pl-9"
-              />
-
-              {/* GitHub */}
-              <div className="space-y-1">
-                <NavButton
-                  item={{ text: 'GitHub', icon: <GithubIcon className="h-4 w-4" /> }}
-                  selected={isActive('/platforms/github')}
-                  onClick={() => navigate('/platforms/github')}
-                  collapsed={collapsed}
-                  className="h-8 pl-9"
-                />
-                {!collapsed && (
-                  <div className="ml-9 border-l border-muted pl-4 space-y-1">
-                    <NavButton
-                      item={{ text: 'Repositories', icon: <FolderGit2 className="h-4 w-4" /> }}
-                      selected={location.pathname === '/platforms/github/repos'}
-                      onClick={() => navigate('/platforms/github/repos')}
-                      className="h-8 text-xs"
-                    />
-                  </div>
-                )}
-              </div>
-
-              {/* Snowflake */}
-              <NavButton
-                item={{ text: 'Snowflake', icon: <div className="w-2 h-2 rounded-full bg-cyan-400" /> }}
-                selected={isActive('/platforms/snowflake')}
-                onClick={() => navigate('/platforms/snowflake')}
-                collapsed={collapsed}
-                className="h-8 pl-9"
-              />
-
-              {/* On-Premises Collapsible */}
-              <div className="space-y-1">
-                <Button
-                  variant="ghost"
-                  className={cn(
-                    "w-full justify-start gap-4 h-8 pl-9 text-muted-foreground text-sm",
-                    collapsed ? "justify-center px-0" : ""
-                  )}
-                  onClick={() => !collapsed && setOnPremOpen(!onPremOpen)}
-                >
-                  <div className="w-2 h-2 rounded-full bg-green-500" />
-                  {!collapsed && (
-                    <>
-                      <span className="flex-grow text-left">On-premises</span>
-                      <ChevronDown className={cn("h-3 w-3 transition-transform", onPremOpen ? "" : "-rotate-90")} />
-                    </>
-                  )}
-                </Button>
-
-                {!collapsed && onPremOpen && (
-                  <div className="ml-12 border-l border-muted pl-4 space-y-1">
-                    <div className="px-2 py-1 text-[10px] font-bold text-muted-foreground/50 uppercase tracking-tighter">Databases</div>
-                    {['Oracle', 'SQL Server', 'MySQL', 'PostgreSQL'].map(db => (
-                      <NavButton
-                        key={db}
-                        item={{ text: db, icon: <DatabaseIcon className="h-3 w-3" /> }}
-                        selected={location.pathname.includes(db.toLowerCase().replace(' ', ''))}
-                        onClick={() => navigate(`/platforms/on-premises/databases/${db.toLowerCase().replace(' ', '')}`)}
-                        className="h-7 text-[11px]"
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* ServiceNow */}
-              <div className="space-y-1">
-                <NavButton
-                  item={{ text: 'ServiceNow', icon: <div className="w-2 h-2 rounded-full bg-green-700" /> }}
-                  selected={isActive('/platforms/servicenow')}
-                  onClick={() => navigate('/platforms/servicenow')}
-                  collapsed={collapsed}
-                  className="h-8 pl-9"
-                />
-                {!collapsed && (
-                  <div className="ml-9 border-l border-muted pl-4 space-y-1">
-                    <NavButton
-                      item={{ text: 'CMDB', icon: <Monitor className="h-4 w-4" /> }}
-                      selected={location.pathname === '/platforms/servicenow/cmdb'}
-                      onClick={() => navigate('/platforms/servicenow/cmdb')}
-                      className="h-8 text-xs"
-                    />
-                  </div>
-                )}
               </div>
             </CollapsibleContent>
           </Collapsible>
+
+          {/* Platforms */}
+          <NavButton
+            item={{ text: 'Platforms', icon: <Cloud className="h-5 w-5" />, path: '/platforms' }}
+            selected={isActive('/platforms')}
+            onClick={() => navigate('/platforms')}
+            collapsed={collapsed}
+          />
+
         </div>
       </ScrollArea>
 

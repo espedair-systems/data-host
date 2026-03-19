@@ -10,6 +10,7 @@ import TableEditor from './pages/TableEditor';
 import IngestionPage from './pages/Ingestion';
 import LocalIngestion from './pages/LocalIngestion';
 import BigQueryDashboard from './pages/BigQueryDashboard';
+import Entities from './pages/Entities';
 import GCPConnections from './pages/GCPConnections';
 import GCPProjects from './pages/GCPProjects';
 import GCSDashboard from './pages/GCSDashboard';
@@ -45,7 +46,7 @@ import Steward from './pages/Steward';
 import Model from './pages/Model';
 import Secure from './pages/Secure';
 import MockPage from './pages/MockPage';
-import { BookMarked, Zap, UserCircle, Lock, BarChart3, Component, GitBranch, Key, Users as UsersIcon } from 'lucide-react';
+import { BookMarked, Zap, UserCircle, Lock, BarChart3, GitBranch, Key, Users as UsersIcon, Bot, Cpu, Sparkles } from 'lucide-react';
 import Curate from './pages/Curate';
 import KnowledgeDashboard from './pages/KnowledgeDashboard';
 import Librarian from './pages/Librarian';
@@ -57,6 +58,7 @@ import PlaceholderPage from './pages/Placeholder';
 import GithubRepos from './pages/GithubRepos';
 import Settings from './pages/Settings';
 import Home from './pages/Home';
+import Platforms from './pages/Platforms';
 import SchemaGeneration from './pages/SchemaGeneration';
 const SwaggerPage = lazy(() => import('./pages/Integrate/Swagger'));
 import { ColorModeProvider } from './context/ColorModeContext';
@@ -110,11 +112,17 @@ function App() {
                   <Route path="privacy" element={<MockPage title="Privacy" parent="Steward" icon={<Lock className="h-10 w-10" />} />} />
                 </Route>
 
+                <Route path="ai-steward">
+                  <Route index element={<MockPage title="AI Steward Dashboard" parent="AI Steward" icon={<Bot className="h-10 w-10" />} />} />
+                  <Route path="agents" element={<MockPage title="AI Agents" parent="AI Steward" icon={<Cpu className="h-10 w-10" />} />} />
+                  <Route path="insights" element={<MockPage title="Model Insights" parent="AI Steward" icon={<Sparkles className="h-10 w-10" />} />} />
+                </Route>
+
                 <Route path="model">
                   <Route index element={<Model />} />
                   <Route path="dashboard" element={<Model />} />
                   <Route path="analysis" element={<MockPage title="Analysis" parent="Model" icon={<BarChart3 className="h-10 w-10" />} />} />
-                  <Route path="entities" element={<MockPage title="Entities" parent="Model" icon={<Component className="h-10 w-10" />} />} />
+                  <Route path="entities" element={<Entities />} />
                   <Route path="pipelines" element={<MockPage title="Pipelines" parent="Model" icon={<GitBranch className="h-10 w-10" />} />} />
                 </Route>
 
@@ -173,6 +181,7 @@ function App() {
                   <Route path="projects" element={<MongoProjects />} />
                 </Route>
                 <Route path="platforms">
+                  <Route index element={<Platforms />} />
                   <Route path="gcp">
                     <Route index element={<GCPPlatform />} />
                     <Route path="agents" element={<PlaceholderPage title="GCP Agents" />} />
