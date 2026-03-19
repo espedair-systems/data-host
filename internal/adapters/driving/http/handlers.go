@@ -5,12 +5,17 @@
 package http
 
 import (
+	"crypto/sha256"
 	"data-host/artifacts"
 	"data-host/internal/core/domain"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/coder/websocket"
 	"github.com/gin-gonic/gin"
@@ -484,7 +489,56 @@ func (a *GinAdapter) IngestSchema(c *gin.Context) {
 		return
 	}
 
+	// JSON formatting for storage
+	jsonBytes, _ := json.Marshal(schema)
+	hasher := sha256.New()
+	hasher.Write(jsonBytes)
+	fileHash := hex.EncodeToString(hasher.Sum(nil))
+
+	// 1. Record in file_archive (Database)
+	_ = a.repo.SaveFileArchive(domain.FileArchive{
+		Name:        schema.Name,
+		Type:        "schema",
+		Description: schema.Desc,
+		Hash:        fileHash,
+		Status:      "synced",
+	})
+
+	// 2. Archive to filesystem if path is configured
+	if a.config.ArchivePath != "" {
+		archiveDir := a.config.ArchivePath
+		if err := os.MkdirAll(archiveDir, 0755); err == nil {
+			fileName := fmt.Sprintf("%s_%d.schema.json", schema.Name, time.Now().Unix())
+			filePath := filepath.Join(archiveDir, fileName)
+			if raw, err := json.MarshalIndent(schema, "", "  "); err == nil {
+				_ = os.WriteFile(filePath, raw, 0644)
+				log.Info().Str("path", filePath).Msg("schema archived to filesystem")
+			}
+		}
+	}
+
 	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "Schema ingested successfully"})
+}
+
+// GetFileArchives godoc
+// @Summary      Get archived files
+// @Description  Retrieve list of files from the file_archive table
+// @Tags         Ingestion
+// @Produce      json
+// @Success      200  {array}   domain.FileArchive
+// @Failure      500  {object}  domain.ErrorResponse
+// @Router       /ingestion/archives [get]
+func (a *GinAdapter) GetFileArchives(c *gin.Context) {
+	archives, err := a.repo.GetFileArchives()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{
+			Error:   "Internal Server Error",
+			Message: err.Error(),
+			Code:    http.StatusInternalServerError,
+		})
+		return
+	}
+	c.JSON(http.StatusOK, archives)
 }
 
 func (a *GinAdapter) UpdateSelection(c *gin.Context) {

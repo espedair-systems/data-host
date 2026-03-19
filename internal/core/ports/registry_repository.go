@@ -46,5 +46,9 @@ type RegistryRepository interface {
 	GetSites() ([]domain.SiteConfig, error)
 	SaveSiteConfig(site domain.SiteConfig) error
 
+	// File Archive operations
+	GetFileArchives() ([]domain.FileArchive, error)
+	SaveFileArchive(archive domain.FileArchive) error
+
 	GetUserRepo() UserRepository
 }

@@ -1039,3 +1039,30 @@ func (r *SQLiteRepository) SaveSiteConfig(site domain.SiteConfig) error {
 
 	return nil
 }
+
+func (r *SQLiteRepository) GetFileArchives() ([]domain.FileArchive, error) {
+	rows, err := r.db.Query("SELECT id, name, type, description, hash, status, created_at, updated_at FROM file_archive ORDER BY created_at DESC")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var results []domain.FileArchive
+	for rows.Next() {
+		var a domain.FileArchive
+		var desc sql.NullString
+		if err := rows.Scan(&a.ID, &a.Name, &a.Type, &desc, &a.Hash, &a.Status, &a.CreatedAt, &a.UpdatedAt); err != nil {
+			return nil, err
+		}
+		a.Description = desc.String
+		results = append(results, a)
+	}
+	return results, nil
+}
+
+func (r *SQLiteRepository) SaveFileArchive(archive domain.FileArchive) error {
+	_, err := r.db.Exec(`INSERT INTO file_archive (name, type, description, hash, status) 
+		VALUES (?, ?, ?, ?, ?)`,
+		archive.Name, archive.Type, archive.Description, archive.Hash, archive.Status)
+	return err
+}

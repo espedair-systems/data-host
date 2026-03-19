@@ -2,6 +2,7 @@
 # For Docker, see docker/config.yaml or use environment variables
 port: 8080
 database_url: "blueprint.db"
+archive_path: "./artifacts/archive"
 debug: true
 
 # Logging configuration

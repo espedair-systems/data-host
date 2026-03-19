@@ -5,57 +5,25 @@
 package main
 
 import (
-	"archive/zip"
 	configAdapter "data-host/internal/adapters/driven/config"
+	"data-host/internal/adapters/driven/repository"
 	appConfig "data-host/internal/adapters/driving/config"
+	"data-host/internal/adapters/driving/http"
 	"data-host/internal/adapters/driving/logger"
+	"data-host/internal/adapters/driving/tui"
+	"data-host/internal/core/ports"
 	"data-host/internal/core/services"
+	"data-host/internal/database"
+	"data-host/internal/utils/archive"
+	"encoding/json"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/rs/zerolog/log"
 )
-
-// unzip utility for deployment artifacts
-func unzip(src string, dest string) error {
-	r, err := zip.OpenReader(src)
-	if err != nil {
-		return err
-	}
-	defer r.Close()
-
-	for _, f := range r.File {
-		fpath := filepath.Join(dest, f.Name)
-		if !strings.HasPrefix(fpath, filepath.Clean(dest)+string(os.PathSeparator)) {
-			return fmt.Errorf("%s: illegal file path", fpath)
-		}
-		if f.FileInfo().IsDir() {
-			os.MkdirAll(fpath, os.ModePerm)
-			continue
-		}
-		if err = os.MkdirAll(filepath.Dir(fpath), os.ModePerm); err != nil {
-			return err
-		}
-		outFile, err := os.OpenFile(fpath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
-		if err != nil {
-			return err
-		}
-		rc, err := f.Open()
-		if err != nil {
-			return err
-		}
-		_, err = io.Copy(outFile, rc)
-		outFile.Close()
-		rc.Close()
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
 
 func main() {
 	configName := "config"
@@ -84,34 +52,85 @@ func main() {
 	// Persist any new default fields to the config file
 	_ = appConfig.SaveWithComments(fullPath, &config)
 
+	// Create shared log channels EARLY
+	logChan := make(chan string, 1000)
+	errorChan := make(chan string, 1000)
+
+	// Initialize REAL TUI logger immediately
+	logger.InitTUI(config, &logger.TUIWriter{
+		TopWindow:    &chanWriter{channel: errorChan},
+		BottomWindow: &chanWriter{channel: logChan},
+	})
+
 	// Extract templates to ./artifacts/templates by default
 	bootRes := bootstrap.ExtractTemplates(&config)
 	if !bootRes.OK {
-		fmt.Printf("Warning: Template extraction failed: %s\n", bootRes.Text)
+		log.Warn().Msgf("Template extraction failed: %s", bootRes.Text)
 	}
-
-	// Initialize logger (handles file logging if enabled)
-	logger.Init(config)
 
 	if config.Deploy == "IDE" {
 		targets := []string{"./data-service/dist.zip", "./data-services/dist.zip"}
 		for _, zipPath := range targets {
 			if _, err := os.Stat(zipPath); err == nil {
 				dest := filepath.Dir(zipPath)
-				fmt.Printf("Found %s, unzipping to %s...\n", zipPath, dest)
-				if err := unzip(zipPath, dest); err != nil {
-					fmt.Printf("Error unzipping %s: %v\n", zipPath, err)
+				log.Info().Msgf("Found %s, unzipping to %s...", zipPath, dest)
+				if err := archive.Unzip(zipPath, dest); err != nil {
+					log.Error().Err(err).Msgf("Error unzipping %s", zipPath)
 				} else {
-					fmt.Printf("Successfully unzipped %s\n", zipPath)
+					log.Info().Msgf("Successfully unzipped %s", zipPath)
 				}
 				break
 			}
 		}
 	}
 
-	p := tea.NewProgram(initialModel(config), tea.WithAltScreen(), tea.WithMouseCellMotion())
+	// Initialize Ports and Adapters
+	httpAdapter := http.NewGinAdapter()
+	hostService := services.NewHostService(httpAdapter)
+
+	var repo ports.RegistryRepository
+	appEnv := os.Getenv("APP_ENV")
+	if appEnv == "production" || appEnv == "publish" {
+		repo = repository.NewFilesystemRepository(config)
+	} else {
+		// Disable migration on startup to handle it stepwise in TUI
+		os.Setenv("MIGRATE_ON_STARTUP", "false")
+		db := database.New(config.DatabaseURL)
+		repo, _ = repository.NewSQLiteRepository(db.GetDB(), config)
+	}
+
+	// Initialize TUI Model with dependencies and shared channels
+	model := tui.NewBootstrapModel(config, bootstrap, hostService, repo, logChan, errorChan)
+
+	p := tea.NewProgram(model, tea.WithAltScreen(), tea.WithMouseCellMotion())
+
 	if _, err := p.Run(); err != nil {
 		fmt.Printf("Error running TUI: %v", err)
 		os.Exit(1)
 	}
+}
+
+type chanWriter struct {
+	channel chan<- string
+}
+
+func (w *chanWriter) Write(p []byte) (n int, err error) {
+	msg := string(p)
+
+	// Clean up JSON logs from Zerolog for the TUI window
+	if strings.HasPrefix(msg, "{") {
+		var data map[string]interface{}
+		if err := json.Unmarshal(p, &data); err == nil {
+			msgStr, okM := data["message"].(string)
+			lvlStr, okL := data["level"].(string)
+			if okM && okL {
+				msg = fmt.Sprintf("[%s] %s", strings.ToUpper(lvlStr), msgStr)
+			} else if okM {
+				msg = msgStr
+			}
+		}
+	}
+
+	w.channel <- strings.TrimSpace(msg)
+	return len(p), nil
 }

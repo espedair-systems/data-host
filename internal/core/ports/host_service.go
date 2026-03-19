@@ -14,6 +14,7 @@ type HostService interface {
 	Stop() error
 	GetOn404() <-chan string
 	GetOnRequest() <-chan struct{}
+	GetOnStatus() <-chan int
 	SetLogOutput(w io.Writer)
 	BroadcastMessage(msg string)
 }

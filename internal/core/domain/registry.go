@@ -147,3 +147,15 @@ type DesignFile struct {
 	Size         int64  `json:"size"`
 	LastModified string `json:"lastModified"`
 }
+
+// @Description File archive record
+type FileArchive struct {
+	ID          int64  `json:"id" example:"1"`
+	Name        string `json:"name" example:"accounting-v4.schema.json"`
+	Type        string `json:"type" example:"schema"`
+	Description string `json:"description" example:"Final schema for account module"`
+	Hash        string `json:"hash" example:"sha256:..."`
+	Status      string `json:"status" example:"pending"`
+	CreatedAt   string `json:"createdAt" example:"2026-03-19T00:00:00Z"`
+	UpdatedAt   string `json:"updatedAt" example:"2026-03-19T00:00:00Z"`
+}

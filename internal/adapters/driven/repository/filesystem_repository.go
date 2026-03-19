@@ -966,6 +966,14 @@ func (r *FilesystemRepository) SaveSiteConfig(site domain.SiteConfig) error {
 	return fmt.Errorf("site registration not supported in filesystem mode")
 }
 
+func (r *FilesystemRepository) GetFileArchives() ([]domain.FileArchive, error) {
+	return []domain.FileArchive{}, nil
+}
+
+func (r *FilesystemRepository) SaveFileArchive(archive domain.FileArchive) error {
+	return nil
+}
+
 func writeJSON(path string, val interface{}) error {
 	data, err := json.MarshalIndent(val, "", "    ")
 	if err != nil {

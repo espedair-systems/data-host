@@ -34,6 +34,7 @@ type GinAdapter struct {
 	server            *http.Server
 	On404             chan string
 	OnRequest         chan struct{}
+	OnStatus          chan int
 	LogOutput         io.Writer
 	repo              ports.RegistryRepository
 	config            domain.HostConfig
@@ -48,6 +49,7 @@ func NewGinAdapter() *GinAdapter {
 	return &GinAdapter{
 		On404:          make(chan string, 100),
 		OnRequest:      make(chan struct{}, 1000),
+		OnStatus:       make(chan int, 1000),
 		shutdownNotify: make(chan struct{}),
 	}
 }
@@ -137,6 +139,7 @@ func (a *GinAdapter) Start(config domain.HostConfig, repo ports.RegistryReposito
 		{
 			ingestion.POST("/validate", a.ValidateSchema)
 			ingestion.POST("/ingest", auth.RequireRole(domain.RoleAdmin), a.IngestSchema)
+			ingestion.GET("/archives", a.GetFileArchives)
 			ingestion.POST("/ingest-to-local-folder", auth.RequireRole(domain.RoleAdmin), a.IngestToFolder)
 			ingestion.POST("/generate/:asset", auth.RequireRole(domain.RoleAdmin), a.GenerateAsset)
 			ingestion.GET("/generate/:asset/plan", auth.RequireRole(domain.RoleAdmin), a.GetGenerationPlan)
@@ -296,6 +299,10 @@ func (a *GinAdapter) GetOnRequest() <-chan struct{} {
 	return a.OnRequest
 }
 
+func (a *GinAdapter) GetOnStatus() <-chan int {
+	return a.OnStatus
+}
+
 func (a *GinAdapter) SetLogOutput(w io.Writer) {
 	a.LogOutput = w
 }
@@ -321,6 +328,11 @@ func (a *GinAdapter) RequestTrackerMiddleware() gin.HandlerFunc {
 			// Don't block if channel is full
 		}
 		c.Next()
+		status := c.Writer.Status()
+		select {
+		case a.OnStatus <- status:
+		default:
+		}
 	}
 }
 func (a *GinAdapter) GenerateAsset(c *gin.Context) {

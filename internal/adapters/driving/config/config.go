@@ -75,6 +75,9 @@ func SaveWithComments(path string, config *domain.HostConfig) error {
 	sb.WriteString("# Default directory for generated pages.\n")
 	sb.WriteString(fmt.Sprintf("generate_path: \"%s\"\n\n", config.GeneratePath))
 
+	sb.WriteString("# Directory for archived data and schemas.\n")
+	sb.WriteString(fmt.Sprintf("archive_path: \"%s\"\n\n", config.ArchivePath))
+
 	sb.WriteString("# Directory for extracted artifacts (templates, schemas, etc.)\n")
 	sb.WriteString(fmt.Sprintf("local_artifacts_dir: \"%s\"\n\n", config.LocalArtifactsDir))
 
@@ -172,6 +175,7 @@ func GetDefaults() *domain.HostConfig {
 		DevMode:           true,
 		SitePath:          "./sites",
 		GeneratePath:      "./generated",
+		ArchivePath:       "./artifacts/archive",
 		Sites: []domain.SiteConfig{
 			{
 				Name:        "data-services",
@@ -213,6 +217,9 @@ func loadFromEnv(config *domain.HostConfig) {
 	}
 	if val := os.Getenv("DATA_HOST_GENERATE_PATH"); val != "" {
 		config.GeneratePath = val
+	}
+	if val := os.Getenv("DATA_HOST_ARCHIVE_PATH"); val != "" {
+		config.ArchivePath = val
 	}
 	if val := os.Getenv("DATA_HOST_DEBUG"); val != "" {
 		config.Debug = strings.ToLower(val) == "true"

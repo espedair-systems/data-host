@@ -178,9 +178,9 @@ scan: ## Scan dependencies for vulnerabilities using osv-scanner
 
 # DB Migrations
 migrate-up: ## Run database migrations up
-	@goose -dir internal/database/migrations sqlite blueprint.db up
+	@goose -dir internal/database/migrations/sqlite sqlite blueprint.db up -allow-missing
 
 migrate-down: ## Run database migrations down
-	@goose -dir internal/database/migrations sqlite blueprint.db down
+	@goose -dir internal/database/migrations/sqlite sqlite blueprint.db down -allow-missing
 
 .PHONY: all build run test clean watch scan migrate-up migrate-down help push docker-bundle docker-stage build-frontend run-cli run-tui run-frontend storybook build-storybook docker-run docker-down build-linux build-windows build-mac build-all build-linux-amd64 build-linux-arm64 build-windows-amd64 build-mac-amd64 build-mac-arm64

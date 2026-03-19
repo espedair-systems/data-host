@@ -77,23 +77,21 @@ func InitTUI(config domain.HostConfig, writer *TUIWriter) {
 		}
 	}
 
-	// UI logging: Only add TUI writer if file logging is NOT enabled
-	// as per user request to hide logger messages in the window when logging to file.
-	if !config.LogFileEnabled {
-		writers = append(writers, writer)
-	}
+	// UI logging: Always add TUI writer in TUI mode
+	writers = append(writers, writer)
 
 	// NOTE: We do NOT use getWriters(config) here because we must avoid os.Stdout
 	// in TUI mode to prevent display corruption.
 
 	multi := io.MultiWriter(writers...)
+
 	log.Logger = zerolog.New(multi).
 		With().
 		Timestamp().
 		Logger().
 		Level(zerolog.DebugLevel)
 
-	stdLog.SetOutput(multi)
+	stdLog.SetOutput(log.Logger)
 }
 
 func getWriters(config domain.HostConfig) []io.Writer {

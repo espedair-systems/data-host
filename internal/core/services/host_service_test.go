@@ -36,6 +36,10 @@ func (m *mockHTTPServer) GetOnRequest() <-chan struct{} {
 	return make(chan struct{})
 }
 
+func (m *mockHTTPServer) GetOnStatus() <-chan int {
+	return make(chan int)
+}
+
 func (m *mockHTTPServer) SetLogOutput(w io.Writer)    {}
 func (m *mockHTTPServer) BroadcastMessage(msg string) {}
 

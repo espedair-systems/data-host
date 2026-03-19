@@ -41,6 +41,10 @@ func (s *hostService) GetOnRequest() <-chan struct{} {
 	return s.httpServer.GetOnRequest()
 }
 
+func (s *hostService) GetOnStatus() <-chan int {
+	return s.httpServer.GetOnStatus()
+}
+
 func (s *hostService) SetLogOutput(w io.Writer) {
 	s.logOutput = w
 	s.httpServer.SetLogOutput(w)
