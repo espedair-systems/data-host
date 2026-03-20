@@ -381,7 +381,7 @@ const Entities: React.FC = () => {
                                                         <span className="text-[10px] text-muted-foreground/50 italic line-clamp-1 group-hover:text-muted-foreground/70">{table.description || 'No descriptive metadata synced'}</span>
                                                     </div>
                                                     <Link 
-                                                        to={`/platforms/test/erd1?table=${table.name}&schema=${table.schemaName}`}
+                                                        to={`/scratchpad/test/erd1?table=${table.name}&schema=${table.schemaName}`}
                                                         className="p-2 rounded-lg bg-primary/5 text-primary opacity-0 group-hover:opacity-100 hover:bg-primary/20 transition-all shadow-sm"
                                                         title="View Focused ERD"
                                                     >

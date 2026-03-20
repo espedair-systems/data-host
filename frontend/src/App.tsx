@@ -62,6 +62,8 @@ import Platforms from './pages/Platforms';
 import TestPlatform from './pages/TestPlatform';
 import TestErd1 from './pages/TestErd1';
 import TestErd2 from './pages/TestErd2';
+import TestErd3 from './pages/TestErd3';
+import TestErd4 from './pages/TestErd4';
 import SchemaGeneration from './pages/SchemaGeneration';
 const SwaggerPage = lazy(() => import('./pages/Integrate/Swagger'));
 import { ColorModeProvider } from './context/ColorModeContext';
@@ -185,11 +187,6 @@ function App() {
                 </Route>
                 <Route path="platforms">
                   <Route index element={<Platforms />} />
-                  <Route path="test">
-                    <Route index element={<TestPlatform />} />
-                    <Route path="erd1" element={<TestErd1 />} />
-                    <Route path="erd2" element={<TestErd2 />} />
-                  </Route>
                   <Route path="gcp">
                     <Route index element={<GCPPlatform />} />
                     <Route path="agents" element={<PlaceholderPage title="GCP Agents" />} />
@@ -230,6 +227,16 @@ function App() {
                     <Route path="environments" element={<Environments />} />
                     <Route path="connections" element={<GCPConnections />} />
                     <Route path="issues" element={<GCPIssues />} />
+                  </Route>
+                </Route>
+
+                <Route path="scratchpad">
+                  <Route index element={<TestPlatform />} />
+                  <Route path="test">
+                    <Route path="erd1" element={<TestErd1 />} />
+                    <Route path="erd2" element={<TestErd2 />} />
+                    <Route path="erd3" element={<TestErd3 />} />
+                    <Route path="erd4" element={<TestErd4 />} />
                   </Route>
                 </Route>
                 <Route path="integrate">

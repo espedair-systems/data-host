@@ -60,7 +60,7 @@ const TestErd2: React.FC = () => {
                             variant="ghost"
                             size="icon"
                             className="h-10 w-10 rounded-2xl bg-card/50 border border-white/5 hover:bg-primary/20 hover:text-primary transition-all shadow-xl backdrop-blur-md"
-                            onClick={() => navigate('/platforms/test')}
+                            onClick={() => navigate('/scratchpad')}
                         >
                             <ArrowLeft className="h-5 w-5" />
                         </Button>
@@ -115,7 +115,7 @@ const TestErd2: React.FC = () => {
                         <div className="text-center space-y-4">
                             <Database className="h-12 w-12 text-muted-foreground/20 mx-auto" />
                             <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest italic">Blog Schema Not Found</p>
-                            <Button variant="secondary" onClick={() => navigate('/platforms/test')}>Return to Sandbox</Button>
+                            <Button variant="secondary" onClick={() => navigate('/scratchpad')}>Return to Scratchpad</Button>
                         </div>
                     </div>
                 )}

@@ -84,18 +84,18 @@ const edgeTypes = {
     cardinality: CardinalityEdge,
 };
 
-const getLayoutedElements = (nodes: any[], edges: any[], direction = 'LR') => {
+const getLayoutedElements = (nodes: any[], edges: any[], direction = 'LR', compact = false) => {
     const dagreGraph = new dagre.graphlib.Graph();
     dagreGraph.setDefaultEdgeLabel(() => ({}));
 
-    // More generous spacing for premium feel
-    const nodeWidth = 300;
-    const nodeHeight = 400;
+    // Dynamic spacing based on compact mode
+    const nodeWidth = compact ? 220 : 300;
+    const nodeHeight = compact ? 80 : 400;
 
     dagreGraph.setGraph({ 
         rankdir: direction,
-        nodesep: 100,
-        ranksep: 150,
+        nodesep: compact ? 40 : 100,
+        ranksep: compact ? 80 : 150,
         marginx: 50,
         marginy: 50
     });
@@ -295,7 +295,7 @@ const DatabaseSchema: React.FC<DatabaseSchemaProps> = ({ schema, focusTable, com
             });
         }
 
-        return getLayoutedElements(nodes, edges);
+        return getLayoutedElements(nodes, edges, 'LR', compact);
     }, [schema, focusTable, mode, showOnlyKeys, notationMode, compact]);
 
     const [nodes, setNodes, onNodesChange] = useNodesState(initialElements.nodes);
@@ -362,6 +362,7 @@ const DatabaseSchema: React.FC<DatabaseSchemaProps> = ({ schema, focusTable, com
                 nodeTypes={nodeTypes}
                 edgeTypes={edgeTypes}
                 fitView
+                fitViewOptions={{ padding: 0.2 }}
                 colorMode={mode as any}
                 defaultEdgeOptions={{
                     type: 'smoothstep',

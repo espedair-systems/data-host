@@ -129,6 +129,7 @@ const Layout: React.FC = () => {
   const [modelOpen, setModelOpen] = useState(false);
   const [secureOpen, setSecureOpen] = useState(false);
   const [integrateOpen, setIntegrateOpen] = useState(false);
+  const [scratchpadOpen, setScratchpadOpen] = useState(false);
   const { mode, toggleColorMode } = useColorMode();
   const { content: sidebarContent } = useSidebar();
   const navigate = useNavigate();
@@ -749,6 +750,46 @@ const Layout: React.FC = () => {
             onClick={() => navigate('/platforms')}
             collapsed={collapsed}
           />
+
+          <Separator className="my-3 mx-2 opacity-50" />
+
+          {/* Scratchpad Collapsible */}
+          <Collapsible
+            open={!collapsed && scratchpadOpen}
+            onOpenChange={setScratchpadOpen}
+            className="space-y-1 pb-4"
+          >
+            <CollapsibleTrigger asChild>
+              <Button
+                variant="ghost"
+                className={cn(
+                  "w-full justify-start gap-4 px-3 h-10 text-muted-foreground",
+                  collapsed ? "justify-center px-0" : ""
+                )}
+              >
+                <div className="shrink-0">
+                  <Monitor className={cn("h-5 w-5", isActive('/scratchpad') ? "text-primary" : "")} />
+                </div>
+                {!collapsed && (
+                  <>
+                    <span className={cn("text-[10px] font-black uppercase tracking-widest flex-grow text-left", isActive('/scratchpad') ? "text-primary" : "")}>Scratchpad</span>
+                    <ChevronDown className={cn("h-4 w-4 transition-transform", scratchpadOpen ? "" : "-rotate-90")} />
+                  </>
+                )}
+              </Button>
+            </CollapsibleTrigger>
+
+            <CollapsibleContent className="space-y-1">
+              <div className="ml-9 border-l border-muted pl-4 space-y-1">
+                <NavButton
+                  item={{ text: 'ERD sandbox', icon: <Cpu className="h-4 w-4" /> }}
+                  selected={isActive('/scratchpad')}
+                  onClick={() => navigate('/scratchpad')}
+                  className="h-8 text-xs"
+                />
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
 
         </div>
       </ScrollArea>
