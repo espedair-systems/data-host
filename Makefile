@@ -5,6 +5,16 @@
 help: ## Display this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
+setup: ## Setup the development environment (install dependencies, run migrations)
+	@echo "Setting up development environment..."
+	@echo "Installing Go dependencies..."
+	@go mod download
+	@echo "Installing Frontend dependencies..."
+	@npm install --prefix ./frontend
+	@echo "Running database migrations..."
+	@$(MAKE) migrate-up
+	@echo "Setup complete! Run 'make help' for available commands."
+
 # Build the application
 all: build test ## Build and test the application
 
@@ -183,4 +193,4 @@ migrate-up: ## Run database migrations up
 migrate-down: ## Run database migrations down
 	@goose -dir internal/database/migrations/sqlite sqlite blueprint.db down -allow-missing
 
-.PHONY: all build run test clean watch scan migrate-up migrate-down help push docker-bundle docker-stage build-frontend run-cli run-tui run-frontend storybook build-storybook docker-run docker-down build-linux build-windows build-mac build-all build-linux-amd64 build-linux-arm64 build-windows-amd64 build-mac-amd64 build-mac-arm64
+.PHONY: all build run test clean watch scan migrate-up migrate-down help push docker-bundle docker-stage build-frontend run-cli run-tui run-frontend storybook build-storybook docker-run docker-down build-linux build-windows build-mac build-all build-linux-amd64 build-linux-arm64 build-windows-amd64 build-mac-amd64 build-mac-arm64 setup
