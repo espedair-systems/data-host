@@ -81,6 +81,16 @@ const PlatformsPage: React.FC = () => {
             path: '/platforms/on-premises/databases',
             description: 'Legacy and private cloud relational database deployments.',
             color: 'bg-indigo-500/10'
+        },
+        {
+            id: 'test',
+            name: 'Test Environment',
+            icon: <Zap className="h-10 w-10 text-red-500" />,
+            status: 'Active',
+            type: 'Validation',
+            path: '/platforms/test',
+            description: 'Sandbox for experimental ERD modeling and schema validation.',
+            color: 'bg-red-500/10'
         }
     ];
 

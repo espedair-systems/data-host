@@ -59,6 +59,8 @@ import GithubRepos from './pages/GithubRepos';
 import Settings from './pages/Settings';
 import Home from './pages/Home';
 import Platforms from './pages/Platforms';
+import TestPlatform from './pages/TestPlatform';
+import TestErd1 from './pages/TestErd1';
 import SchemaGeneration from './pages/SchemaGeneration';
 const SwaggerPage = lazy(() => import('./pages/Integrate/Swagger'));
 import { ColorModeProvider } from './context/ColorModeContext';
@@ -182,6 +184,10 @@ function App() {
                 </Route>
                 <Route path="platforms">
                   <Route index element={<Platforms />} />
+                  <Route path="test">
+                    <Route index element={<TestPlatform />} />
+                    <Route path="erd1" element={<TestErd1 />} />
+                  </Route>
                   <Route path="gcp">
                     <Route index element={<GCPPlatform />} />
                     <Route path="agents" element={<PlaceholderPage title="GCP Agents" />} />
