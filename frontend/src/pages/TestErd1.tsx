@@ -31,42 +31,51 @@ const TestErd1: React.FC = () => {
     }, []);
 
     return (
-        <div className="flex flex-col h-[calc(100vh-8rem)] space-y-6 animate-in fade-in duration-500">
-            <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 px-2">
-                <div className="space-y-1">
-                    <div className="flex items-center gap-2">
+        <div className="flex flex-col h-[calc(100vh-8rem)] space-y-6 animate-in fade-in duration-700 relative group/page">
+            {/* Ambient Background Glows */}
+            <div className="absolute -top-40 -right-40 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[150px] -z-10 pointer-events-none animate-pulse duration-[10s]" />
+            <div className="absolute top-1/2 -left-40 w-[500px] h-[500px] bg-blue-500/5 rounded-full blur-[120px] -z-10 pointer-events-none animate-pulse duration-[8s] delay-1000" />
+            
+            <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 px-2">
+                <div className="space-y-4">
+                    <div className="flex items-center gap-3">
                         <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 rounded-xl bg-muted/50 hover:bg-primary/20 hover:text-primary transition-all"
+                            className="h-10 w-10 rounded-2xl bg-card/50 border border-white/5 hover:bg-primary/20 hover:text-primary transition-all shadow-xl backdrop-blur-md"
                             onClick={() => navigate('/platforms/test')}
                         >
-                            <ArrowLeft className="h-4 w-4" />
+                            <ArrowLeft className="h-5 w-5" />
                         </Button>
-                        <div className="flex items-center gap-2 text-primary font-black uppercase tracking-widest text-[10px]">
-                            <Layers className="h-3 w-3" />
-                            Visual Blueprint
+                        <div className="flex flex-col">
+                            <div className="flex items-center gap-2 text-primary font-black uppercase tracking-[0.3em] text-[10px] opacity-70">
+                                <Layers className="h-3 w-3" />
+                                Interactive Architecture
+                            </div>
+                            <h1 className="text-4xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-br from-foreground to-foreground/50">
+                                Blog <span className="text-primary/80 text-3xl">Engine</span>
+                            </h1>
                         </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <h1 className="text-3xl font-black tracking-tighter">ERD1: Blog Engine</h1>
-                        <Badge className="bg-blue-500/10 text-blue-500 border-none font-bold text-[10px] uppercase tracking-tighter">React Flow Engine</Badge>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-2">
-                    <Button variant="outline" className="rounded-xl font-bold text-xs h-10 px-4 gap-2">
+                <div className="flex items-center gap-3 pb-1">
+                    <Badge className="bg-blue-500/10 text-blue-400 border border-blue-500/20 px-3 py-1 rounded-full font-bold text-[10px] uppercase tracking-widest backdrop-blur-md">
+                        React Flow v12
+                    </Badge>
+                    <div className="h-10 w-[1px] bg-white/5 mx-2 hidden md:block" />
+                    <Button variant="outline" className="rounded-2xl font-black text-[10px] uppercase tracking-widest h-12 px-6 gap-2 border-white/10 hover:bg-white/5 transition-all">
                         <Download className="h-4 w-4" />
                         Export SQL
                     </Button>
-                    <Button className="rounded-xl font-bold text-xs h-10 px-4 gap-2 shadow-lg shadow-primary/20">
+                    <Button className="rounded-2xl font-black text-[10px] uppercase tracking-widest h-12 px-6 gap-2 shadow-[0_10px_30px_rgba(var(--primary-rgb),0.3)] hover:scale-105 transition-all">
                         <Share2 className="h-4 w-4" />
                         Share Schema
                     </Button>
                 </div>
             </header>
 
-            <div className="flex-grow relative min-h-[500px]">
+            <div className="flex-grow relative min-h-[500px] group/canvas">
                 {loading ? (
                     <div className="absolute inset-0 flex items-center justify-center bg-card/50 backdrop-blur-sm rounded-[2.5rem] border border-white/5">
                         <div className="flex flex-col items-center gap-4">

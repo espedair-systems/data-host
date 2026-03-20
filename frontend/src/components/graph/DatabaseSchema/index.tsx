@@ -12,6 +12,7 @@ import {
 import '@xyflow/react/dist/style.css';
 import dagre from 'dagre';
 
+import { useColorMode } from '@/context/ColorModeContext';
 import TableNode from './TableNode';
 
 const nodeTypes = {
@@ -22,10 +23,17 @@ const getLayoutedElements = (nodes: any[], edges: any[], direction = 'LR') => {
     const dagreGraph = new dagre.graphlib.Graph();
     dagreGraph.setDefaultEdgeLabel(() => ({}));
 
-    const nodeWidth = 250;
-    const nodeHeight = 300;
+    // More generous spacing for premium feel
+    const nodeWidth = 300;
+    const nodeHeight = 400;
 
-    dagreGraph.setGraph({ rankdir: direction });
+    dagreGraph.setGraph({ 
+        rankdir: direction,
+        nodesep: 100,
+        ranksep: 150,
+        marginx: 50,
+        marginy: 50
+    });
 
     nodes.forEach((node) => {
         dagreGraph.setNode(node.id, { width: nodeWidth, height: nodeHeight });
@@ -42,7 +50,6 @@ const getLayoutedElements = (nodes: any[], edges: any[], direction = 'LR') => {
         node.targetPosition = direction === 'LR' ? 'left' : 'top';
         node.sourcePosition = direction === 'LR' ? 'right' : 'bottom';
 
-        // We are shifting the dagre node position (which is center-based) to top-left
         node.position = {
             x: nodeWithPosition.x - nodeWidth / 2,
             y: nodeWithPosition.y - nodeHeight / 2,
@@ -59,6 +66,7 @@ interface DatabaseSchemaProps {
 }
 
 const DatabaseSchema: React.FC<DatabaseSchemaProps> = ({ schema }) => {
+    const { mode } = useColorMode();
     const initialElements = useMemo(() => {
         if (!schema || !schema.tables) return { nodes: [], edges: [] };
 
@@ -83,14 +91,24 @@ const DatabaseSchema: React.FC<DatabaseSchemaProps> = ({ schema }) => {
                             target: table.name,
                             animated: true,
                             label: constraint.column || '',
-                            labelStyle: { fill: '#888', fontWeight: 700, fontSize: 10 },
+                            labelStyle: { 
+                                fill: 'rgba(255, 255, 255, 0.4)', 
+                                fontWeight: 900, 
+                                fontSize: 10,
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.1em'
+                            },
                             markerEnd: {
                                 type: MarkerType.ArrowClosed,
                                 width: 20,
                                 height: 20,
-                                color: '#4f46e5',
+                                color: mode === 'dark' ? '#94a3b8' : '#64748b', // Fallback to solid colors for markers
                             },
-                            style: { stroke: '#4f46e5', strokeWidth: 2 },
+                            style: { 
+                                stroke: mode === 'dark' ? '#94a3b8' : '#64748b',
+                                strokeWidth: 2,
+                                opacity: 0.8
+                            },
                         });
                     }
                 });
@@ -109,7 +127,7 @@ const DatabaseSchema: React.FC<DatabaseSchemaProps> = ({ schema }) => {
     );
 
     return (
-        <div className="w-full h-full bg-background/50 rounded-[2.5rem] border border-white/5 overflow-hidden shadow-inner">
+        <div className="w-full h-full bg-background/50 rounded-[2.5rem] border border-white/5 overflow-hidden shadow-2xl backdrop-blur-sm">
             <ReactFlow
                 nodes={nodes}
                 edges={edges}
@@ -118,13 +136,24 @@ const DatabaseSchema: React.FC<DatabaseSchemaProps> = ({ schema }) => {
                 onConnect={onConnect}
                 nodeTypes={nodeTypes}
                 fitView
-                colorMode="dark"
+                colorMode={mode as any}
+                defaultEdgeOptions={{
+                    type: 'smoothstep',
+                }}
             >
-                <Background color="#333" gap={20} />
-                <Controls />
+                <Background 
+                    color={mode === 'dark' ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.05)'} 
+                    gap={40} 
+                    size={2}
+                    variant={BackgroundVariant.Dots}
+                />
+                <Controls className="bg-card/80 border-white/10 rounded-xl overflow-hidden backdrop-blur-md !shadow-2xl" />
             </ReactFlow>
         </div>
     );
 };
+
+// Import BackgroundVariant from ReactFlow if not already present
+import { BackgroundVariant } from '@xyflow/react';
 
 export default DatabaseSchema;
