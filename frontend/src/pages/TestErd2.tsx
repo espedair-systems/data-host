@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import DatabaseSchema from '@/components/graph/DatabaseSchema';
 
-const TestErd1: React.FC = () => {
+const TestErd2: React.FC = () => {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const focusTable = searchParams.get('table');
@@ -109,7 +109,7 @@ const TestErd1: React.FC = () => {
                         </div>
                     </div>
                 ) : schema ? (
-                    <DatabaseSchema schema={schema} focusTable={focusTable || undefined} />
+                    <DatabaseSchema schema={schema} focusTable={focusTable || undefined} compact={true} />
                 ) : (
                     <div className="absolute inset-0 flex items-center justify-center bg-card/50 backdrop-blur-sm rounded-[2.5rem] border border-white/5">
                         <div className="text-center space-y-4">
@@ -133,4 +133,4 @@ const TestErd1: React.FC = () => {
     );
 };
 
-export default TestErd1;
+export default TestErd2;

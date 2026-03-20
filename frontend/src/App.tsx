@@ -61,6 +61,7 @@ import Home from './pages/Home';
 import Platforms from './pages/Platforms';
 import TestPlatform from './pages/TestPlatform';
 import TestErd1 from './pages/TestErd1';
+import TestErd2 from './pages/TestErd2';
 import SchemaGeneration from './pages/SchemaGeneration';
 const SwaggerPage = lazy(() => import('./pages/Integrate/Swagger'));
 import { ColorModeProvider } from './context/ColorModeContext';
@@ -187,6 +188,7 @@ function App() {
                   <Route path="test">
                     <Route index element={<TestPlatform />} />
                     <Route path="erd1" element={<TestErd1 />} />
+                    <Route path="erd2" element={<TestErd2 />} />
                   </Route>
                   <Route path="gcp">
                     <Route index element={<GCPPlatform />} />

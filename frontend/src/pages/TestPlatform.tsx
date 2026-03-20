@@ -45,6 +45,8 @@ const TestPlatform: React.FC = () => {
     const handleErdClick = (erdId: string, schemaName: string) => {
         if (erdId === 'erd1') {
             navigate('/platforms/test/erd1');
+        } else if (erdId === 'erd2') {
+            navigate('/platforms/test/erd2');
         } else {
             navigate(`/model/entities?schema=${encodeURIComponent(schemaName)}`);
         }

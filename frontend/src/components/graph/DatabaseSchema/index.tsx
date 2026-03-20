@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState, useEffect } from 'react';
 import {
     ReactFlow,
     Controls,
@@ -8,15 +8,80 @@ import {
     addEdge,
     type Connection,
     MarkerType,
+    Panel,
+    BackgroundVariant,
+    BaseEdge,
+    EdgeLabelRenderer,
+    getSmoothStepPath
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import dagre from 'dagre';
+import { Key } from 'lucide-react';
 
 import { useColorMode } from '@/context/ColorModeContext';
+import { cn } from '@/lib/utils';
 import TableNode from './TableNode';
 
 const nodeTypes = {
     table: TableNode,
+};
+
+const CardinalityEdge = ({
+    sourceX,
+    sourceY,
+    targetX,
+    targetY,
+    sourcePosition,
+    targetPosition,
+    style = {},
+    markerEnd,
+    data,
+}: any) => {
+    const [edgePath] = getSmoothStepPath({
+        sourceX,
+        sourceY,
+        sourcePosition,
+        targetPosition,
+        targetX,
+        targetY,
+    });
+
+    if (data?.compact) {
+        return <BaseEdge path={edgePath} markerEnd={markerEnd} style={style} />;
+    }
+
+    return (
+        <>
+            <BaseEdge path={edgePath} markerEnd={markerEnd} style={style} />
+            <EdgeLabelRenderer>
+                {/* Position cardinality labels at the entity boundaries */}
+                <div
+                    style={{
+                        position: 'absolute',
+                        transform: `translate(-50%, -50%) translate(${sourceX + (sourcePosition === 'right' ? 20 : -20)}px, ${sourceY - 15}px)`,
+                        pointerEvents: 'none',
+                    }}
+                    className="bg-background/80 px-1 rounded text-[10px] font-black border border-border/50 text-muted-foreground shadow-sm"
+                >
+                    {data?.sourceLabel}
+                </div>
+                <div
+                    style={{
+                        position: 'absolute',
+                        transform: `translate(-50%, -50%) translate(${targetX + (targetPosition === 'left' ? -20 : 20)}px, ${targetY - 15}px)`,
+                        pointerEvents: 'none',
+                    }}
+                    className="bg-primary/90 text-primary-foreground px-1.5 rounded text-[11px] font-black border border-primary shadow-lg"
+                >
+                    {data?.targetLabel}
+                </div>
+            </EdgeLabelRenderer>
+        </>
+    );
+};
+
+const edgeTypes = {
+    cardinality: CardinalityEdge,
 };
 
 const getLayoutedElements = (nodes: any[], edges: any[], direction = 'LR') => {
@@ -63,19 +128,89 @@ const getLayoutedElements = (nodes: any[], edges: any[], direction = 'LR') => {
 
 interface DatabaseSchemaProps {
     schema: any;
+    focusTable?: string;
+    compact?: boolean;
 }
 
-const DatabaseSchema: React.FC<DatabaseSchemaProps> = ({ schema }) => {
+const DatabaseSchema: React.FC<DatabaseSchemaProps> = ({ schema, focusTable, compact = false }) => {
     const { mode } = useColorMode();
+    const [showOnlyKeys, setShowOnlyKeys] = useState(false);
+    const [notationMode, setNotationMode] = useState<'chen' | 'crowsfoot'>('chen');
+    
+    const getNotationData = (isUnique: boolean) => {
+        if (notationMode === 'crowsfoot') {
+            return {
+                sourceLabel: '',
+                targetLabel: ''
+            };
+        }
+        return {
+            sourceLabel: '1',
+            targetLabel: isUnique ? '1' : ':n'
+        };
+    };
+
     const initialElements = useMemo(() => {
         if (!schema || !schema.tables) return { nodes: [], edges: [] };
 
-        const nodes: any[] = schema.tables.map((table: any) => ({
+        let tablesToRender = schema.tables;
+        
+        if (focusTable) {
+            const neighbors = new Set<string>();
+            neighbors.add(focusTable);
+
+            // Find direct neighbors (connected via foreign keys)
+            schema.tables.forEach((t: any) => {
+                if (t.constraints) {
+                    t.constraints.forEach((c: any) => {
+                        if (c.type === 'FOREIGN KEY') {
+                            if (t.name === focusTable && c.referenced_table) {
+                                neighbors.add(c.referenced_table);
+                            } else if (c.referenced_table === focusTable) {
+                                neighbors.add(t.name);
+                            }
+                        }
+                    });
+                }
+            });
+
+            // Also check relations if they exist (sometimes provided separately)
+            if (schema.relations) {
+                schema.relations.forEach((r: any) => {
+                    if (r.table === focusTable) {
+                        neighbors.add(r.parent_table);
+                    } else if (r.parent_table === focusTable) {
+                        neighbors.add(r.table);
+                    }
+                });
+            }
+
+            tablesToRender = schema.tables.filter((t: any) => neighbors.has(t.name));
+        }
+
+        const renderedTableNames = new Set(tablesToRender.map((t: any) => t.name));
+
+        const nodes: any[] = tablesToRender.map((table: any) => ({
             id: table.name,
             type: 'table',
             data: {
                 label: table.name,
-                columns: table.columns,
+                columns: compact 
+                    ? [] 
+                    : showOnlyKeys 
+                        ? (table.columns || []).filter((c: any) => {
+                            const isPKCol = c.primary_key || c.is_primary_key || c.isPrimaryKey || c.pk || c.constraints?.some((con: any) => con.type === 'PRIMARY KEY');
+                            const isFKCol = c.referenced_table || c.referencedTable || c.is_foreign_key || c.isForeignKey || c.fk || c.constraints?.some((con: any) => con.type === 'FOREIGN KEY');
+                            
+                            // Check table-level constraints too (crucial for composite keys)
+                            const isTablePK = table.constraints?.some((con: any) => con.type === 'PRIMARY KEY' && (con.columns?.includes(c.name) || con.column === c.name));
+                            const isTableFK = table.constraints?.some((con: any) => con.type === 'FOREIGN KEY' && (con.columns?.includes(c.name) || con.column === c.name));
+                            
+                            return !!(isPKCol || isFKCol || isTablePK || isTableFK);
+                        })
+                        : table.columns,
+                constraints: table.constraints,
+                compact
             },
             position: { x: 0, y: 0 },
         }));
@@ -84,30 +219,38 @@ const DatabaseSchema: React.FC<DatabaseSchemaProps> = ({ schema }) => {
         schema.tables.forEach((table: any) => {
             if (table.constraints) {
                 table.constraints.forEach((constraint: any) => {
-                    if (constraint.type === 'FOREIGN KEY' && constraint.referenced_table) {
+                    if (constraint.type === 'FOREIGN KEY' && 
+                        constraint.referenced_table && 
+                        renderedTableNames.has(table.name) && 
+                        renderedTableNames.has(constraint.referenced_table)) {
+                        const isUnique = table.constraints?.some((c: any) => 
+                            (c.type === 'UNIQUE' || c.type === 'PRIMARY KEY') && 
+                            (c.columns?.includes(constraint.column) || c.column === constraint.column)
+                        );
+
+                        const notationData = getNotationData(isUnique);
+                        const edgeColor = isUnique 
+                            ? (mode === 'dark' ? '#10b981' : '#059669')  // Emerald for 1:1
+                            : (mode === 'dark' ? '#f59e0b' : '#d97706'); // Amber for 1:N
+
                         edges.push({
                             id: `e-${table.name}-${constraint.referenced_table}`,
                             source: constraint.referenced_table,
                             target: table.name,
-                            animated: true,
-                            label: constraint.column || '',
-                            labelStyle: { 
-                                fill: 'rgba(255, 255, 255, 0.4)', 
-                                fontWeight: 900, 
-                                fontSize: 10,
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.1em'
+                            type: 'cardinality',
+                            animated: isUnique,
+                            reconnectable: true,
+                            data: {
+                                ...notationData,
+                                column: constraint.column,
+                                compact
                             },
-                            markerEnd: {
-                                type: MarkerType.ArrowClosed,
-                                width: 20,
-                                height: 20,
-                                color: mode === 'dark' ? '#94a3b8' : '#64748b', // Fallback to solid colors for markers
-                            },
+                            markerEnd: compact || notationMode !== 'crowsfoot' 
+                                ? { type: MarkerType.ArrowClosed, color: edgeColor }
+                                : (isUnique ? 'url(#marker-one)' : 'url(#marker-many)'),
                             style: { 
-                                stroke: mode === 'dark' ? '#94a3b8' : '#64748b',
-                                strokeWidth: 2,
-                                opacity: 0.8
+                                stroke: edgeColor,
+                                strokeWidth: isUnique ? 2.5 : 3.5,
                             },
                         });
                     }
@@ -115,19 +258,101 @@ const DatabaseSchema: React.FC<DatabaseSchemaProps> = ({ schema }) => {
             }
         });
 
-        return getLayoutedElements(nodes, edges);
-    }, [schema]);
+        // Add additional edges from relations if not already captured
+        if (schema.relations) {
+            schema.relations.forEach((r: any) => {
+                if (renderedTableNames.has(r.table) && renderedTableNames.has(r.parent_table)) {
+                    const edgeId = `r-${r.table}-${r.parent_table}`;
+                    if (!edges.some(e => e.source === r.parent_table && e.target === r.table)) {
+                    const notationData = getNotationData(r.cardinality === '1:1');
+                    const isUnique = r.cardinality === '1:1';
+                    const edgeColor = isUnique 
+                        ? (mode === 'dark' ? '#10b981' : '#059669') 
+                        : (mode === 'dark' ? '#f59e0b' : '#d97706');
 
-    const [nodes, , onNodesChange] = useNodesState(initialElements.nodes);
+                        edges.push({
+                            id: edgeId,
+                            source: r.parent_table,
+                            target: r.table,
+                            type: 'cardinality',
+                            animated: isUnique,
+                            reconnectable: true,
+                            data: {
+                                ...notationData,
+                                column: r.columns?.join(', '),
+                                compact
+                            },
+                            markerEnd: compact || notationMode !== 'crowsfoot' 
+                                ? { type: MarkerType.ArrowClosed, color: edgeColor }
+                                : (isUnique ? 'url(#marker-one)' : 'url(#marker-many)'),
+                            style: { 
+                                stroke: edgeColor,
+                                strokeWidth: isUnique ? 2.5 : 3.5,
+                            },
+                        });
+                    }
+                }
+            });
+        }
+
+        return getLayoutedElements(nodes, edges);
+    }, [schema, focusTable, mode, showOnlyKeys, notationMode, compact]);
+
+    const [nodes, setNodes, onNodesChange] = useNodesState(initialElements.nodes);
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialElements.edges);
+
+    useEffect(() => {
+        setNodes(initialElements.nodes);
+        setEdges(initialElements.edges);
+    }, [initialElements, setNodes, setEdges]);
 
     const onConnect = useCallback(
         (params: Connection) => setEdges((eds) => addEdge(params, eds)),
         [setEdges]
     );
 
+    const CrowFootDefs = () => (
+        <svg style={{ position: 'absolute', width: 0, height: 0 }}>
+            <defs>
+                <marker
+                    id="marker-one"
+                    viewBox="0 0 20 20"
+                    refX="18"
+                    refY="10"
+                    markerWidth="20"
+                    markerHeight="20"
+                    orient="auto"
+                >
+                    <path 
+                        d="M 10 4 L 10 16 M 15 4 L 15 16" 
+                        stroke={mode === 'dark' ? '#10b981' : '#059669'} 
+                        strokeWidth="3.5" 
+                        fill="none"
+                    />
+                </marker>
+                <marker
+                    id="marker-many"
+                    viewBox="0 0 20 20"
+                    refX="18"
+                    refY="10"
+                    markerWidth="20"
+                    markerHeight="20"
+                    orient="auto"
+                >
+                    <path
+                        d="M 2 4 L 18 10 L 2 16 M 18 4 L 18 16"
+                        fill="none"
+                        stroke={mode === 'dark' ? '#f59e0b' : '#d97706'}
+                        strokeWidth="2.5"
+                    />
+                </marker>
+            </defs>
+        </svg>
+    );
+
     return (
         <div className="w-full h-full bg-background/50 rounded-[2.5rem] border border-white/5 overflow-hidden shadow-2xl backdrop-blur-sm">
+            <CrowFootDefs />
             <ReactFlow
                 nodes={nodes}
                 edges={edges}
@@ -135,12 +360,55 @@ const DatabaseSchema: React.FC<DatabaseSchemaProps> = ({ schema }) => {
                 onEdgesChange={onEdgesChange}
                 onConnect={onConnect}
                 nodeTypes={nodeTypes}
+                edgeTypes={edgeTypes}
                 fitView
                 colorMode={mode as any}
                 defaultEdgeOptions={{
                     type: 'smoothstep',
                 }}
             >
+                <Panel position="top-left" className="mt-4 ml-4 flex flex-col gap-2">
+                    {!compact && (
+                        <button 
+                            onClick={() => setShowOnlyKeys(!showOnlyKeys)}
+                            className={cn(
+                                "flex items-center justify-center p-3 rounded-xl border-2 transition-all duration-300 shadow-2xl backdrop-blur-md group",
+                                showOnlyKeys 
+                                    ? "bg-blue-600 border-blue-600 text-white shadow-blue-500/20 scale-110" 
+                                    : "bg-card/90 border-white/10 text-muted-foreground hover:bg-card hover:border-white/20 hover:text-foreground"
+                            )}
+                            title={showOnlyKeys ? "Show all columns" : "Show only PK/FK columns"}
+                        >
+                            <Key className={cn("h-5 w-5 transition-transform duration-500", showOnlyKeys ? "rotate-12 scale-110" : "group-hover:rotate-12")} />
+                        </button>
+                    )}
+                    
+                    {!compact && (
+                        <button 
+                            onClick={() => {
+                                setNotationMode(notationMode === 'chen' ? 'crowsfoot' : 'chen');
+                            }}
+                            className={cn(
+                                "flex items-center justify-center p-3 rounded-xl border-2 transition-all duration-300 shadow-2xl backdrop-blur-md group",
+                                "bg-card/90 border-white/10 text-muted-foreground hover:bg-card hover:border-white/20 hover:text-foreground"
+                            )}
+                            title={notationMode === 'chen' ? "Switch to Crow's Foot Notation" : "Switch to Chen Notation"}
+                        >
+                            {notationMode === 'chen' ? (
+                                <div className="flex font-black text-xs items-center gap-0.5 scale-125 px-1 tracking-tighter">
+                                    <span className="text-primary italic">n</span>
+                                    <span>:</span>
+                                    <span className="text-muted-foreground">1</span>
+                                </div>
+                            ) : (
+                                <div className="flex font-black text-base items-center gap-0 tracking-[-4px] translate-x-1">
+                                    <span className="opacity-40 -translate-x-1">|</span>
+                                    <span className="text-primary translate-y-[1px] -translate-x-1">&lt;</span>
+                                </div>
+                            )}
+                        </button>
+                    )}
+                </Panel>
                 <Background 
                     color={mode === 'dark' ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.05)'} 
                     gap={40} 
@@ -152,8 +420,5 @@ const DatabaseSchema: React.FC<DatabaseSchemaProps> = ({ schema }) => {
         </div>
     );
 };
-
-// Import BackgroundVariant from ReactFlow if not already present
-import { BackgroundVariant } from '@xyflow/react';
 
 export default DatabaseSchema;

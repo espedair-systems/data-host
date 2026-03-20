@@ -16,7 +16,8 @@ import {
     Zap,
     Shield,
     Info,
-    Activity
+    Activity,
+    Network
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -374,9 +375,18 @@ const Entities: React.FC = () => {
                                     {tables.map((table) => (
                                         <TableRow key={`${table.schemaName}-${table.name}`} className="group hover:bg-primary/5 transition-colors border-slate-100 dark:border-slate-900">
                                             <TableCell className="px-8 py-5">
-                                                <div className="flex flex-col gap-1">
-                                                    <span className="font-black uppercase tracking-tight text-foreground/90 group-hover:text-primary transition-colors">{table.name}</span>
-                                                    <span className="text-[10px] text-muted-foreground/50 italic line-clamp-1 group-hover:text-muted-foreground/70">{table.description || 'No descriptive metadata synced'}</span>
+                                                <div className="flex items-center gap-3">
+                                                    <div className="flex flex-col gap-1 flex-1">
+                                                        <span className="font-black uppercase tracking-tight text-foreground/90 group-hover:text-primary transition-colors">{table.name}</span>
+                                                        <span className="text-[10px] text-muted-foreground/50 italic line-clamp-1 group-hover:text-muted-foreground/70">{table.description || 'No descriptive metadata synced'}</span>
+                                                    </div>
+                                                    <Link 
+                                                        to={`/platforms/test/erd1?table=${table.name}&schema=${table.schemaName}`}
+                                                        className="p-2 rounded-lg bg-primary/5 text-primary opacity-0 group-hover:opacity-100 hover:bg-primary/20 transition-all shadow-sm"
+                                                        title="View Focused ERD"
+                                                    >
+                                                        <Network className="h-4 w-4" />
+                                                    </Link>
                                                 </div>
                                             </TableCell>
                                             <TableCell>
