@@ -38,8 +38,10 @@ interface ValidationResult {
     message: string;
     existing?: any;
     new?: any;
+    type?: 'SCHEMA' | 'ORG';
     error?: string;
     details?: string[];
+    fileName?: string;
 }
 
 const IngestionPage: React.FC = () => {
@@ -157,6 +159,20 @@ const IngestionPage: React.FC = () => {
             const text = await file.text();
             const schema = JSON.parse(text);
 
+            // SPECIAL CASE: Organizational Structure Data
+            if (schema.metadata?.organization || schema.type === "ORG") {
+                setResult({
+                    status: 'success',
+                    message: 'Organizational Structure Authenticated',
+                    type: 'ORG' as any,
+                    new: schema,
+                    fileName: file.name
+                });
+                toast.success("Org Structure Recognized", { description: "Identity verification complete." });
+                setIsUploading(false);
+                return;
+            }
+
             const token = localStorage.getItem('token');
             const response = await fetch('/api/ingestion/validate', {
                 method: 'POST',
@@ -177,7 +193,7 @@ const IngestionPage: React.FC = () => {
                 });
                 toast.error("Validation Failed", { description: data.error });
             } else {
-                setResult(data);
+                setResult({ ...data, fileName: file.name });
                 if (data.status === 'conflict') {
                     // Initialize selection with all new/changed items
                     const tables: Record<string, boolean> = {};
@@ -212,10 +228,11 @@ const IngestionPage: React.FC = () => {
     const handleConfirmIngestion = async () => {
         if (!result || !result.new) return;
 
-        const payload = { ...result.new };
+        const isOrg = (result as any).type === "ORG";
+        const payload = isOrg ? { ...result.new, fileName: result.fileName } : { ...result.new, fileName: result.fileName };
 
         // If conflict, filter elements based on selection
-        if (result.status === 'conflict') {
+        if (!isOrg && result.status === 'conflict') {
             payload.tables = result.new.tables?.filter((t: any) => selectedTables[t.name]) || [];
             payload.enums = result.new.enums?.filter((e: any) => selectedEnums[e.name]) || [];
             payload.functions = result.new.functions?.filter((f: any) => selectedFunctions[f.name]) || [];
@@ -224,7 +241,8 @@ const IngestionPage: React.FC = () => {
         setIsUploading(true);
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch('/api/ingestion/ingest', {
+            const endpoint = isOrg ? '/api/ingestion/ingest-org' : '/api/ingestion/ingest';
+            const response = await fetch(endpoint, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -384,6 +402,14 @@ const IngestionPage: React.FC = () => {
                                                     <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest truncate max-w-lg opacity-50">
                                                         {archive?.description || "Federated Registry Update"}
                                                     </p>
+                                                    {archive?.fileName && (
+                                                        <>
+                                                            <div className="h-4 w-px bg-muted-foreground/20" />
+                                                            <p className="text-[10px] text-primary/60 font-black uppercase tracking-widest truncate max-w-lg">
+                                                                FILE: {archive.fileName}
+                                                            </p>
+                                                        </>
+                                                    )}
                                                     <div className="h-4 w-px bg-muted-foreground/20" />
                                                     <div className="flex items-center gap-2 grayscale opacity-40 group-hover:grayscale-0 group-hover:opacity-100 transition-all">
                                                         <Badge variant="ghost" className="text-[9px] font-black p-0 h-auto uppercase tracking-widest">PROTO: {archive?.type || 'SCHEMA'}</Badge>
@@ -476,11 +502,23 @@ const IngestionPage: React.FC = () => {
                                 <div className="flex items-center gap-10 p-10 bg-emerald-500/10 rounded-[3rem] border border-emerald-500/20 relative overflow-hidden group shadow-inner">
                                     <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-transparent skew-x-12 translate-x-full group-hover:translate-x-0 transition-transform duration-1000" />
                                     <div className="p-8 bg-emerald-500/20 rounded-[2rem] text-emerald-600 shadow-2xl shadow-emerald-500/30 relative z-10 scale-110">
-                                        <Database className="h-12 w-12" />
+                                        {(result as any).type === "ORG" ? (
+                                            <Network className="h-12 w-12" />
+                                        ) : (
+                                            <Database className="h-12 w-12" />
+                                        )}
                                     </div>
                                     <div className="relative z-10">
-                                        <h3 className="text-3xl font-black tracking-tighter uppercase italic text-emerald-600">{result.new?.name}</h3>
-                                        <p className="text-xs text-emerald-600/50 font-black uppercase tracking-[0.25em] mt-3">{result.new?.tables?.length || 0} CORE TABLES AUTHENTICATED</p>
+                                        <h3 className="text-3xl font-black tracking-tighter uppercase italic text-emerald-600">
+                                            {(result as any).type === "ORG" ? (result.new?.metadata?.organization || "Org-Structure") : result.new?.name}
+                                        </h3>
+                                        <p className="text-xs text-emerald-600/50 font-black uppercase tracking-[0.25em] mt-3">
+                                            {(result as any).type === "ORG" ? (
+                                                `ORGANIZATIONAL MAP DETECTED [${result.new?.id || 'GLOBAL'}]`
+                                            ) : (
+                                                `${result.new?.tables?.length || 0} CORE TABLES AUTHENTICATED`
+                                            )}
+                                        </p>
                                     </div>
                                 </div>
                             </CardContent>

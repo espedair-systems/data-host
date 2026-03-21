@@ -158,6 +158,8 @@ type DesignFile struct {
 type FileArchive struct {
 	ID          int64  `json:"id" example:"1"`
 	Name        string `json:"name" example:"accounting-v4.schema.json"`
+	FileName    string `json:"fileName,omitempty" example:"accounting-v4.schema.json"`
+	Path        string `json:"path,omitempty" example:"/home/user/schema.json"`
 	Type        string `json:"type" example:"schema"`
 	Description string `json:"description" example:"Final schema for account module"`
 	Hash        string `json:"hash" example:"sha256:..."`

@@ -1,0 +1,710 @@
+{
+  "metadata": {
+    "domain": "data-flow-diagram",
+    "version": "v2-dfd",
+    "level": "context",
+    "title": "InsureCorp Insurance System - Context Diagram",
+    "description": "System context showing external data integrations, regulatory compliance, and industry partnerships",
+    "generatedAt": "2026-03-21T00:00:00Z"
+  },
+  "elements": {
+    "nodes": [
+      {
+        "data": {
+          "id": "boundary_external",
+          "type": "boundary",
+          "name": "External Systems",
+          "boundaryType": "trust-boundary"
+        },
+        "classes": ["boundary"]
+      },
+      {
+        "data": {
+          "id": "boundary_regulatory",
+          "type": "boundary",
+          "name": "Regulatory",
+          "boundaryType": "trust-boundary"
+        },
+        "classes": ["boundary"]
+      },
+      {
+        "data": {
+          "id": "boundary_internal",
+          "type": "boundary",
+          "name": "InsureCorp Internal",
+          "boundaryType": "trust-boundary"
+        },
+        "classes": ["boundary"]
+      },
+      {
+        "data": {
+          "id": "insurecorp_system",
+          "type": "process",
+          "role": "system-of-interest",
+          "name": "InsureCorp Insurance Platform",
+          "number": "0",
+          "description": "Integrated insurance operations and analytics"
+        },
+        "classes": ["system"]
+      },
+      {
+        "data": {
+          "id": "ext_credit_bureaus",
+          "type": "external_entity",
+          "name": "Credit Bureaus",
+          "description": "TRW, Equifax, Experian",
+          "parent": "boundary_external"
+        }
+      },
+      {
+        "data": {
+          "id": "ext_mvr_providers",
+          "type": "external_entity",
+          "name": "MVR/Record Providers",
+          "description": "Motor Vehicle Records, Claims History",
+          "parent": "boundary_external"
+        }
+      },
+      {
+        "data": {
+          "id": "ext_market_data",
+          "type": "external_entity",
+          "name": "Market Data Providers",
+          "description": "Reinsurance, Economic, Currency, Rates, Credit Ratings",
+          "parent": "boundary_external"
+        }
+      },
+      {
+        "data": {
+          "id": "ext_weather_cat",
+          "type": "external_entity",
+          "name": "Weather & Catastrophe",
+          "description": "Weather forecasts, Catastrophe exposure",
+          "parent": "boundary_external"
+        }
+      },
+      {
+        "data": {
+          "id": "ext_demographics",
+          "type": "external_entity",
+          "name": "Demographics & Valuation",
+          "description": "Demographics, Property valuation, Competitor pricing",
+          "parent": "boundary_external"
+        }
+      },
+      {
+        "data": {
+          "id": "ext_compliance_lists",
+          "type": "external_entity",
+          "name": "Compliance Data",
+          "description": "Sanctions, PEP, AML lists",
+          "parent": "boundary_external"
+        }
+      },
+      {
+        "data": {
+          "id": "regulator_apra",
+          "type": "external_entity",
+          "name": "APRA Regulator",
+          "description": "Australian Prudential Regulation Authority",
+          "parent": "boundary_regulatory"
+        }
+      },
+      {
+        "data": {
+          "id": "ext_reinsurers",
+          "type": "external_entity",
+          "name": "Reinsurance Partners",
+          "description": "Treaty reinsurers, RI brokers",
+          "parent": "boundary_external"
+        }
+      },
+      {
+        "data": {
+          "id": "ext_brokers",
+          "type": "external_entity",
+          "name": "Insurance Brokers",
+          "description": "Intermediaries, distribution partners",
+          "parent": "boundary_external"
+        }
+      },
+      {
+        "data": {
+          "id": "ext_industry",
+          "type": "external_entity",
+          "name": "Industry Bodies",
+          "description": "Insurance Council, Catastrophe Claims Index",
+          "parent": "boundary_external"
+        }
+      },
+      {
+        "data": {
+          "id": "ext_government",
+          "type": "external_entity",
+          "name": "Government",
+          "description": "Disaster relief, community programs",
+          "parent": "boundary_external"
+        }
+      },
+      {
+        "data": {
+          "id": "ds_external_feeds",
+          "type": "data_store",
+          "name": "External Feeds Database",
+          "description": "Inbound: Credit, MVR, Market, Weather, Demographics, Compliance",
+          "parent": "boundary_internal",
+          "tables": 21,
+          "domain": "externals"
+        }
+      },
+      {
+        "data": {
+          "id": "ds_operational",
+          "type": "data_store",
+          "name": "Operational Database",
+          "description": "7 source systems: Actuarial, Claims, Policy, Pricing, Reinsurance, Risk, Underwriting",
+          "parent": "boundary_internal",
+          "tables": 140,
+          "domain": "SYSTEMS"
+        }
+      },
+      {
+        "data": {
+          "id": "ds_datalake",
+          "type": "data_store",
+          "name": "Data Lake & Vault",
+          "description": "Data Vault 2.0: 60 tables, Hub-Link-Satellite topology",
+          "parent": "boundary_internal",
+          "tables": 60,
+          "domain": "Data Vault"
+        }
+      },
+      {
+        "data": {
+          "id": "ds_analytics_star",
+          "type": "data_store",
+          "name": "Analytics Data Warehouse",
+          "description": "Star Schema: 16 dimensions, 7 facts, 3 aggregates (26 tables)",
+          "parent": "boundary_internal",
+          "tables": 26,
+          "domain": "Analytics"
+        }
+      },
+      {
+        "data": {
+          "id": "ds_analytics_snowflake",
+          "type": "data_store",
+          "name": "Cloud Data Warehouse",
+          "description": "Snowflake Schema: 13 reference, 17 dimensions, 7 facts (37 tables)",
+          "parent": "boundary_internal",
+          "tables": 37,
+          "domain": "Cloud Warehouse"
+        }
+      },
+      {
+        "data": {
+          "id": "ds_exchange_feeds",
+          "type": "data_store",
+          "name": "Outbound Exchange Database",
+          "description": "APRA (5), Reinsurance (3), Industry (4), Brokers (2), Government (2), Audit (2)",
+          "parent": "boundary_internal",
+          "tables": 18,
+          "domain": "exchange"
+        }
+      },
+      {
+        "data": {
+          "id": "process_uw",
+          "type": "process",
+          "name": "Underwriting Engine",
+          "number": "1.1",
+          "parent": "boundary_internal"
+        }
+      },
+      {
+        "data": {
+          "id": "process_claims",
+          "type": "process",
+          "name": "Claims Management",
+          "number": "1.2",
+          "parent": "boundary_internal"
+        }
+      },
+      {
+        "data": {
+          "id": "process_pricing",
+          "type": "process",
+          "name": "Actuarial Pricing",
+          "number": "1.3",
+          "parent": "boundary_internal"
+        }
+      },
+      {
+        "data": {
+          "id": "process_etl",
+          "type": "process",
+          "name": "ETL & Data Integration",
+          "number": "1.4",
+          "parent": "boundary_internal"
+        }
+      },
+      {
+        "data": {
+          "id": "process_reporting",
+          "type": "process",
+          "name": "Reporting & Analytics",
+          "number": "1.5",
+          "parent": "boundary_internal"
+        }
+      },
+      {
+        "data": {
+          "id": "process_compliance",
+          "type": "process",
+          "name": "Compliance & Regulatory",
+          "number": "1.6",
+          "parent": "boundary_internal"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "data": {
+          "id": "f1_credit",
+          "source": "ext_credit_bureaus",
+          "target": "insurecorp_system",
+          "type": "data_flow",
+          "label": "Credit Data",
+          "dataElements": [
+            "Credit scores",
+            "Payment history",
+            "Defaults"
+          ],
+          "classification": "confidential",
+          "protocol": "SFTP/API",
+          "frequency": "daily"
+        }
+      },
+      {
+        "data": {
+          "id": "f2_mvr",
+          "source": "ext_mvr_providers",
+          "target": "insurecorp_system",
+          "type": "data_flow",
+          "label": "MVR/Claims History",
+          "dataElements": [
+            "Driving records",
+            "Claims history",
+            "Violations"
+          ],
+          "classification": "confidential",
+          "protocol": "SFTP/API",
+          "frequency": "daily"
+        }
+      },
+      {
+        "data": {
+          "id": "f3_market",
+          "source": "ext_market_data",
+          "target": "insurecorp_system",
+          "type": "data_flow",
+          "label": "Market Data",
+          "dataElements": [
+            "Rates",
+            "Indices",
+            "Economic data"
+          ],
+          "classification": "internal",
+          "protocol": "API",
+          "frequency": "hourly"
+        }
+      },
+      {
+        "data": {
+          "id": "f4_weather",
+          "source": "ext_weather_cat",
+          "target": "insurecorp_system",
+          "type": "data_flow",
+          "label": "Weather & CAT",
+          "dataElements": [
+            "Forecasts",
+            "Catastrophe exposure"
+          ],
+          "classification": "internal",
+          "protocol": "API",
+          "frequency": "6-hourly"
+        }
+      },
+      {
+        "data": {
+          "id": "f5_demographics",
+          "source": "ext_demographics",
+          "target": "insurecorp_system",
+          "type": "data_flow",
+          "label": "Demographics",
+          "dataElements": [
+            "Population data",
+            "Property values",
+            "Pricing",
+            "Competitors"
+          ],
+          "classification": "internal",
+          "protocol": "SFTP",
+          "frequency": "weekly"
+        }
+      },
+      {
+        "data": {
+          "id": "f6_compliance",
+          "source": "ext_compliance_lists",
+          "target": "insurecorp_system",
+          "type": "data_flow",
+          "label": "AML/Compliance",
+          "dataElements": [
+            "Sanctions lists",
+            "PEP matches",
+            "AML alerts"
+          ],
+          "classification": "restricted",
+          "protocol": "Secure API",
+          "frequency": "real-time"
+        }
+      },
+      {
+        "data": {
+          "id": "f7_apra_inbound",
+          "source": "regulator_apra",
+          "target": "insurecorp_system",
+          "type": "data_flow",
+          "label": "Regulatory Submissions",
+          "dataElements": [
+            "Requirements",
+            "Changes"
+          ],
+          "classification": "restricted",
+          "protocol": "HTTPS",
+          "frequency": "ad-hoc"
+        }
+      },
+      {
+        "data": {
+          "id": "f8_apra_outbound",
+          "source": "insurecorp_system",
+          "target": "regulator_apra",
+          "type": "data_flow",
+          "label": "APRA Reporting",
+          "dataElements": [
+            "ARF",
+            "Solvency",
+            "Prudential",
+            "Portfolio",
+            "Incidents"
+          ],
+          "classification": "restricted",
+          "protocol": "SFTP",
+          "frequency": "monthly/quarterly/annual"
+        }
+      },
+      {
+        "data": {
+          "id": "f9_reinsurance_out",
+          "source": "insurecorp_system",
+          "target": "ext_reinsurers",
+          "type": "data_flow",
+          "label": "Reinsurance Feeds",
+          "dataElements": [
+            "Placements",
+            "Performance",
+            "Cat losses"
+          ],
+          "classification": "confidential",
+          "protocol": "API/SFTP",
+          "frequency": "ad-hoc/monthly"
+        }
+      },
+      {
+        "data": {
+          "id": "f10_brokers",
+          "source": "insurecorp_system",
+          "target": "ext_brokers",
+          "type": "data_flow",
+          "label": "Broker/Partner Feeds",
+          "dataElements": [
+            "Production data",
+            "Policy data"
+          ],
+          "classification": "internal",
+          "protocol": "API",
+          "frequency": "daily"
+        }
+      },
+      {
+        "data": {
+          "id": "f11_industry",
+          "source": "insurecorp_system",
+          "target": "ext_industry",
+          "type": "data_flow",
+          "label": "Industry Reporting",
+          "dataElements": [
+            "Claims data",
+            "Pricing",
+            "Statistics"
+          ],
+          "classification": "internal",
+          "protocol": "SFTP",
+          "frequency": "monthly/quarterly"
+        }
+      },
+      {
+        "data": {
+          "id": "f12_government",
+          "source": "insurecorp_system",
+          "target": "ext_government",
+          "type": "data_flow",
+          "label": "Govt Programs",
+          "dataElements": [
+            "Disaster claims",
+            "Community data"
+          ],
+          "classification": "public",
+          "protocol": "API/SFTP",
+          "frequency": "ad-hoc"
+        }
+      },
+      {
+        "data": {
+          "id": "f13_external_store",
+          "source": "ext_credit_bureaus",
+          "target": "ds_external_feeds",
+          "type": "data_flow",
+          "label": "(via system)",
+          "dataElements": ["External feeds"],
+          "classification": "confidential"
+        }
+      },
+      {
+        "data": {
+          "id": "f14_operational",
+          "source": "process_uw",
+          "target": "ds_operational",
+          "type": "data_flow",
+          "label": "Transactional",
+          "dataElements": ["Policies", "Claims", "Pricing"],
+          "classification": "confidential"
+        }
+      },
+      {
+        "data": {
+          "id": "f15_etl_to_external",
+          "source": "process_etl",
+          "target": "ds_external_feeds",
+          "type": "data_flow",
+          "label": "Load",
+          "dataElements": ["External feeds"],
+          "classification": "confidential"
+        }
+      },
+      {
+        "data": {
+          "id": "f16_etl_to_vault",
+          "source": "ds_operational",
+          "target": "process_etl",
+          "type": "data_flow",
+          "label": "Extract",
+          "dataElements": ["System data"],
+          "classification": "confidential"
+        }
+      },
+      {
+        "data": {
+          "id": "f17_vault_load",
+          "source": "process_etl",
+          "target": "ds_datalake",
+          "type": "data_flow",
+          "label": "Load",
+          "dataElements": ["Hub-Link-Sat"],
+          "classification": "confidential"
+        }
+      },
+      {
+        "data": {
+          "id": "f18_vault_to_star",
+          "source": "ds_datalake",
+          "target": "process_etl",
+          "type": "data_flow",
+          "label": "Transform",
+          "dataElements": ["Hub-Link-Sat"],
+          "classification": "confidential"
+        }
+      },
+      {
+        "data": {
+          "id": "f19_star_load",
+          "source": "process_etl",
+          "target": "ds_analytics_star",
+          "type": "data_flow",
+          "label": "Load",
+          "dataElements": ["Dimensions", "Facts"],
+          "classification": "confidential"
+        }
+      },
+      {
+        "data": {
+          "id": "f20_snowflake_load",
+          "source": "process_etl",
+          "target": "ds_analytics_snowflake",
+          "type": "data_flow",
+          "label": "Load",
+          "dataElements": ["Normalized dimensions", "Facts"],
+          "classification": "confidential"
+        }
+      },
+      {
+        "data": {
+          "id": "f21_reporting",
+          "source": "ds_analytics_star",
+          "target": "process_reporting",
+          "type": "data_flow",
+          "label": "Query",
+          "dataElements": ["Dimensions", "Facts"],
+          "classification": "confidential"
+        }
+      },
+      {
+        "data": {
+          "id": "f22_compliance_vault",
+          "source": "ds_datalake",
+          "target": "process_compliance",
+          "type": "data_flow",
+          "label": "Audit data",
+          "dataElements": ["Change records", "Lineage"],
+          "classification": "restricted"
+        }
+      },
+      {
+        "data": {
+          "id": "f23_compliance_exchange",
+          "source": "process_compliance",
+          "target": "ds_exchange_feeds",
+          "type": "data_flow",
+          "label": "Prepare",
+          "dataElements": ["APRA", "Regulatory"],
+          "classification": "restricted"
+        }
+      },
+      {
+        "data": {
+          "id": "f24_pricing_uw",
+          "source": "process_pricing",
+          "target": "process_uw",
+          "type": "data_flow",
+          "label": "Rate cards",
+          "dataElements": ["Rates", "Factors"],
+          "classification": "confidential"
+        }
+      },
+      {
+        "data": {
+          "id": "f25_claims_uw",
+          "source": "process_claims",
+          "target": "process_uw",
+          "type": "data_flow",
+          "label": "Claims history",
+          "dataElements": ["History", "Patterns"],
+          "classification": "confidential"
+        }
+      },
+      {
+        "data": {
+          "id": "f26_external_to_uw",
+          "source": "ds_external_feeds",
+          "target": "process_uw",
+          "type": "data_flow",
+          "label": "Risk data",
+          "dataElements": ["Credit", "MVR", "Weather"],
+          "classification": "confidential"
+        }
+      }
+    ]
+  },
+  "style": [
+    {
+      "selector": "node[type='process'][role='system-of-interest']",
+      "style": {
+        "shape": "ellipse",
+        "background-color": "#1f77b4",
+        "label": "data(name)",
+        "color": "#fff",
+        "font-weight": "bold",
+        "font-size": 14,
+        "border-width": 4,
+        "border-color": "#0d3a66"
+      }
+    },
+    {
+      "selector": "node[type='process']",
+      "style": {
+        "shape": "ellipse",
+        "background-color": "#ff7f0e",
+        "label": "data(name)",
+        "color": "#fff",
+        "font-weight": "bold",
+        "font-size": 11
+      }
+    },
+    {
+      "selector": "node[type='external_entity']",
+      "style": {
+        "shape": "round-rectangle",
+        "background-color": "#2ca02c",
+        "label": "data(name)",
+        "color": "#fff",
+        "font-size": 10,
+        "text-valign": "center"
+      }
+    },
+    {
+      "selector": "node[type='data_store']",
+      "style": {
+        "shape": "rectangle",
+        "background-color": "#d62728",
+        "label": "data(name)",
+        "color": "#fff",
+        "font-weight": "bold",
+        "font-size": 10
+      }
+    },
+    {
+      "selector": "node[type='boundary']",
+      "style": {
+        "shape": "round-rectangle",
+        "background-opacity": 0,
+        "border-width": 2,
+        "border-color": "#999",
+        "border-style": "dashed",
+        "label": "data(name)",
+        "font-size": 10,
+        "color": "#666",
+        "text-halign": "left"
+      }
+    },
+    {
+      "selector": "edge[type='data_flow']",
+      "style": {
+        "curve-style": "bezier",
+        "line-color": "#444",
+        "target-arrow-shape": "triangle",
+        "target-arrow-color": "#444",
+        "label": "data(label)",
+        "font-size": 8,
+        "text-background-opacity": 0.8,
+        "text-background-color": "#fff",
+        "text-background-padding": 2
+      }
+    }
+  ],
+  "layout": {
+    "name": "hierarchical",
+    "rankDir": "LR"
+  }
+}

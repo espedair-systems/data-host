@@ -77,12 +77,19 @@ func (a *GinAdapter) Start(config domain.HostConfig, repo ports.RegistryReposito
 	r.Use(NewRateLimiterMiddleware(config))
 
 	// 3. CORS Support (Configurable)
-	r.Use(cors.New(cors.Config{
-		AllowOrigins:     config.CORSAllowOrigins,
+	corsConfig := cors.Config{
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
 		AllowHeaders:     []string{"Accept", "Authorization", "Content-Type"},
 		AllowCredentials: true,
-	}))
+	}
+
+	if len(config.CORSAllowOrigins) > 0 {
+		corsConfig.AllowOrigins = config.CORSAllowOrigins
+	} else {
+		// Fallback for development: allow all origins
+		corsConfig.AllowAllOrigins = true
+	}
+	r.Use(cors.New(corsConfig))
 
 	// Swagger UI
 	r.GET("/swagger", func(c *gin.Context) {
@@ -140,6 +147,8 @@ func (a *GinAdapter) Start(config domain.HostConfig, repo ports.RegistryReposito
 		{
 			ingestion.POST("/validate", a.ValidateSchema)
 			ingestion.POST("/ingest", auth.RequireRole(domain.RoleAdmin), a.IngestSchema)
+			ingestion.POST("/full", auth.RequireRole(domain.RoleAdmin), a.IngestSchema)
+			ingestion.POST("/ingest-org", auth.RequireRole(domain.RoleAdmin), a.IngestOrg)
 			ingestion.GET("/archives", a.GetFileArchives)
 			ingestion.DELETE("/archives/:id", auth.RequireRole(domain.RoleAdmin), a.DeleteFileArchive)
 			ingestion.POST("/ingest-to-local-folder", auth.RequireRole(domain.RoleAdmin), a.IngestToFolder)
@@ -342,6 +351,27 @@ func (a *GinAdapter) RequestTrackerMiddleware() gin.HandlerFunc {
 		default:
 		}
 	}
+}
+func (a *GinAdapter) SaveOrgStructure(c *gin.Context) {
+	log.Info().Msg("Received request to save organizational structure")
+	var payload interface{}
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		log.Error().Err(err).Msg("Invalid org structure payload")
+		c.JSON(400, domain.AppResponse{OK: false, Text: "invalid payload: " + err.Error()})
+		return
+	}
+
+	// Persist to repository
+	if err := a.repo.SaveOrgStructure(payload); err != nil {
+		log.Error().Err(err).Msg("Failed to save org structure to repository")
+		c.JSON(500, domain.AppResponse{OK: false, Text: "failed to save to repository: " + err.Error()})
+		return
+	}
+
+	// Audit logging (simulated via standard logger for now)
+	log.Info().Interface("payload_preview", payload).Msg("ORGANIZATION_STRUCTURE_UPDATED")
+
+	c.JSON(200, domain.AppResponse{OK: true, Text: "organizational structure saved successfully"})
 }
 func (a *GinAdapter) GenerateAsset(c *gin.Context) {
 	asset := c.Param("asset")

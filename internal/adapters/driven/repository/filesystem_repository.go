@@ -726,8 +726,20 @@ func buildFilteredTree(root string, filterData bool) ([]domain.SchemaNode, error
 
 				hasData := false
 				if filterData {
-					if _, err := os.Stat(filepath.Join(nodeFullPath, "schema.json")); err == nil {
+					schemaPath := filepath.Join(nodeFullPath, "schema.json")
+					if _, err := os.Stat(schemaPath); err == nil {
 						hasData = true
+						// NEW: Read tables and add as virtual children
+						if tables, err := readTablesFromSchema(schemaPath); err == nil {
+							for _, t := range tables {
+								children = append(children, domain.SchemaNode{
+									Name:    t,
+									Path:    filepath.Join(nodeRelPath, t),
+									IsDir:   false,
+									HasData: true,
+								})
+							}
+						}
 					} else if _, err := os.Stat(filepath.Join(nodeFullPath, "collection.json")); err == nil {
 						hasData = true
 					}
@@ -992,4 +1004,40 @@ func writeJSON(path string, val interface{}) error {
 		return err
 	}
 	return os.WriteFile(path, data, 0644)
+}
+func readTablesFromSchema(filePath string) ([]string, error) {
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return nil, err
+	}
+
+	var schema domain.FileSchema
+	if err := json.Unmarshal(data, &schema); err != nil {
+		return nil, err
+	}
+
+	var tables []string
+	for _, t := range schema.Tables {
+		tables = append(tables, t.Name)
+	}
+	return tables, nil
+}
+
+func (r *FilesystemRepository) SaveOrgStructure(payload interface{}) error {
+	log.Info().Msg("Saving organizational structure to filesystem")
+	data, err := json.MarshalIndent(payload, "", "  ")
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to marshal org structure")
+		return err
+	}
+
+	path := filepath.Join(r.getProjectRoot(), "system-organization.json")
+	err = os.WriteFile(path, data, 0644)
+	if err != nil {
+		log.Error().Err(err).Str("path", path).Msg("Failed to write org structure to file")
+		return err
+	}
+
+	log.Info().Str("path", path).Msg("successfully saved org structure")
+	return nil
 }

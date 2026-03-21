@@ -404,57 +404,88 @@ func (a *GinAdapter) GetSelection(c *gin.Context) {
 // @Failure 400 {object} map[string]interface{}
 // @Router /ingestion/validate [post]
 func (a *GinAdapter) ValidateSchema(c *gin.Context) {
-	var newSchema domain.FileSchema
-	if err := c.ShouldBindJSON(&newSchema); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON format: " + err.Error()})
+	// Read raw body to detect type before binding
+	body, err := c.GetRawData()
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to read request body"})
 		return
+	}
+
+	var rawData map[string]interface{}
+	if err := json.Unmarshal(body, &rawData); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Malformed JSON format: " + err.Error()})
+		return
+	}
+
+	// Detect type
+	isOrg := false
+	if _, ok := rawData["elements"]; ok {
+		isOrg = true
+	}
+
+	schemaPath := "schema/services.schema.json"
+	detectedType := "DB_SCHEMA"
+	if isOrg {
+		schemaPath = "schema/org-schema-raw.json"
+		detectedType = "ORG_STRUCTURE"
 	}
 
 	// 1. JSON Schema Validation from embedded FS
-	masterData, err := artifacts.Content.ReadFile("schema/services.schema.json")
+	masterData, err := artifacts.Content.ReadFile(schemaPath)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to read embedded master schema"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to read master schema"})
 		return
 	}
 	schemaLoader := gojsonschema.NewBytesLoader(masterData)
-	documentLoader := gojsonschema.NewGoLoader(newSchema)
+	documentLoader := gojsonschema.NewBytesLoader(body)
 
-	result, err := gojsonschema.Validate(schemaLoader, documentLoader)
+	resultValidate, err := gojsonschema.Validate(schemaLoader, documentLoader)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Validation system error: " + err.Error()})
 		return
 	}
 
-	if !result.Valid() {
+	if !resultValidate.Valid() {
 		var errors []string
-		for _, desc := range result.Errors() {
+		for _, desc := range resultValidate.Errors() {
 			errors = append(errors, desc.String())
 		}
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Schema validation failed", "details": errors})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Validation failed", "details": errors})
 		return
 	}
 
-	// 2. Check existence and build diff preview
-	existing, err := a.repo.GetFullSchema(newSchema.Name)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error: " + err.Error()})
-		return
-	}
+	// 2. Further processing for DB schemas (diff preview)
+	if !isOrg {
+		var newSchema domain.FileSchema
+		_ = json.Unmarshal(body, &newSchema)
 
-	if existing != nil {
+		existing, err := a.repo.GetFullSchema(newSchema.Name)
+		if err == nil && existing != nil {
+			c.JSON(http.StatusOK, gin.H{
+				"status":        "conflict",
+				"detected_type": detectedType,
+				"message":       "Schema already exists. Review differences below.",
+				"existing":      existing,
+				"new":           newSchema,
+			})
+			return
+		}
+
 		c.JSON(http.StatusOK, gin.H{
-			"status":   "conflict",
-			"message":  "Schema already exists. Review differences below.",
-			"existing": existing,
-			"new":      newSchema,
+			"status":        "success",
+			"detected_type": detectedType,
+			"message":       "Schema is valid and ready for ingestion.",
+			"new":           newSchema,
 		})
 		return
 	}
 
+	// For ORG structure
 	c.JSON(http.StatusOK, gin.H{
-		"status":  "success",
-		"message": "Schema is valid and ready for ingestion.",
-		"new":     newSchema,
+		"status":        "success",
+		"detected_type": detectedType,
+		"message":       "Organizational structure is valid.",
+		"new":           rawData,
 	})
 }
 
@@ -469,56 +500,203 @@ func (a *GinAdapter) ValidateSchema(c *gin.Context) {
 // @Failure 500 {object} map[string]interface{}
 // @Router /ingestion/ingest [post]
 func (a *GinAdapter) IngestSchema(c *gin.Context) {
+	// Read raw body to detect type
+	body, err := c.GetRawData()
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to read request body"})
+		return
+	}
+
+	var rawData map[string]interface{}
+	json.Unmarshal(body, &rawData)
+
+	// Detect type
+	isOrg := false
+	if _, ok := rawData["elements"]; ok {
+		isOrg = true
+	}
+
 	var schema domain.FileSchema
-	if err := c.ShouldBindJSON(&schema); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
-		return
-	}
+	ingestType := "schema"
+	name := "data-host"
+	desc := ""
 
-	if len(schema.Tables) == 0 {
-		if schema.Name == "" {
-			schema.Name = "data-host"
+	if isOrg {
+		ingestType = "org"
+		name = "org-structure"
+		desc = "Organizational Structure Data"
+
+		// Extract name from metadata if present
+		if m, ok := rawData["metadata"].(map[string]interface{}); ok {
+			if title, ok := m["title"].(string); ok {
+				name = title
+			} else if dom, ok := m["domain"].(string); ok {
+				name = dom
+			}
+			if description, ok := m["description"].(string); ok {
+				desc = description
+			}
 		}
-		extracted, err := a.repo.ExtractDatabaseSchema(schema.Name, schema.Desc)
-		if err == nil && extracted != nil {
-			schema = *extracted
+
+		// Save the organizational structure to the database tables
+		if err := a.repo.SaveOrgStructure(rawData); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save organization structure: " + err.Error()})
+			return
 		}
+	} else {
+		if err := json.Unmarshal(body, &schema); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid schema format"})
+			return
+		}
+
+		if len(schema.Tables) == 0 {
+			if schema.Name == "" {
+				if schema.FileName != "" {
+					tname := strings.TrimSuffix(schema.FileName, filepath.Ext(schema.FileName))
+					schema.Name = tname
+				} else {
+					schema.Name = "data-host"
+				}
+			}
+			extracted, err := a.repo.ExtractDatabaseSchema(schema.Name, schema.Desc)
+			if err == nil && extracted != nil {
+				schema = *extracted
+			}
+		}
+
+		if err := a.repo.SaveFullSchema(schema); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save schema: " + err.Error()})
+			return
+		}
+		name = schema.Name
+		desc = schema.Desc
 	}
 
-	if err := a.repo.SaveFullSchema(schema); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save schema: " + err.Error()})
-		return
-	}
-
-	// JSON formatting for storage
-	jsonBytes, _ := json.Marshal(schema)
+	// Calculate Hash
 	hasher := sha256.New()
-	hasher.Write(jsonBytes)
+	hasher.Write(body)
 	fileHash := hex.EncodeToString(hasher.Sum(nil))
 
-	// 1. Record in file_archive (Database)
+	// 1. Archive to filesystem if path is configured
+	var fileName, filePath string
+	if a.config.ArchivePath != "" {
+		archiveDir := a.config.ArchivePath
+		if err := os.MkdirAll(archiveDir, 0755); err == nil {
+			ts := time.Now().Unix()
+			if isOrg {
+				fileName = fmt.Sprintf("%s_%d.org.json", name, ts)
+			} else {
+				if schema.FileName != "" {
+					fileName = fmt.Sprintf("%d_%s", ts, schema.FileName)
+				} else {
+					fileName = fmt.Sprintf("%s_%d.schema.json", schema.Name, ts)
+				}
+			}
+			filePath = filepath.Join(archiveDir, fileName)
+			_ = os.WriteFile(filePath, body, 0644)
+			log.Info().Str("path", filePath).Msg("file archived to filesystem")
+		}
+	}
+
+	// 2. Record in file_archive (Database)
 	_ = a.repo.SaveFileArchive(domain.FileArchive{
-		Name:        schema.Name,
-		Type:        "schema",
-		Description: schema.Desc,
+		Name:        name,
+		FileName:    fileName,
+		Path:        filePath,
+		Type:        ingestType,
+		Description: desc,
 		Hash:        fileHash,
 		Status:      "synced",
 	})
 
-	// 2. Archive to filesystem if path is configured
+	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "File ingested successfully"})
+}
+
+// IngestOrg performs ingestion for organizational structure data
+// @Summary Ingest organizational structure
+// @Description Saves the organization structure JSON to the archive
+// @Tags Ingestion
+// @Accept json
+// @Produce json
+// @Param data body interface{} true "Org structure data"
+// @Success 200 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /ingestion/ingest-org [post]
+func (a *GinAdapter) IngestOrg(c *gin.Context) {
+	var payload interface{}
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON format: " + err.Error()})
+		return
+	}
+
+	// Extract name from metadata if present
+	name := "org-structure"
+	desc := "Organizational Structure Data"
+
+	if m, ok := payload.(map[string]interface{}); ok {
+		if meta, ok := m["metadata"].(map[string]interface{}); ok {
+			if title, ok := meta["title"].(string); ok {
+				name = title
+			} else if dom, ok := meta["domain"].(string); ok {
+				name = dom
+			}
+			if organization, ok := meta["organization"].(string); ok {
+				name = organization
+			}
+			if description, ok := meta["description"].(string); ok {
+				desc = description
+			}
+		}
+		if fname, ok := m["fileName"].(string); ok {
+			name = strings.TrimSuffix(fname, filepath.Ext(fname))
+		}
+	}
+
+	// Save the organizational structure to the database tables
+	if err := a.repo.SaveOrgStructure(payload); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save organization structure: " + err.Error()})
+		return
+	}
+
+	// JSON formatting for storage
+	jsonBytes, _ := json.Marshal(payload)
+	hasher := sha256.New()
+	hasher.Write(jsonBytes)
+	fileHash := hex.EncodeToString(hasher.Sum(nil))
+
+	// 1. Archive to filesystem if path is configured
+	var fileName, filePath string
 	if a.config.ArchivePath != "" {
 		archiveDir := a.config.ArchivePath
 		if err := os.MkdirAll(archiveDir, 0755); err == nil {
-			fileName := fmt.Sprintf("%s_%d.schema.json", schema.Name, time.Now().Unix())
-			filePath := filepath.Join(archiveDir, fileName)
-			if raw, err := json.MarshalIndent(schema, "", "  "); err == nil {
+			if m, ok := payload.(map[string]interface{}); ok {
+				if fname, ok := m["fileName"].(string); ok {
+					fileName = fmt.Sprintf("%d_%s", time.Now().Unix(), fname)
+				}
+			}
+			if fileName == "" {
+				fileName = fmt.Sprintf("%s_%d.org.json", name, time.Now().Unix())
+			}
+			filePath = filepath.Join(archiveDir, fileName)
+			if raw, err := json.MarshalIndent(payload, "", "  "); err == nil {
 				_ = os.WriteFile(filePath, raw, 0644)
-				log.Info().Str("path", filePath).Msg("schema archived to filesystem")
+				log.Info().Str("path", filePath).Msg("org structure archived to filesystem")
 			}
 		}
 	}
 
-	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "Schema ingested successfully"})
+	// 2. Record in file_archive (Database)
+	_ = a.repo.SaveFileArchive(domain.FileArchive{
+		Name:        name,
+		FileName:    fileName,
+		Path:        filePath,
+		Type:        "ORG",
+		Description: desc,
+		Hash:        fileHash,
+		Status:      "synced",
+	})
+
+	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "Org structure ingested successfully"})
 }
 
 // GetFileArchives godoc

@@ -1,0 +1,1417 @@
+{
+  "metadata": {
+    "domain": "org-structure",
+    "version": "v2-org",
+    "title": "Insurance Company Organizational Structure",
+    "description": "Complete organizational hierarchy for InsureCorp Ltd., including divisions, departments, teams, positions, and people.",
+    "rootUnitId": "OU_InsureCorp",
+    "generatedAt": "2026-03-21T00:00:00Z"
+  },
+  "elements": {
+    "nodes": [
+      {
+        "data": {
+          "id": "OU_InsureCorp",
+          "type": "org_unit",
+          "name": "InsureCorp Ltd",
+          "unitType": "company",
+          "description": "Australian insurance company — life, health, general insurance"
+        }
+      },
+      {
+        "data": {
+          "id": "OU_Underwriting",
+          "type": "org_unit",
+          "name": "Underwriting",
+          "unitType": "division",
+          "description": "Policy underwriting and risk selection"
+        }
+      },
+      {
+        "data": {
+          "id": "OU_UW_Life",
+          "type": "org_unit",
+          "name": "Life & IP",
+          "unitType": "department",
+          "description": "Life insurance and income protection underwriting"
+        }
+      },
+      {
+        "data": {
+          "id": "OU_UW_General",
+          "type": "org_unit",
+          "name": "General Insurance",
+          "unitType": "department",
+          "description": "Motor, Home, Travel, Pet insurance underwriting"
+        }
+      },
+      {
+        "data": {
+          "id": "OU_UW_Life_Team",
+          "type": "org_unit",
+          "name": "Life Underwriting Team",
+          "unitType": "team",
+          "description": "Senior underwriters — life risk assessment"
+        }
+      },
+      {
+        "data": {
+          "id": "OU_UW_IP_Team",
+          "type": "org_unit",
+          "name": "Income Protection Team",
+          "unitType": "team",
+          "description": "IP underwriting and occupational assessment"
+        }
+      },
+      {
+        "data": {
+          "id": "OU_UW_Motor_Team",
+          "type": "org_unit",
+          "name": "Motor Insurance Team",
+          "unitType": "team",
+          "description": "Auto/motor vehicle underwriting"
+        }
+      },
+      {
+        "data": {
+          "id": "OU_UW_Home_Team",
+          "type": "org_unit",
+          "name": "Home & Property Team",
+          "unitType": "team",
+          "description": "Home and landlord insurance underwriting"
+        }
+      },
+      {
+        "data": {
+          "id": "OU_UW_Specialty",
+          "type": "org_unit",
+          "name": "Specialty & Commercial",
+          "unitType": "team",
+          "description": "Commercial and specialty insurance underwriting"
+        }
+      },
+      {
+        "data": {
+          "id": "OU_Claims",
+          "type": "org_unit",
+          "name": "Claims",
+          "unitType": "division",
+          "description": "Claims management and settlement"
+        }
+      },
+      {
+        "data": {
+          "id": "OU_Claims_Life",
+          "type": "org_unit",
+          "name": "Life Claims",
+          "unitType": "department",
+          "description": "Life insurance claims processing"
+        }
+      },
+      {
+        "data": {
+          "id": "OU_Claims_General",
+          "type": "org_unit",
+          "name": "General Claims",
+          "unitType": "department",
+          "description": "Non-life insurance claims"
+        }
+      },
+      {
+        "data": {
+          "id": "OU_Claims_Life_Team",
+          "type": "org_unit",
+          "name": "Life Claims Assessment",
+          "unitType": "team",
+          "description": "Death, TPD, and critical illness claims"
+        }
+      },
+      {
+        "data": {
+          "id": "OU_Claims_IP_Team",
+          "type": "org_unit",
+          "name": "Income Protection Claims",
+          "unitType": "team",
+          "description": "IP claim assessment and management"
+        }
+      },
+      {
+        "data": {
+          "id": "OU_Claims_Motor_Team",
+          "type": "org_unit",
+          "name": "Motor Claims",
+          "unitType": "team",
+          "description": "Motor vehicle accident claims"
+        }
+      },
+      {
+        "data": {
+          "id": "OU_Claims_Home_Team",
+          "type": "org_unit",
+          "name": "Home Claims",
+          "unitType": "team",
+          "description": "Home and property claims"
+        }
+      },
+      {
+        "data": {
+          "id": "OU_Claims_Fraud",
+          "type": "org_unit",
+          "name": "Fraud & Investigations",
+          "unitType": "team",
+          "description": "Claims fraud detection and investigation"
+        }
+      },
+      {
+        "data": {
+          "id": "OU_Operations",
+          "type": "org_unit",
+          "name": "Operations",
+          "unitType": "division",
+          "description": "Customer service, administration, distribution"
+        }
+      },
+      {
+        "data": {
+          "id": "OU_Ops_Customer",
+          "type": "org_unit",
+          "name": "Customer Operations",
+          "unitType": "department",
+          "description": "Contact center and customer support"
+        }
+      },
+      {
+        "data": {
+          "id": "OU_Ops_Admin",
+          "type": "org_unit",
+          "name": "Administrative Services",
+          "unitType": "department",
+          "description": "Policy administration and processing"
+        }
+      },
+      {
+        "data": {
+          "id": "OU_Ops_Digital",
+          "type": "org_unit",
+          "name": "Digital & Distribution",
+          "unitType": "department",
+          "description": "Online platforms, brokers, partnerships"
+        }
+      },
+      {
+        "data": {
+          "id": "OU_Finance",
+          "type": "org_unit",
+          "name": "Finance & Treasury",
+          "unitType": "division",
+          "description": "Financial management, accounting, investments"
+        }
+      },
+      {
+        "data": {
+          "id": "OU_Fin_Accounting",
+          "type": "org_unit",
+          "name": "Accounting & Reporting",
+          "unitType": "department",
+          "description": "General ledger, APRA reporting, audit"
+        }
+      },
+      {
+        "data": {
+          "id": "OU_Fin_Treasury",
+          "type": "org_unit",
+          "name": "Treasury & Investments",
+          "unitType": "department",
+          "description": "Cash management, investment strategy"
+        }
+      },
+      {
+        "data": {
+          "id": "OU_Fin_Planning",
+          "type": "org_unit",
+          "name": "FP&A",
+          "unitType": "department",
+          "description": "Financial planning and analysis"
+        }
+      },
+      {
+        "data": {
+          "id": "OU_Risk",
+          "type": "org_unit",
+          "name": "Risk & Compliance",
+          "unitType": "division",
+          "description": "Risk management, regulatory compliance"
+        }
+      },
+      {
+        "data": {
+          "id": "OU_Risk_Management",
+          "type": "org_unit",
+          "name": "Risk Management",
+          "unitType": "department",
+          "description": "Enterprise risk, insurance risk modeling"
+        }
+      },
+      {
+        "data": {
+          "id": "OU_Compliance",
+          "type": "org_unit",
+          "name": "Compliance & Legal",
+          "unitType": "department",
+          "description": "Regulatory compliance, legal, AML/KYC"
+        }
+      },
+      {
+        "data": {
+          "id": "OU_Actuarial",
+          "type": "org_unit",
+          "name": "Actuarial",
+          "unitType": "division",
+          "description": "Actuarial analysis, pricing, reserving"
+        }
+      },
+      {
+        "data": {
+          "id": "OU_Act_Pricing",
+          "type": "org_unit",
+          "name": "Pricing & Modeling",
+          "unitType": "team",
+          "description": "Premium calculation, pricing models"
+        }
+      },
+      {
+        "data": {
+          "id": "OU_Act_Reserve",
+          "type": "org_unit",
+          "name": "Reserving & Valuations",
+          "unitType": "team",
+          "description": "Liability reserves, policy valuation"
+        }
+      },
+      {
+        "data": {
+          "id": "OU_Act_Experience",
+          "type": "org_unit",
+          "name": "Experience Analysis",
+          "unitType": "team",
+          "description": "Actual vs expected analysis, assumption review"
+        }
+      },
+      {
+        "data": {
+          "id": "OU_Technology",
+          "type": "org_unit",
+          "name": "Technology",
+          "unitType": "division",
+          "description": "IT, data, systems, digital transformation"
+        }
+      },
+      {
+        "data": {
+          "id": "OU_Tech_CoreSystems",
+          "type": "org_unit",
+          "name": "Core Systems",
+          "unitType": "department",
+          "description": "Policy admin, claims, billing systems"
+        }
+      },
+      {
+        "data": {
+          "id": "OU_Tech_Data",
+          "type": "org_unit",
+          "name": "Data & Analytics",
+          "unitType": "department",
+          "description": "Data warehouse, BI, data science"
+        }
+      },
+      {
+        "data": {
+          "id": "OU_Tech_Infrastructure",
+          "type": "org_unit",
+          "name": "Infrastructure & Security",
+          "unitType": "department",
+          "description": "Cloud, infrastructure, cybersecurity"
+        }
+      },
+      {
+        "data": {
+          "id": "P_CEO",
+          "type": "position",
+          "title": "Chief Executive Officer",
+          "level": "C-Level",
+          "vacancyStatus": "filled",
+          "costCenter": "EXEC"
+        }
+      },
+      {
+        "data": {
+          "id": "P_CFO",
+          "type": "position",
+          "title": "Chief Financial Officer",
+          "level": "C-Level",
+          "vacancyStatus": "filled",
+          "costCenter": "EXEC"
+        }
+      },
+      {
+        "data": {
+          "id": "P_CRO",
+          "type": "position",
+          "title": "Chief Risk Officer",
+          "level": "C-Level",
+          "vacancyStatus": "filled",
+          "costCenter": "EXEC"
+        }
+      },
+      {
+        "data": {
+          "id": "P_CTO",
+          "type": "position",
+          "title": "Chief Technology Officer",
+          "level": "C-Level",
+          "vacancyStatus": "filled",
+          "costCenter": "EXEC"
+        }
+      },
+      {
+        "data": {
+          "id": "P_COO",
+          "type": "position",
+          "title": "Chief Operating Officer",
+          "level": "C-Level",
+          "vacancyStatus": "filled",
+          "costCenter": "EXEC"
+        }
+      },
+      {
+        "data": {
+          "id": "P_EVP_Underwriting",
+          "type": "position",
+          "title": "EVP, Underwriting",
+          "level": "L7",
+          "vacancyStatus": "filled",
+          "costCenter": "UW_DIV"
+        }
+      },
+      {
+        "data": {
+          "id": "P_SVP_Claims",
+          "type": "position",
+          "title": "SVP, Claims",
+          "level": "L7",
+          "vacancyStatus": "filled",
+          "costCenter": "CLAIMS_DIV"
+        }
+      },
+      {
+        "data": {
+          "id": "P_SVP_Operations",
+          "type": "position",
+          "title": "SVP, Operations",
+          "level": "L7",
+          "vacancyStatus": "filled",
+          "costCenter": "OPS_DIV"
+        }
+      },
+      {
+        "data": {
+          "id": "P_VP_Finance",
+          "type": "position",
+          "title": "VP, Finance",
+          "level": "L6",
+          "vacancyStatus": "filled",
+          "costCenter": "FIN"
+        }
+      },
+      {
+        "data": {
+          "id": "P_Head_Actuarial",
+          "type": "position",
+          "title": "Head of Actuarial",
+          "level": "L6",
+          "vacancyStatus": "filled",
+          "costCenter": "ACT"
+        }
+      },
+      {
+        "data": {
+          "id": "P_HD_Life_UW",
+          "type": "position",
+          "title": "Head of Life Underwriting",
+          "level": "L6",
+          "vacancyStatus": "filled",
+          "costCenter": "UW_LIFE"
+        }
+      },
+      {
+        "data": {
+          "id": "P_HD_General_UW",
+          "type": "position",
+          "title": "Head of General Underwriting",
+          "level": "L6",
+          "vacancyStatus": "filled",
+          "costCenter": "UW_GENERAL"
+        }
+      },
+      {
+        "data": {
+          "id": "P_HD_Life_Claims",
+          "type": "position",
+          "title": "Head of Life Claims",
+          "level": "L6",
+          "vacancyStatus": "filled",
+          "costCenter": "CLAIMS_LIFE"
+        }
+      },
+      {
+        "data": {
+          "id": "P_HD_General_Claims",
+          "type": "position",
+          "title": "Head of General Claims",
+          "level": "L6",
+          "vacancyStatus": "filled",
+          "costCenter": "CLAIMS_GENERAL"
+        }
+      },
+      {
+        "data": {
+          "id": "U_SarahChen",
+          "type": "person",
+          "displayName": "Sarah Chen",
+          "givenName": "Sarah",
+          "familyName": "Chen",
+          "email": "sarah.chen@insurecorp.com.au",
+          "employeeId": "EMP001",
+          "employmentType": "permanent",
+          "jobTitle": "Chief Executive Officer",
+          "location": "Sydney, NSW",
+          "timezone": "Australia/Sydney",
+          "startDate": "2023-01-01"
+        }
+      },
+      {
+        "data": {
+          "id": "U_JohnSmith",
+          "type": "person",
+          "displayName": "John Smith",
+          "givenName": "John",
+          "familyName": "Smith",
+          "email": "john.smith@insurecorp.com.au",
+          "employeeId": "EMP002",
+          "employmentType": "permanent",
+          "jobTitle": "Chief Financial Officer",
+          "location": "Melbourne, VIC",
+          "timezone": "Australia/Melbourne",
+          "startDate": "2022-06-15"
+        }
+      },
+      {
+        "data": {
+          "id": "U_RachelBrown",
+          "type": "person",
+          "displayName": "Rachel Brown",
+          "givenName": "Rachel",
+          "familyName": "Brown",
+          "email": "rachel.brown@insurecorp.com.au",
+          "employeeId": "EMP003",
+          "employmentType": "permanent",
+          "jobTitle": "Chief Risk Officer",
+          "location": "Brisbane, QLD",
+          "timezone": "Australia/Brisbane",
+          "startDate": "2021-08-20"
+        }
+      },
+      {
+        "data": {
+          "id": "U_AndrewWilson",
+          "type": "person",
+          "displayName": "Andrew Wilson",
+          "givenName": "Andrew",
+          "familyName": "Wilson",
+          "email": "andrew.wilson@insurecorp.com.au",
+          "employeeId": "EMP004",
+          "employmentType": "permanent",
+          "jobTitle": "Chief Technology Officer",
+          "location": "Sydney, NSW",
+          "timezone": "Australia/Sydney",
+          "startDate": "2023-03-01"
+        }
+      },
+      {
+        "data": {
+          "id": "U_MarkDavis",
+          "type": "person",
+          "displayName": "Mark Davis",
+          "givenName": "Mark",
+          "familyName": "Davis",
+          "email": "mark.davis@insurecorp.com.au",
+          "employeeId": "EMP005",
+          "employmentType": "permanent",
+          "jobTitle": "Chief Operating Officer",
+          "location": "Sydney, NSW",
+          "timezone": "Australia/Sydney",
+          "startDate": "2021-11-01"
+        }
+      },
+      {
+        "data": {
+          "id": "U_EmiliaGarcia",
+          "type": "person",
+          "displayName": "Emilia Garcia",
+          "givenName": "Emilia",
+          "familyName": "Garcia",
+          "email": "emilia.garcia@insurecorp.com.au",
+          "employeeId": "EMP006",
+          "employmentType": "permanent",
+          "jobTitle": "EVP, Underwriting",
+          "location": "Sydney, NSW",
+          "timezone": "Australia/Sydney",
+          "startDate": "2020-09-15"
+        }
+      },
+      {
+        "data": {
+          "id": "U_PeterLee",
+          "type": "person",
+          "displayName": "Peter Lee",
+          "givenName": "Peter",
+          "familyName": "Lee",
+          "email": "peter.lee@insurecorp.com.au",
+          "employeeId": "EMP007",
+          "employmentType": "permanent",
+          "jobTitle": "SVP, Claims",
+          "location": "Melbourne, VIC",
+          "timezone": "Australia/Melbourne",
+          "startDate": "2020-02-01"
+        }
+      },
+      {
+        "data": {
+          "id": "U_SophiaMartin",
+          "type": "person",
+          "displayName": "Sophia Martin",
+          "givenName": "Sophia",
+          "familyName": "Martin",
+          "email": "sophia.martin@insurecorp.com.au",
+          "employeeId": "EMP008",
+          "employmentType": "permanent",
+          "jobTitle": "SVP, Operations",
+          "location": "Brisbane, QLD",
+          "timezone": "Australia/Brisbane",
+          "startDate": "2021-05-10"
+        }
+      },
+      {
+        "data": {
+          "id": "U_NicholasLin",
+          "type": "person",
+          "displayName": "Nicholas Lin",
+          "givenName": "Nicholas",
+          "familyName": "Lin",
+          "email": "nicholas.lin@insurecorp.com.au",
+          "employeeId": "EMP009",
+          "employmentType": "permanent",
+          "jobTitle": "Head of Life Underwriting",
+          "location": "Sydney, NSW",
+          "timezone": "Australia/Sydney",
+          "startDate": "2020-07-20"
+        }
+      },
+      {
+        "data": {
+          "id": "U_OliviaRussell",
+          "type": "person",
+          "displayName": "Olivia Russell",
+          "givenName": "Olivia",
+          "familyName": "Russell",
+          "email": "olivia.russell@insurecorp.com.au",
+          "employeeId": "EMP010",
+          "employmentType": "permanent",
+          "jobTitle": "Head of General Underwriting",
+          "location": "Sydney, NSW",
+          "timezone": "Australia/Sydney",
+          "startDate": "2021-01-11"
+        }
+      },
+      {
+        "data": {
+          "id": "U_BrianOConnor",
+          "type": "person",
+          "displayName": "Brian O'Connor",
+          "givenName": "Brian",
+          "familyName": "O'Connor",
+          "email": "brian.oconnor@insurecorp.com.au",
+          "employeeId": "EMP011",
+          "employmentType": "permanent",
+          "jobTitle": "Head of Life Claims",
+          "location": "Melbourne, VIC",
+          "timezone": "Australia/Melbourne",
+          "startDate": "2019-10-15"
+        }
+      },
+      {
+        "data": {
+          "id": "U_JessicaBrown",
+          "type": "person",
+          "displayName": "Jessica Brown",
+          "givenName": "Jessica",
+          "familyName": "Brown",
+          "email": "jessica.brown@insurecorp.com.au",
+          "employeeId": "EMP012",
+          "employmentType": "permanent",
+          "jobTitle": "Head of General Claims",
+          "location": "Brisbane, QLD",
+          "timezone": "Australia/Brisbane",
+          "startDate": "2019-06-01"
+        }
+      },
+      {
+        "data": {
+          "id": "U_DavidPatel",
+          "type": "person",
+          "displayName": "David Patel",
+          "givenName": "David",
+          "familyName": "Patel",
+          "email": "david.patel@insurecorp.com.au",
+          "employeeId": "EMP013",
+          "employmentType": "permanent",
+          "jobTitle": "Head of Actuarial",
+          "location": "Sydney, NSW",
+          "timezone": "Australia/Sydney",
+          "startDate": "2021-03-22"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "data": {
+          "id": "e_ou_uwd",
+          "type": "unit_hierarchy",
+          "source": "OU_InsureCorp",
+          "target": "OU_Underwriting"
+        }
+      },
+      {
+        "data": {
+          "id": "e_ou_claimd",
+          "type": "unit_hierarchy",
+          "source": "OU_InsureCorp",
+          "target": "OU_Claims"
+        }
+      },
+      {
+        "data": {
+          "id": "e_ou_opsd",
+          "type": "unit_hierarchy",
+          "source": "OU_InsureCorp",
+          "target": "OU_Operations"
+        }
+      },
+      {
+        "data": {
+          "id": "e_ou_find",
+          "type": "unit_hierarchy",
+          "source": "OU_InsureCorp",
+          "target": "OU_Finance"
+        }
+      },
+      {
+        "data": {
+          "id": "e_ou_riskd",
+          "type": "unit_hierarchy",
+          "source": "OU_InsureCorp",
+          "target": "OU_Risk"
+        }
+      },
+      {
+        "data": {
+          "id": "e_ou_actd",
+          "type": "unit_hierarchy",
+          "source": "OU_InsureCorp",
+          "target": "OU_Actuarial"
+        }
+      },
+      {
+        "data": {
+          "id": "e_ou_techd",
+          "type": "unit_hierarchy",
+          "source": "OU_InsureCorp",
+          "target": "OU_Technology"
+        }
+      },
+      {
+        "data": {
+          "id": "e_ou_uw_life2",
+          "type": "unit_hierarchy",
+          "source": "OU_Underwriting",
+          "target": "OU_UW_Life"
+        }
+      },
+      {
+        "data": {
+          "id": "e_ou_uw_gen2",
+          "type": "unit_hierarchy",
+          "source": "OU_Underwriting",
+          "target": "OU_UW_General"
+        }
+      },
+      {
+        "data": {
+          "id": "e_ou_uw_life_t",
+          "type": "unit_hierarchy",
+          "source": "OU_UW_Life",
+          "target": "OU_UW_Life_Team"
+        }
+      },
+      {
+        "data": {
+          "id": "e_ou_uw_ip_t",
+          "type": "unit_hierarchy",
+          "source": "OU_UW_Life",
+          "target": "OU_UW_IP_Team"
+        }
+      },
+      {
+        "data": {
+          "id": "e_ou_uw_motor_t",
+          "type": "unit_hierarchy",
+          "source": "OU_UW_General",
+          "target": "OU_UW_Motor_Team"
+        }
+      },
+      {
+        "data": {
+          "id": "e_ou_uw_home_t",
+          "type": "unit_hierarchy",
+          "source": "OU_UW_General",
+          "target": "OU_UW_Home_Team"
+        }
+      },
+      {
+        "data": {
+          "id": "e_ou_uw_spec_t",
+          "type": "unit_hierarchy",
+          "source": "OU_UW_General",
+          "target": "OU_UW_Specialty"
+        }
+      },
+      {
+        "data": {
+          "id": "e_ou_claims_life_d",
+          "type": "unit_hierarchy",
+          "source": "OU_Claims",
+          "target": "OU_Claims_Life"
+        }
+      },
+      {
+        "data": {
+          "id": "e_ou_claims_gen_d",
+          "type": "unit_hierarchy",
+          "source": "OU_Claims",
+          "target": "OU_Claims_General"
+        }
+      },
+      {
+        "data": {
+          "id": "e_ou_claims_life_t",
+          "type": "unit_hierarchy",
+          "source": "OU_Claims_Life",
+          "target": "OU_Claims_Life_Team"
+        }
+      },
+      {
+        "data": {
+          "id": "e_ou_claims_ip_t",
+          "type": "unit_hierarchy",
+          "source": "OU_Claims_Life",
+          "target": "OU_Claims_IP_Team"
+        }
+      },
+      {
+        "data": {
+          "id": "e_ou_claims_motor_t",
+          "type": "unit_hierarchy",
+          "source": "OU_Claims_General",
+          "target": "OU_Claims_Motor_Team"
+        }
+      },
+      {
+        "data": {
+          "id": "e_ou_claims_home_t",
+          "type": "unit_hierarchy",
+          "source": "OU_Claims_General",
+          "target": "OU_Claims_Home_Team"
+        }
+      },
+      {
+        "data": {
+          "id": "e_ou_claims_fraud_t",
+          "type": "unit_hierarchy",
+          "source": "OU_Claims_General",
+          "target": "OU_Claims_Fraud"
+        }
+      },
+      {
+        "data": {
+          "id": "e_ou_ops_cust",
+          "type": "unit_hierarchy",
+          "source": "OU_Operations",
+          "target": "OU_Ops_Customer"
+        }
+      },
+      {
+        "data": {
+          "id": "e_ou_ops_admin",
+          "type": "unit_hierarchy",
+          "source": "OU_Operations",
+          "target": "OU_Ops_Admin"
+        }
+      },
+      {
+        "data": {
+          "id": "e_ou_ops_dig",
+          "type": "unit_hierarchy",
+          "source": "OU_Operations",
+          "target": "OU_Ops_Digital"
+        }
+      },
+      {
+        "data": {
+          "id": "e_ou_fin_acct",
+          "type": "unit_hierarchy",
+          "source": "OU_Finance",
+          "target": "OU_Fin_Accounting"
+        }
+      },
+      {
+        "data": {
+          "id": "e_ou_fin_treas",
+          "type": "unit_hierarchy",
+          "source": "OU_Finance",
+          "target": "OU_Fin_Treasury"
+        }
+      },
+      {
+        "data": {
+          "id": "e_ou_fin_plan",
+          "type": "unit_hierarchy",
+          "source": "OU_Finance",
+          "target": "OU_Fin_Planning"
+        }
+      },
+      {
+        "data": {
+          "id": "e_ou_risk_mgmt",
+          "type": "unit_hierarchy",
+          "source": "OU_Risk",
+          "target": "OU_Risk_Management"
+        }
+      },
+      {
+        "data": {
+          "id": "e_ou_compliance",
+          "type": "unit_hierarchy",
+          "source": "OU_Risk",
+          "target": "OU_Compliance"
+        }
+      },
+      {
+        "data": {
+          "id": "e_ou_act_pricing",
+          "type": "unit_hierarchy",
+          "source": "OU_Actuarial",
+          "target": "OU_Act_Pricing"
+        }
+      },
+      {
+        "data": {
+          "id": "e_ou_act_reserve",
+          "type": "unit_hierarchy",
+          "source": "OU_Actuarial",
+          "target": "OU_Act_Reserve"
+        }
+      },
+      {
+        "data": {
+          "id": "e_ou_act_exp",
+          "type": "unit_hierarchy",
+          "source": "OU_Actuarial",
+          "target": "OU_Act_Experience"
+        }
+      },
+      {
+        "data": {
+          "id": "e_ou_tech_core",
+          "type": "unit_hierarchy",
+          "source": "OU_Technology",
+          "target": "OU_Tech_CoreSystems"
+        }
+      },
+      {
+        "data": {
+          "id": "e_ou_tech_data",
+          "type": "unit_hierarchy",
+          "source": "OU_Technology",
+          "target": "OU_Tech_Data"
+        }
+      },
+      {
+        "data": {
+          "id": "e_ou_tech_infra",
+          "type": "unit_hierarchy",
+          "source": "OU_Technology",
+          "target": "OU_Tech_Infrastructure"
+        }
+      },
+      {
+        "data": {
+          "id": "e_pos_ceo",
+          "type": "position_in_unit",
+          "source": "P_CEO",
+          "target": "OU_InsureCorp"
+        }
+      },
+      {
+        "data": {
+          "id": "e_pos_cfo",
+          "type": "position_in_unit",
+          "source": "P_CFO",
+          "target": "OU_Finance"
+        }
+      },
+      {
+        "data": {
+          "id": "e_pos_cro",
+          "type": "position_in_unit",
+          "source": "P_CRO",
+          "target": "OU_Risk"
+        }
+      },
+      {
+        "data": {
+          "id": "e_pos_cto",
+          "type": "position_in_unit",
+          "source": "P_CTO",
+          "target": "OU_Technology"
+        }
+      },
+      {
+        "data": {
+          "id": "e_pos_coo",
+          "type": "position_in_unit",
+          "source": "P_COO",
+          "target": "OU_Operations"
+        }
+      },
+      {
+        "data": {
+          "id": "e_pos_evp_uw",
+          "type": "position_in_unit",
+          "source": "P_EVP_Underwriting",
+          "target": "OU_Underwriting"
+        }
+      },
+      {
+        "data": {
+          "id": "e_pos_svp_claims",
+          "type": "position_in_unit",
+          "source": "P_SVP_Claims",
+          "target": "OU_Claims"
+        }
+      },
+      {
+        "data": {
+          "id": "e_pos_svp_ops",
+          "type": "position_in_unit",
+          "source": "P_SVP_Operations",
+          "target": "OU_Operations"
+        }
+      },
+      {
+        "data": {
+          "id": "e_pos_vp_fin",
+          "type": "position_in_unit",
+          "source": "P_VP_Finance",
+          "target": "OU_Fin_Accounting"
+        }
+      },
+      {
+        "data": {
+          "id": "e_pos_head_act",
+          "type": "position_in_unit",
+          "source": "P_Head_Actuarial",
+          "target": "OU_Actuarial"
+        }
+      },
+      {
+        "data": {
+          "id": "e_pos_hd_life_uw",
+          "type": "position_in_unit",
+          "source": "P_HD_Life_UW",
+          "target": "OU_UW_Life"
+        }
+      },
+      {
+        "data": {
+          "id": "e_pos_hd_gen_uw",
+          "type": "position_in_unit",
+          "source": "P_HD_General_UW",
+          "target": "OU_UW_General"
+        }
+      },
+      {
+        "data": {
+          "id": "e_pos_hd_life_claims",
+          "type": "position_in_unit",
+          "source": "P_HD_Life_Claims",
+          "target": "OU_Claims_Life"
+        }
+      },
+      {
+        "data": {
+          "id": "e_pos_hd_gen_claims",
+          "type": "position_in_unit",
+          "source": "P_HD_General_Claims",
+          "target": "OU_Claims_General"
+        }
+      },
+      {
+        "data": {
+          "id": "e_person_ceo",
+          "type": "occupies_position",
+          "source": "U_SarahChen",
+          "target": "P_CEO"
+        }
+      },
+      {
+        "data": {
+          "id": "e_person_cfo",
+          "type": "occupies_position",
+          "source": "U_JohnSmith",
+          "target": "P_CFO"
+        }
+      },
+      {
+        "data": {
+          "id": "e_person_cro",
+          "type": "occupies_position",
+          "source": "U_RachelBrown",
+          "target": "P_CRO"
+        }
+      },
+      {
+        "data": {
+          "id": "e_person_cto",
+          "type": "occupies_position",
+          "source": "U_AndrewWilson",
+          "target": "P_CTO"
+        }
+      },
+      {
+        "data": {
+          "id": "e_person_coo",
+          "type": "occupies_position",
+          "source": "U_MarkDavis",
+          "target": "P_COO"
+        }
+      },
+      {
+        "data": {
+          "id": "e_person_evp_uw",
+          "type": "occupies_position",
+          "source": "U_EmiliaGarcia",
+          "target": "P_EVP_Underwriting"
+        }
+      },
+      {
+        "data": {
+          "id": "e_person_svp_claims",
+          "type": "occupies_position",
+          "source": "U_PeterLee",
+          "target": "P_SVP_Claims"
+        }
+      },
+      {
+        "data": {
+          "id": "e_person_svp_ops",
+          "type": "occupies_position",
+          "source": "U_SophiaMartin",
+          "target": "P_SVP_Operations"
+        }
+      },
+      {
+        "data": {
+          "id": "e_person_hd_life_uw",
+          "type": "occupies_position",
+          "source": "U_NicholasLin",
+          "target": "P_HD_Life_UW"
+        }
+      },
+      {
+        "data": {
+          "id": "e_person_hd_gen_uw",
+          "type": "occupies_position",
+          "source": "U_OliviaRussell",
+          "target": "P_HD_General_UW"
+        }
+      },
+      {
+        "data": {
+          "id": "e_person_hd_life_claims",
+          "type": "occupies_position",
+          "source": "U_BrianOConnor",
+          "target": "P_HD_Life_Claims"
+        }
+      },
+      {
+        "data": {
+          "id": "e_person_hd_gen_claims",
+          "type": "occupies_position",
+          "source": "U_JessicaBrown",
+          "target": "P_HD_General_Claims"
+        }
+      },
+      {
+        "data": {
+          "id": "e_person_head_act",
+          "type": "occupies_position",
+          "source": "U_DavidPatel",
+          "target": "P_Head_Actuarial"
+        }
+      },
+      {
+        "data": {
+          "id": "e_reports_to_1",
+          "type": "reports_to",
+          "source": "U_JohnSmith",
+          "target": "U_SarahChen",
+          "label": "direct report"
+        }
+      },
+      {
+        "data": {
+          "id": "e_reports_to_2",
+          "type": "reports_to",
+          "source": "U_RachelBrown",
+          "target": "U_SarahChen",
+          "label": "direct report"
+        }
+      },
+      {
+        "data": {
+          "id": "e_reports_to_3",
+          "type": "reports_to",
+          "source": "U_AndrewWilson",
+          "target": "U_SarahChen",
+          "label": "direct report"
+        }
+      },
+      {
+        "data": {
+          "id": "e_reports_to_4",
+          "type": "reports_to",
+          "source": "U_MarkDavis",
+          "target": "U_SarahChen",
+          "label": "direct report"
+        }
+      },
+      {
+        "data": {
+          "id": "e_reports_to_5",
+          "type": "reports_to",
+          "source": "U_EmiliaGarcia",
+          "target": "U_SarahChen",
+          "label": "direct report"
+        }
+      },
+      {
+        "data": {
+          "id": "e_reports_to_6",
+          "type": "reports_to",
+          "source": "U_PeterLee",
+          "target": "U_MarkDavis",
+          "label": "direct report"
+        }
+      },
+      {
+        "data": {
+          "id": "e_reports_to_7",
+          "type": "reports_to",
+          "source": "U_SophiaMartin",
+          "target": "U_MarkDavis",
+          "label": "direct report"
+        }
+      },
+      {
+        "data": {
+          "id": "e_reports_to_8",
+          "type": "reports_to",
+          "source": "U_NicholasLin",
+          "target": "U_EmiliaGarcia",
+          "label": "direct report"
+        }
+      },
+      {
+        "data": {
+          "id": "e_reports_to_9",
+          "type": "reports_to",
+          "source": "U_OliviaRussell",
+          "target": "U_EmiliaGarcia",
+          "label": "direct report"
+        }
+      },
+      {
+        "data": {
+          "id": "e_reports_to_10",
+          "type": "reports_to",
+          "source": "U_BrianOConnor",
+          "target": "U_PeterLee",
+          "label": "direct report"
+        }
+      },
+      {
+        "data": {
+          "id": "e_reports_to_11",
+          "type": "reports_to",
+          "source": "U_JessicaBrown",
+          "target": "U_PeterLee",
+          "label": "direct report"
+        }
+      },
+      {
+        "data": {
+          "id": "e_reports_to_12",
+          "type": "reports_to",
+          "source": "U_DavidPatel",
+          "target": "U_SarahChen",
+          "label": "direct report"
+        }
+      }
+    ]
+  },
+  "style": [
+    {
+      "selector": "node[type='org_unit'][unitType='company']",
+      "style": {
+        "background-color": "#1f77b4",
+        "label": "data(name)",
+        "shape": "rectangle",
+        "text-halign": "center",
+        "text-valign": "center",
+        "font-size": 14,
+        "font-weight": "bold",
+        "color": "white"
+      }
+    },
+    {
+      "selector": "node[type='org_unit'][unitType='division']",
+      "style": {
+        "background-color": "#2ca02c",
+        "label": "data(name)",
+        "shape": "rectangle",
+        "text-halign": "center",
+        "text-valign": "center",
+        "font-size": 12,
+        "color": "white"
+      }
+    },
+    {
+      "selector": "node[type='org_unit'][unitType='department']",
+      "style": {
+        "background-color": "#ff7f0e",
+        "label": "data(name)",
+        "shape": "rectangle",
+        "text-halign": "center",
+        "text-valign": "center",
+        "font-size": 11,
+        "color": "white"
+      }
+    },
+    {
+      "selector": "node[type='org_unit'][unitType='team']",
+      "style": {
+        "background-color": "#d62728",
+        "label": "data(name)",
+        "shape": "rectangle",
+        "text-halign": "center",
+        "text-valign": "center",
+        "font-size": 10,
+        "color": "white"
+      }
+    },
+    {
+      "selector": "node[type='position']",
+      "style": {
+        "background-color": "#9467bd",
+        "label": "data(title)",
+        "shape": "diamond",
+        "text-halign": "center",
+        "text-valign": "center",
+        "font-size": 10,
+        "color": "white"
+      }
+    },
+    {
+      "selector": "node[type='person']",
+      "style": {
+        "background-color": "#17becf",
+        "label": "data(displayName)",
+        "shape": "ellipse",
+        "text-halign": "center",
+        "text-valign": "center",
+        "font-size": 10,
+        "color": "white"
+      }
+    },
+    {
+      "selector": "edge[type='unit_hierarchy']",
+      "style": {
+        "line-color": "#cccccc",
+        "target-arrow-color": "#cccccc",
+        "target-arrow-shape": "triangle-tee",
+        "curve-style": "bezier",
+        "arrow-scale": 1.5
+      }
+    },
+    {
+      "selector": "edge[type='position_in_unit']",
+      "style": {
+        "line-color": "#999999",
+        "target-arrow-color": "#999999",
+        "target-arrow-shape": "square",
+        "curve-style": "bezier",
+        "arrow-scale": 1.2
+      }
+    },
+    {
+      "selector": "edge[type='occupies_position']",
+      "style": {
+        "line-color": "#666666",
+        "target-arrow-color": "#666666",
+        "target-arrow-shape": "circle",
+        "curve-style": "bezier",
+        "arrow-scale": 1,
+        "line-style": "dashed"
+      }
+    },
+    {
+      "selector": "edge[type='reports_to']",
+      "style": {
+        "line-color": "#ff0000",
+        "target-arrow-color": "#ff0000",
+        "target-arrow-shape": "triangle",
+        "curve-style": "bezier",
+        "arrow-scale": 1.5,
+        "line-style": "solid",
+        "width": 2
+      }
+    }
+  ],
+  "layout": {
+    "name": "hierarchical",
+    "animate": true,
+    "animationDuration": 500,
+    "padding": 50,
+    "rankDir": "TB"
+  }
+}

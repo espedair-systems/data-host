@@ -9,6 +9,11 @@ type CheckResult struct {
 	Text string `json:"text"`
 }
 
+type AppResponse struct {
+	OK   bool   `json:"ok"`
+	Text string `json:"text"`
+}
+
 type BootstrapStatus struct {
 	Phase   string        `json:"phase"`
 	Results []CheckResult `json:"results"`

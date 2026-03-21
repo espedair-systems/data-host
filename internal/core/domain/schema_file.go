@@ -6,6 +6,7 @@ package domain
 
 type FileSchema struct {
 	Name          string          `json:"name"`
+	FileName      string          `json:"fileName,omitempty"`
 	Desc          string          `json:"desc"`
 	Tables        []FileTable     `json:"tables"`
 	Relations     []FileRelation  `json:"relations"`

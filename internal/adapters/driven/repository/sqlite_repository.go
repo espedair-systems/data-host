@@ -58,7 +58,7 @@ func (r *SQLiteRepository) UpdateTrainingSelection(selection interface{}) error 
 func (r *SQLiteRepository) getConfig(key string) (interface{}, error) {
 	log.Debug().Str("key", key).Msg("fetching config from database")
 	var content string
-	err := r.db.QueryRow("SELECT content FROM site_config WHERE key = ?", key).Scan(&content)
+	err := r.db.QueryRow("SELECT content FROM db_site_config WHERE key = ?", key).Scan(&content)
 	if err == sql.ErrNoRows {
 		log.Debug().Str("key", key).Msg("config not found in database, fetching from filesystem")
 		var selection interface{}
@@ -94,7 +94,7 @@ func (r *SQLiteRepository) saveConfig(key string, val interface{}) error {
 		log.Error().Err(err).Str("key", key).Msg("failed to marshal config content for saving")
 		return err
 	}
-	_, err = r.db.Exec("INSERT OR REPLACE INTO site_config (key, content) VALUES (?, ?)", key, string(data))
+	_, err = r.db.Exec("INSERT OR REPLACE INTO db_site_config (key, content) VALUES (?, ?)", key, string(data))
 	if err != nil {
 		log.Error().Err(err).Str("key", key).Msg("failed to save config to database")
 	}
@@ -104,7 +104,7 @@ func (r *SQLiteRepository) saveConfig(key string, val interface{}) error {
 func (r *SQLiteRepository) UpdateTable(moduleName string, table domain.TableDetail) error {
 	log.Debug().Str("module", moduleName).Str("table", table.Name).Msg("updating table details in database")
 	cols, _ := json.Marshal(table.Columns)
-	_, err := r.db.Exec(`INSERT OR REPLACE INTO table_details (module, name, type, description, columns) 
+	_, err := r.db.Exec(`INSERT OR REPLACE INTO db_table_details (module, name, type, description, columns) 
 		VALUES (?, ?, ?, ?, ?)`,
 		moduleName, table.Name, table.Type, table.Description, string(cols))
 	if err != nil {
@@ -116,7 +116,7 @@ func (r *SQLiteRepository) UpdateTable(moduleName string, table domain.TableDeta
 // Delegation to FS repo for things not yet fully in SQLite or read-only tree structures
 func (r *SQLiteRepository) GetBlueprintSchemas() ([]domain.BlueprintSchema, error) {
 	log.Debug().Msg("fetching blueprint schemas from database")
-	rows, err := r.db.Query("SELECT id, name, desc, created_at, updated_at FROM schemas ORDER BY name ASC")
+	rows, err := r.db.Query("SELECT id, name, desc, created_at, updated_at FROM db_schemas ORDER BY name ASC")
 	if err != nil {
 		log.Error().Err(err).Msg("failed to query blueprint schemas")
 		return nil, err
@@ -144,9 +144,9 @@ func (r *SQLiteRepository) GetBlueprintTables(criteria map[string]string) ([]dom
 			s.name as schema_name, 
 			t.type, 
 			t.comment,
-			(SELECT COUNT(*) FROM columns c WHERE c.table_id = t.id) as column_count
-		FROM tables t
-		JOIN schemas s ON t.schema_id = s.id
+			(SELECT COUNT(*) FROM db_columns c WHERE c.table_id = t.id) as column_count
+		FROM db_tables t
+		JOIN db_schemas s ON t.schema_id = s.id
 		WHERE 1=1
 	`
 	var args []interface{}
@@ -183,8 +183,48 @@ func (r *SQLiteRepository) GetBlueprintTables(criteria map[string]string) ([]dom
 }
 
 func (r *SQLiteRepository) GetSchemaTree() ([]domain.SchemaNode, error) {
-	return r.fsRepo.GetSchemaTree()
+	// 1. Get filesystem tree
+	tree, err := r.fsRepo.GetSchemaTree()
+	if err != nil {
+		log.Error().Err(err).Msg("failed to get filesystem schema tree")
+		// Continue to database even if FS fails
+	}
+
+	// 2. Get schemas from database
+	schemas, err := r.GetBlueprintSchemas()
+	if err != nil {
+		log.Error().Err(err).Msg("failed to get blueprint schemas for tree")
+		return tree, nil // Return what we have from FS
+	}
+
+	// 3. Add DB schemas to the tree
+	for _, s := range schemas {
+		node := domain.SchemaNode{
+			Name:    s.Name + " (DB)",
+			Path:    "db/" + s.Name,
+			IsDir:   true,
+			HasData: true,
+		}
+
+		// 4. Get tables for this schema to add as children
+		tables, err := r.GetBlueprintTables(map[string]string{"schemaName": s.Name})
+		if err == nil {
+			for _, t := range tables {
+				node.Children = append(node.Children, domain.SchemaNode{
+					Name:    t.Name,
+					Path:    "db/" + s.Name + "/" + t.Name,
+					IsDir:   false,
+					HasData: true,
+				})
+			}
+		}
+
+		tree = append(tree, node)
+	}
+
+	return tree, nil
 }
+
 func (r *SQLiteRepository) GetServiceTree() ([]domain.SchemaNode, error) {
 	return r.fsRepo.GetServiceTree()
 }
@@ -202,7 +242,7 @@ func (r *SQLiteRepository) GetPublishedAssets() ([]domain.PublishedAsset, error)
 	for i := range assets {
 		var exists int
 		// Check both directory name and internal schema name
-		query := "SELECT COUNT(*) FROM schemas WHERE name = ?"
+		query := "SELECT COUNT(*) FROM db_schemas WHERE name = ?"
 		err := r.db.QueryRow(query, assets[i].Name).Scan(&exists)
 		if err == nil && exists > 0 {
 			assets[i].InDatabase = true
@@ -228,7 +268,7 @@ func (r *SQLiteRepository) GetTableAssets() ([]domain.PublishedAsset, error) {
 
 	for i := range assets {
 		var exists int
-		query := "SELECT COUNT(*) FROM schemas WHERE name = ?"
+		query := "SELECT COUNT(*) FROM db_schemas WHERE name = ?" // Changed 'schemas' to 'db_schemas'
 		err := r.db.QueryRow(query, assets[i].Name).Scan(&exists)
 		if err == nil && exists > 0 {
 			assets[i].InDatabase = true
@@ -255,8 +295,8 @@ func (r *SQLiteRepository) GetRegistryTables(assetName string) ([]domain.Registr
 	// Get tables from database for this schema
 	rows, err := r.db.Query(`
 		SELECT t.name 
-		FROM tables t
-		JOIN schemas s ON t.schema_id = s.id
+		FROM db_tables t
+		JOIN db_schemas s ON t.schema_id = s.id
 		WHERE s.name = ?`, assetName)
 	if err != nil {
 		return nil, err
@@ -481,7 +521,7 @@ func (r *SQLiteRepository) GetFullSchema(name string) (*domain.FileSchema, error
 
 	err := r.db.QueryRow(`
 		SELECT id, desc, driver_name, driver_database_version, driver_meta_current_schema 
-		FROM schemas WHERE name = ?`, name).Scan(&schemaID, &desc, &drvName, &drvVer, &drvCurSchema)
+		FROM db_schemas WHERE name = ?`, name).Scan(&schemaID, &desc, &drvName, &drvVer, &drvCurSchema)
 
 	if err == sql.ErrNoRows {
 		return nil, nil
@@ -506,7 +546,7 @@ func (r *SQLiteRepository) GetFullSchema(name string) (*domain.FileSchema, error
 	}
 
 	// 1. Fetch tables
-	rows, err := r.db.Query("SELECT id, name, type, comment, def, labels, referenced_tables FROM tables WHERE schema_id = ?", schemaID)
+	rows, err := r.db.Query("SELECT id, name, type, comment, def, labels, referenced_tables FROM db_tables WHERE schema_id = ?", schemaID)
 	if err != nil {
 		return nil, err
 	}
@@ -529,7 +569,7 @@ func (r *SQLiteRepository) GetFullSchema(name string) (*domain.FileSchema, error
 		}
 
 		// Fetch columns for this table
-		crows, err := r.db.Query("SELECT name, type, nullable, default_value, comment, extra_def, labels, tags FROM columns WHERE table_id = ?", tid)
+		crows, err := r.db.Query("SELECT name, type, nullable, default_value, comment, extra_def, labels, tags FROM db_columns WHERE table_id = ?", tid)
 		if err != nil {
 			return nil, err
 		}
@@ -554,7 +594,7 @@ func (r *SQLiteRepository) GetFullSchema(name string) (*domain.FileSchema, error
 		crows.Close()
 
 		// Fetch indexes with columns
-		idxRows, _ := r.db.Query("SELECT id, name, def, comment FROM indexes WHERE table_id = ?", tid)
+		idxRows, _ := r.db.Query("SELECT id, name, def, comment FROM db_indexes WHERE table_id = ?", tid)
 		for idxRows != nil && idxRows.Next() {
 			var idx domain.FileIndex
 			var iid int64
@@ -564,7 +604,7 @@ func (r *SQLiteRepository) GetFullSchema(name string) (*domain.FileSchema, error
 			idx.Table = t.Name
 
 			// Fetch columns for this index
-			icRows, _ := r.db.Query("SELECT column_name FROM index_columns WHERE index_id = ? ORDER BY position", iid)
+			icRows, _ := r.db.Query("SELECT column_name FROM db_index_columns WHERE index_id = ? ORDER BY position", iid)
 			for icRows != nil && icRows.Next() {
 				var cn string
 				icRows.Scan(&cn)
@@ -580,7 +620,7 @@ func (r *SQLiteRepository) GetFullSchema(name string) (*domain.FileSchema, error
 		}
 
 		// Fetch constraints with columns
-		cnstRows, _ := r.db.Query("SELECT id, name, type, def, referenced_table, comment FROM constraints WHERE table_id = ?", tid)
+		cnstRows, _ := r.db.Query("SELECT id, name, type, def, referenced_table, comment FROM db_constraints WHERE table_id = ?", tid)
 		for cnstRows != nil && cnstRows.Next() {
 			var cnst domain.FileConstraint
 			var cid int64
@@ -591,7 +631,7 @@ func (r *SQLiteRepository) GetFullSchema(name string) (*domain.FileSchema, error
 			cnst.Table = t.Name
 
 			// Local columns
-			lccRows, _ := r.db.Query("SELECT column_name FROM constraint_columns WHERE constraint_id = ? ORDER BY position", cid)
+			lccRows, _ := r.db.Query("SELECT column_name FROM db_constraint_columns WHERE constraint_id = ? ORDER BY position", cid)
 			for lccRows != nil && lccRows.Next() {
 				var cn string
 				lccRows.Scan(&cn)
@@ -602,7 +642,7 @@ func (r *SQLiteRepository) GetFullSchema(name string) (*domain.FileSchema, error
 			}
 
 			// Ref columns
-			rfcRows, _ := r.db.Query("SELECT column_name FROM constraint_referenced_columns WHERE constraint_id = ? ORDER BY position", cid)
+			rfcRows, _ := r.db.Query("SELECT column_name FROM db_constraint_referenced_columns WHERE constraint_id = ? ORDER BY position", cid)
 			for rfcRows != nil && rfcRows.Next() {
 				var cn string
 				rfcRows.Scan(&cn)
@@ -618,7 +658,7 @@ func (r *SQLiteRepository) GetFullSchema(name string) (*domain.FileSchema, error
 		}
 
 		// Triggers
-		trgRows, _ := r.db.Query("SELECT name, def, comment FROM triggers WHERE table_id = ?", tid)
+		trgRows, _ := r.db.Query("SELECT name, def, comment FROM db_triggers WHERE table_id = ?", tid)
 		for trgRows != nil && trgRows.Next() {
 			var trg domain.FileTrigger
 			var tgComment sql.NullString
@@ -634,14 +674,14 @@ func (r *SQLiteRepository) GetFullSchema(name string) (*domain.FileSchema, error
 	}
 
 	// 2. Fetch Relations with columns
-	relRows, _ := r.db.Query("SELECT id, table_name, parent_table_name, cardinality, parent_cardinality, def, virtual, type FROM relations WHERE schema_id = ?", schemaID)
+	relRows, _ := r.db.Query("SELECT id, table_name, parent_table_name, cardinality, parent_cardinality, def, virtual, type FROM db_relations WHERE schema_id = ?", schemaID)
 	for relRows != nil && relRows.Next() {
 		var rel domain.FileRelation
 		var rid int64
 		relRows.Scan(&rid, &rel.Table, &rel.ParentTable, &rel.Cardinality, &rel.ParentCardinality, &rel.Def, &rel.Virtual, &rel.Type)
 
 		// Columns
-		rcRows, _ := r.db.Query("SELECT column_name FROM relation_columns WHERE relation_id = ? ORDER BY position", rid)
+		rcRows, _ := r.db.Query("SELECT column_name FROM db_relation_columns WHERE relation_id = ? ORDER BY position", rid)
 		for rcRows != nil && rcRows.Next() {
 			var cn string
 			rcRows.Scan(&cn)
@@ -652,7 +692,7 @@ func (r *SQLiteRepository) GetFullSchema(name string) (*domain.FileSchema, error
 		}
 
 		// Parent columns
-		rpcRows, _ := r.db.Query("SELECT column_name FROM relation_parent_columns WHERE relation_id = ? ORDER BY position", rid)
+		rpcRows, _ := r.db.Query("SELECT column_name FROM db_relation_parent_columns WHERE relation_id = ? ORDER BY position", rid)
 		for rpcRows != nil && rpcRows.Next() {
 			var cn string
 			rpcRows.Scan(&cn)
@@ -669,12 +709,12 @@ func (r *SQLiteRepository) GetFullSchema(name string) (*domain.FileSchema, error
 	}
 
 	// 3. Fetch Enums
-	enumRows, _ := r.db.Query("SELECT id, name FROM enums WHERE schema_id = ?", schemaID)
+	enumRows, _ := r.db.Query("SELECT id, name FROM db_enums WHERE schema_id = ?", schemaID)
 	for enumRows != nil && enumRows.Next() {
 		var enum domain.FileEnum
 		var eid int64
 		enumRows.Scan(&eid, &enum.Name)
-		valRows, _ := r.db.Query("SELECT value FROM enum_values WHERE enum_id = ? ORDER BY position", eid)
+		valRows, _ := r.db.Query("SELECT value FROM db_enum_values WHERE enum_id = ? ORDER BY position", eid)
 		for valRows != nil && valRows.Next() {
 			var val string
 			valRows.Scan(&val)
@@ -690,7 +730,7 @@ func (r *SQLiteRepository) GetFullSchema(name string) (*domain.FileSchema, error
 	}
 
 	// 4. Fetch Functions
-	funcRows, _ := r.db.Query("SELECT name, return_type, arguments, type FROM functions WHERE schema_id = ?", schemaID)
+	funcRows, _ := r.db.Query("SELECT name, return_type, arguments, type FROM db_functions WHERE schema_id = ?", schemaID)
 	for funcRows != nil && funcRows.Next() {
 		var f domain.FileFunction
 		funcRows.Scan(&f.Name, &f.ReturnType, &f.Arguments, &f.Type)
@@ -701,7 +741,7 @@ func (r *SQLiteRepository) GetFullSchema(name string) (*domain.FileSchema, error
 	}
 
 	// 5. Fetch Viewpoints
-	vpRows, _ := r.db.Query("SELECT id, name, desc, distance, labels, groups FROM viewpoints WHERE schema_id = ?", schemaID)
+	vpRows, _ := r.db.Query("SELECT id, name, desc, distance, labels, groups FROM db_viewpoints WHERE schema_id = ?", schemaID)
 	for vpRows != nil && vpRows.Next() {
 		var vp domain.FileViewpoint
 		var vpid int64
@@ -715,7 +755,7 @@ func (r *SQLiteRepository) GetFullSchema(name string) (*domain.FileSchema, error
 		}
 
 		// Fetch viewpoint tables
-		vtRows, _ := r.db.Query("SELECT table_name FROM viewpoint_tables WHERE viewpoint_id = ?", vpid)
+		vtRows, _ := r.db.Query("SELECT table_name FROM db_viewpoint_tables WHERE viewpoint_id = ?", vpid)
 		for vtRows != nil && vtRows.Next() {
 			var tn string
 			vtRows.Scan(&tn)
@@ -744,11 +784,11 @@ func (r *SQLiteRepository) SaveFullSchema(schema domain.FileSchema) error {
 
 	// Check if exists
 	var schemaID int64
-	err = tx.QueryRow("SELECT id FROM schemas WHERE name = ?", schema.Name).Scan(&schemaID)
+	err = tx.QueryRow("SELECT id FROM db_schemas WHERE name = ?", schema.Name).Scan(&schemaID)
 
 	if err == sql.ErrNoRows {
 		res, err := tx.Exec(`
-			INSERT INTO schemas (name, desc, driver_name, driver_database_version, driver_meta_current_schema) 
+			INSERT INTO db_schemas (name, desc, driver_name, driver_database_version, driver_meta_current_schema) 
 			VALUES (?, ?, ?, ?, ?)`,
 			schema.Name, schema.Desc,
 			getDriverName(schema.Driver), getDriverVer(schema.Driver), getDriverSchema(schema.Driver))
@@ -760,7 +800,7 @@ func (r *SQLiteRepository) SaveFullSchema(schema domain.FileSchema) error {
 		return err
 	} else {
 		_, err = tx.Exec(`
-			UPDATE schemas 
+			UPDATE db_schemas 
 			SET desc = ?, driver_name = ?, driver_database_version = ?, driver_meta_current_schema = ?, updated_at = CURRENT_TIMESTAMP
 			WHERE id = ?`,
 			schema.Desc, getDriverName(schema.Driver), getDriverVer(schema.Driver), getDriverSchema(schema.Driver),
@@ -777,12 +817,12 @@ func (r *SQLiteRepository) SaveFullSchema(schema domain.FileSchema) error {
 
 	for _, t := range schema.Tables {
 		// Cleanup existing table data
-		_, _ = tx.Exec("DELETE FROM tables WHERE schema_id = ? AND name = ?", schemaID, t.Name)
+		_, _ = tx.Exec("DELETE FROM db_tables WHERE schema_id = ? AND name = ?", schemaID, t.Name)
 
 		labelsJSON, _ := json.Marshal(t.Labels)
 		refTablesJSON, _ := json.Marshal(t.ReferencedTables)
 
-		res, err := tx.Exec("INSERT INTO tables (schema_id, name, type, comment, def, labels, referenced_tables) VALUES (?, ?, ?, ?, ?, ?, ?)",
+		res, err := tx.Exec("INSERT INTO db_tables (schema_id, name, type, comment, def, labels, referenced_tables) VALUES (?, ?, ?, ?, ?, ?, ?)",
 			schemaID, t.Name, t.Type, t.Comment, t.Def, string(labelsJSON), string(refTablesJSON))
 		if err != nil {
 			return err
@@ -793,7 +833,7 @@ func (r *SQLiteRepository) SaveFullSchema(schema domain.FileSchema) error {
 			cLabels, _ := json.Marshal(col.Labels)
 			cTags, _ := json.Marshal(col.Tags)
 			_, err = tx.Exec(`
-				INSERT INTO columns (table_id, name, type, nullable, default_value, comment, extra_def, labels, tags) 
+				INSERT INTO db_columns (table_id, name, type, nullable, default_value, comment, extra_def, labels, tags) 
 				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 				tableID, col.Name, col.Type, col.Nullable, formatDefault(col.Default), col.Comment, col.ExtraDef, string(cLabels), string(cTags))
 			if err != nil {
@@ -802,34 +842,34 @@ func (r *SQLiteRepository) SaveFullSchema(schema domain.FileSchema) error {
 		}
 
 		for _, idx := range t.Indexes {
-			res, err := tx.Exec("INSERT INTO indexes (table_id, name, def, comment) VALUES (?, ?, ?, ?)",
+			res, err := tx.Exec("INSERT INTO db_indexes (table_id, name, def, comment) VALUES (?, ?, ?, ?)",
 				tableID, idx.Name, idx.Def, idx.Comment)
 			if err != nil {
 				return err
 			}
 			idxID, _ := res.LastInsertId()
 			for i, colName := range idx.Columns {
-				_, _ = tx.Exec("INSERT INTO index_columns (index_id, column_name, position) VALUES (?, ?, ?)", idxID, colName, i)
+				_, _ = tx.Exec("INSERT INTO db_index_columns (index_id, column_name, position) VALUES (?, ?, ?)", idxID, colName, i)
 			}
 		}
 
 		for _, cnst := range t.Constraints {
-			res, err := tx.Exec("INSERT INTO constraints (table_id, name, type, def, referenced_table, comment) VALUES (?, ?, ?, ?, ?, ?)",
+			res, err := tx.Exec("INSERT INTO db_constraints (table_id, name, type, def, referenced_table, comment) VALUES (?, ?, ?, ?, ?, ?)",
 				tableID, cnst.Name, cnst.Type, cnst.Def, cnst.ReferencedTable, cnst.Comment)
 			if err != nil {
 				return err
 			}
 			cnstID, _ := res.LastInsertId()
 			for i, colName := range cnst.Columns {
-				_, _ = tx.Exec("INSERT INTO constraint_columns (constraint_id, column_name, position) VALUES (?, ?, ?)", cnstID, colName, i)
+				_, _ = tx.Exec("INSERT INTO db_constraint_columns (constraint_id, column_name, position) VALUES (?, ?, ?)", cnstID, colName, i)
 			}
 			for i, colName := range cnst.ReferencedColumns {
-				_, _ = tx.Exec("INSERT INTO constraint_referenced_columns (constraint_id, column_name, position) VALUES (?, ?, ?)", cnstID, colName, i)
+				_, _ = tx.Exec("INSERT INTO db_constraint_referenced_columns (constraint_id, column_name, position) VALUES (?, ?, ?)", cnstID, colName, i)
 			}
 		}
 
 		for _, trg := range t.Triggers {
-			_, err = tx.Exec("INSERT INTO triggers (table_id, name, def, comment) VALUES (?, ?, ?, ?)",
+			_, err = tx.Exec("INSERT INTO db_triggers (table_id, name, def, comment) VALUES (?, ?, ?, ?)",
 				tableID, trg.Name, trg.Def, trg.Comment)
 			if err != nil {
 				return err
@@ -839,11 +879,11 @@ func (r *SQLiteRepository) SaveFullSchema(schema domain.FileSchema) error {
 
 	// Relations (Update only provided)
 	for _, rel := range schema.Relations {
-		_, _ = tx.Exec("DELETE FROM relations WHERE schema_id = ? AND table_name = ? AND parent_table_name = ?",
+		_, _ = tx.Exec("DELETE FROM db_relations WHERE schema_id = ? AND table_name = ? AND parent_table_name = ?",
 			schemaID, rel.Table, rel.ParentTable)
 
 		res, err := tx.Exec(`
-			INSERT INTO relations (schema_id, table_name, parent_table_name, cardinality, parent_cardinality, def, virtual, type) 
+			INSERT INTO db_relations (schema_id, table_name, parent_table_name, cardinality, parent_cardinality, def, virtual, type) 
 			VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
 			schemaID, rel.Table, rel.ParentTable, rel.Cardinality, rel.ParentCardinality, rel.Def, rel.Virtual, rel.Type)
 		if err != nil {
@@ -851,36 +891,36 @@ func (r *SQLiteRepository) SaveFullSchema(schema domain.FileSchema) error {
 		}
 		relID, _ := res.LastInsertId()
 		for i, colName := range rel.Columns {
-			_, _ = tx.Exec("INSERT INTO relation_columns (relation_id, column_name, position) VALUES (?, ?, ?)", relID, colName, i)
+			_, _ = tx.Exec("INSERT INTO db_relation_columns (relation_id, column_name, position) VALUES (?, ?, ?)", relID, colName, i)
 		}
 		for i, colName := range rel.ParentColumns {
-			_, _ = tx.Exec("INSERT INTO relation_parent_columns (relation_id, column_name, position) VALUES (?, ?, ?)", relID, colName, i)
+			_, _ = tx.Exec("INSERT INTO db_relation_parent_columns (relation_id, column_name, position) VALUES (?, ?, ?)", relID, colName, i)
 		}
 	}
 
 	// Enums (Update only provided)
 	for _, e := range schema.Enums {
 		var eid int64
-		_ = tx.QueryRow("SELECT id FROM enums WHERE schema_id = ? AND name = ?", schemaID, e.Name).Scan(&eid)
+		_ = tx.QueryRow("SELECT id FROM db_enums WHERE schema_id = ? AND name = ?", schemaID, e.Name).Scan(&eid)
 		if eid > 0 {
-			_, _ = tx.Exec("DELETE FROM enum_values WHERE enum_id = ?", eid)
-			_, _ = tx.Exec("DELETE FROM enums WHERE id = ?", eid)
+			_, _ = tx.Exec("DELETE FROM db_enum_values WHERE enum_id = ?", eid)
+			_, _ = tx.Exec("DELETE FROM db_enums WHERE id = ?", eid)
 		}
 
-		res, err := tx.Exec("INSERT INTO enums (schema_id, name) VALUES (?, ?)", schemaID, e.Name)
+		res, err := tx.Exec("INSERT INTO db_enums (schema_id, name) VALUES (?, ?)", schemaID, e.Name)
 		if err != nil {
 			return err
 		}
 		eid, _ = res.LastInsertId()
 		for i, val := range e.Values {
-			_, _ = tx.Exec("INSERT INTO enum_values (enum_id, value, position) VALUES (?, ?, ?)", eid, val, i)
+			_, _ = tx.Exec("INSERT INTO db_enum_values (enum_id, value, position) VALUES (?, ?, ?)", eid, val, i)
 		}
 	}
 
 	// Functions
 	for _, f := range schema.Functions {
-		_, _ = tx.Exec("DELETE FROM functions WHERE schema_id = ? AND name = ?", schemaID, f.Name)
-		_, err = tx.Exec("INSERT INTO functions (schema_id, name, return_type, arguments, type) VALUES (?, ?, ?, ?, ?)",
+		_, _ = tx.Exec("DELETE FROM db_functions WHERE schema_id = ? AND name = ?", schemaID, f.Name)
+		_, err = tx.Exec("INSERT INTO db_functions (schema_id, name, return_type, arguments, type) VALUES (?, ?, ?, ?, ?)",
 			schemaID, f.Name, f.ReturnType, f.Arguments, f.Type)
 		if err != nil {
 			return err
@@ -890,23 +930,23 @@ func (r *SQLiteRepository) SaveFullSchema(schema domain.FileSchema) error {
 	// Viewpoints
 	for _, vp := range schema.Viewpoints {
 		var vpid int64
-		_ = tx.QueryRow("SELECT id FROM viewpoints WHERE schema_id = ? AND name = ?", schemaID, vp.Name).Scan(&vpid)
+		_ = tx.QueryRow("SELECT id FROM db_viewpoints WHERE schema_id = ? AND name = ?", schemaID, vp.Name).Scan(&vpid)
 		if vpid > 0 {
-			_, _ = tx.Exec("DELETE FROM viewpoint_tables WHERE viewpoint_id = ?", vpid)
-			_, _ = tx.Exec("DELETE FROM viewpoints WHERE id = ?", vpid)
+			_, _ = tx.Exec("DELETE FROM db_viewpoint_tables WHERE viewpoint_id = ?", vpid)
+			_, _ = tx.Exec("DELETE FROM db_viewpoints WHERE id = ?", vpid)
 		}
 
 		vLabels, _ := json.Marshal(vp.Labels)
 		vGroups, _ := json.Marshal(vp.Groups)
 
-		res, err := tx.Exec("INSERT INTO viewpoints (schema_id, name, desc, distance, labels, groups) VALUES (?, ?, ?, ?, ?, ?)",
+		res, err := tx.Exec("INSERT INTO db_viewpoints (schema_id, name, desc, distance, labels, groups) VALUES (?, ?, ?, ?, ?, ?)",
 			schemaID, vp.Name, vp.Desc, vp.Distance, string(vLabels), string(vGroups))
 		if err != nil {
 			return err
 		}
 		vpid, _ = res.LastInsertId()
 		for _, tn := range vp.Tables {
-			_, _ = tx.Exec("INSERT INTO viewpoint_tables (viewpoint_id, table_name) VALUES (?, ?)", vpid, tn)
+			_, _ = tx.Exec("INSERT INTO db_viewpoint_tables (viewpoint_id, table_name) VALUES (?, ?)", vpid, tn)
 		}
 	}
 
@@ -946,7 +986,7 @@ func (r *SQLiteRepository) applyOverrides(dash *domain.SchemaDashboard) {
 	if dash.SchemaStats != nil {
 		for i, t := range dash.SchemaStats.TableDetail {
 			var dbType, dbDesc, dbCols string
-			err := r.db.QueryRow("SELECT type, description, columns FROM table_details WHERE module = ? AND name = ?",
+			err := r.db.QueryRow("SELECT type, description, columns FROM db_table_details WHERE module = ? AND name = ?",
 				dash.Name, t.Name).Scan(&dbType, &dbDesc, &dbCols)
 			if err == nil {
 				dash.SchemaStats.TableDetail[i].Type = dbType
@@ -968,7 +1008,7 @@ func (r *SQLiteRepository) GetSites() ([]domain.SiteConfig, error) {
 
 	for i, site := range sites {
 		var desc, siteType string
-		err := r.db.QueryRow("SELECT description, type FROM sites WHERE name = ?", site.Name).Scan(&desc, &siteType)
+		err := r.db.QueryRow("SELECT description, type FROM mnt_sites WHERE name = ?", site.Name).Scan(&desc, &siteType)
 		if err == nil {
 			sites[i].InDatabase = true
 			if desc != "" {
@@ -986,7 +1026,7 @@ func (r *SQLiteRepository) GetSites() ([]domain.SiteConfig, error) {
 func (r *SQLiteRepository) SaveSiteConfig(site domain.SiteConfig) error {
 	log.Info().Str("site", site.Name).Msg("saving site configuration to database")
 	_, err := r.db.Exec(`
-		INSERT OR REPLACE INTO sites (name, type, description, data_path, mount_path, mount_source, mount_dist, active)
+		INSERT OR REPLACE INTO mnt_sites (name, type, description, data_path, mount_path, mount_source, mount_dist, active)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 	`, site.Name, site.Type, site.Description, site.DataPath, site.MountPath, site.MountSource, site.MountDist, site.Active)
 	if err != nil {
@@ -1042,7 +1082,7 @@ func (r *SQLiteRepository) SaveSiteConfig(site domain.SiteConfig) error {
 }
 
 func (r *SQLiteRepository) GetFileArchives() ([]domain.FileArchive, error) {
-	rows, err := r.db.Query("SELECT id, name, type, description, hash, status, created_at, updated_at FROM file_archive ORDER BY created_at DESC")
+	rows, err := r.db.Query("SELECT id, name, file_name, file_path, type, description, hash, status, created_at, updated_at FROM mnt_file_archive ORDER BY created_at DESC")
 	if err != nil {
 		return nil, err
 	}
@@ -1051,10 +1091,12 @@ func (r *SQLiteRepository) GetFileArchives() ([]domain.FileArchive, error) {
 	var results []domain.FileArchive
 	for rows.Next() {
 		var a domain.FileArchive
-		var desc sql.NullString
-		if err := rows.Scan(&a.ID, &a.Name, &a.Type, &desc, &a.Hash, &a.Status, &a.CreatedAt, &a.UpdatedAt); err != nil {
+		var fileName, path, desc sql.NullString
+		if err := rows.Scan(&a.ID, &a.Name, &fileName, &path, &a.Type, &desc, &a.Hash, &a.Status, &a.CreatedAt, &a.UpdatedAt); err != nil {
 			return nil, err
 		}
+		a.FileName = fileName.String
+		a.Path = path.String
 		a.Description = desc.String
 		results = append(results, a)
 	}
@@ -1062,14 +1104,14 @@ func (r *SQLiteRepository) GetFileArchives() ([]domain.FileArchive, error) {
 }
 
 func (r *SQLiteRepository) SaveFileArchive(archive domain.FileArchive) error {
-	_, err := r.db.Exec(`INSERT INTO file_archive (name, type, description, hash, status) 
-		VALUES (?, ?, ?, ?, ?)`,
-		archive.Name, archive.Type, archive.Description, archive.Hash, archive.Status)
+	_, err := r.db.Exec(`INSERT INTO mnt_file_archive (name, file_name, file_path, type, description, hash, status) 
+		VALUES (?, ?, ?, ?, ?, ?, ?)`,
+		archive.Name, archive.FileName, archive.Path, archive.Type, archive.Description, archive.Hash, archive.Status)
 	return err
 }
 
 func (r *SQLiteRepository) DeleteFileArchive(id int) error {
-	_, err := r.db.Exec("DELETE FROM file_archive WHERE id = ?", id)
+	_, err := r.db.Exec("DELETE FROM mnt_file_archive WHERE id = ?", id)
 	return err
 }
 
@@ -1130,4 +1172,122 @@ func (r *SQLiteRepository) GetTableCount(tableName string) (int64, error) {
 	var count int64
 	err := r.db.QueryRow(fmt.Sprintf("SELECT COUNT(*) FROM %s", tableName)).Scan(&count)
 	return count, err
+}
+
+func (r *SQLiteRepository) SaveOrgStructure(payload interface{}) error {
+	log.Info().Msg("Saving organizational structure to database")
+
+	// 1. Save as raw JSON for easy retrieval of the whole tree
+	if err := r.saveConfig("organization", payload); err != nil {
+		log.Error().Err(err).Msg("Failed to save org structure JSON to config")
+		return err
+	}
+
+	data, ok := payload.(map[string]interface{})
+	if !ok {
+		log.Warn().Msg("payload is not a map, skipping table sync")
+		return nil
+	}
+
+	// 2. Sync with specific org tables (from migration 00009)
+	tx, err := r.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	// Clear existing data (caution: sync strategy)
+	tables := []string{"org_edges", "org_notes", "org_people", "org_positions", "org_units"}
+	for _, t := range tables {
+		_, _ = tx.Exec(fmt.Sprintf("DELETE FROM %s", t))
+	}
+
+	elements, ok := data["elements"].(map[string]interface{})
+	if !ok {
+		log.Warn().Msg("no elements found in payload, skipping table sync")
+		return nil
+	}
+
+	// Process Nodes
+	if nodes, ok := elements["nodes"].([]interface{}); ok {
+		for _, n := range nodes {
+			node, ok := n.(map[string]interface{})
+			if !ok {
+				continue
+			}
+			nodeData, ok := node["data"].(map[string]interface{})
+			if !ok {
+				continue
+			}
+
+			id, _ := nodeData["id"].(string)
+			nodeType, _ := nodeData["type"].(string)
+			if id == "" || nodeType == "" {
+				continue
+			}
+
+			switch nodeType {
+			case "org_unit":
+				name, _ := nodeData["name"].(string)
+				unitType, _ := nodeData["unitType"].(string)
+				description, _ := nodeData["description"].(string)
+				_, err = tx.Exec("INSERT INTO org_units (id, name, unit_type, description) VALUES (?, ?, ?, ?)", id, name, unitType, description)
+			case "position":
+				title, _ := nodeData["title"].(string)
+				level, _ := nodeData["level"].(string)
+				vacancyStatus, _ := nodeData["vacancyStatus"].(string)
+				costCenter, _ := nodeData["costCenter"].(string)
+				_, err = tx.Exec("INSERT INTO org_positions (id, title, level, vacancy_status, cost_center) VALUES (?, ?, ?, ?, ?)", id, title, level, vacancyStatus, costCenter)
+			case "person":
+				displayName, _ := nodeData["displayName"].(string)
+				givenName, _ := nodeData["givenName"].(string)
+				familyName, _ := nodeData["familyName"].(string)
+				email, _ := nodeData["email"].(string)
+				employeeId, _ := nodeData["employeeId"].(string)
+				employmentType, _ := nodeData["employmentType"].(string)
+				jobTitle, _ := nodeData["jobTitle"].(string)
+				location, _ := nodeData["location"].(string)
+				timezone, _ := nodeData["timezone"].(string)
+				startDate, _ := nodeData["startDate"].(string)
+				_, err = tx.Exec("INSERT INTO org_people (id, display_name, given_name, family_name, email, employee_id, employment_type, job_title, location, timezone, start_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", id, displayName, givenName, familyName, email, employeeId, employmentType, jobTitle, location, timezone, startDate)
+			case "note":
+				text, _ := nodeData["text"].(string)
+				_, err = tx.Exec("INSERT INTO org_notes (id, text) VALUES (?, ?)", id, text)
+			}
+			if err != nil {
+				log.Error().Err(err).Msgf("Failed to insert node %s into database", id)
+			}
+		}
+	}
+
+	// Process Edges
+	if edges, ok := elements["edges"].([]interface{}); ok {
+		for _, e := range edges {
+			edge, ok := e.(map[string]interface{})
+			if !ok {
+				continue
+			}
+			edgeData, ok := edge["data"].(map[string]interface{})
+			if !ok {
+				continue
+			}
+
+			id, _ := edgeData["id"].(string)
+			edgeType, _ := edgeData["type"].(string)
+			source, _ := edgeData["source"].(string)
+			target, _ := edgeData["target"].(string)
+			label, _ := edgeData["label"].(string)
+			notes, _ := edgeData["notes"].(string)
+
+			if source != "" && target != "" {
+				_, err = tx.Exec("INSERT INTO org_edges (id, type, source, target, label, notes) VALUES (?, ?, ?, ?, ?, ?)",
+					id, edgeType, source, target, label, notes)
+				if err != nil {
+					log.Error().Err(err).Msgf("Failed to insert edge %s into database", id)
+				}
+			}
+		}
+	}
+
+	return tx.Commit()
 }

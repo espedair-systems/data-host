@@ -1,6 +1,6 @@
 -- +goose Up
 -- +goose StatementBegin
-CREATE TABLE IF NOT EXISTS sites (
+CREATE TABLE IF NOT EXISTS mnt_sites (
     name TEXT PRIMARY KEY,
     type TEXT,
     description TEXT,
@@ -15,5 +15,5 @@ CREATE TABLE IF NOT EXISTS sites (
 
 -- +goose Down
 -- +goose StatementBegin
-DROP TABLE IF EXISTS sites;
+DROP TABLE IF EXISTS mnt_sites;
 -- +goose StatementEnd

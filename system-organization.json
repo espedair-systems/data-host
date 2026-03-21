@@ -1,0 +1,19 @@
+{
+  "metadata": {
+    "organization": "Espedair Systems",
+    "version": "1.0",
+    "last_updated": "2023-10-27"
+  },
+  "departments": [
+    {
+      "name": "Engineering",
+      "lead": "John Doe",
+      "teams": ["Platform", "Data Science", "Security"]
+    },
+    {
+      "name": "Product",
+      "lead": "Jane Smith",
+      "teams": ["UI/UX", "User Research"]
+    }
+  ]
+}

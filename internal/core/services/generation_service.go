@@ -41,6 +41,12 @@ type TableSummary struct {
 	Description string
 }
 
+type TableGenerationData struct {
+	domain.FileTable
+	Root        SchemaOverviewData
+	DisplayName string
+}
+
 type GenerationPlan struct {
 	RootPath    string        `json:"rootPath"`
 	Directories []string      `json:"directories"`
@@ -101,15 +107,50 @@ func (s *GenerationService) GetGenerationPlan(config *domain.HostConfig, assetNa
 		case "schema-overview.mdx", "schema_overview.mdx":
 			destRelPath = filepath.Join("schema", assetName, "overview.mdx")
 			enabled = true
+			plan.Files = append(plan.Files, PlannedFile{
+				Name:     formatTemplateName(name),
+				Path:     destRelPath,
+				Template: name,
+				Exists:   fileExists(filepath.Join(root, destRelPath)),
+				Enabled:  enabled,
+			})
 		case "table-index.mdx":
 			destRelPath = filepath.Join("schema", assetName, "index.mdx")
 			enabled = false
+			plan.Files = append(plan.Files, PlannedFile{
+				Name:     formatTemplateName(name),
+				Path:     destRelPath,
+				Template: name,
+				Exists:   fileExists(filepath.Join(root, destRelPath)),
+				Enabled:  enabled,
+			})
 		case "table-explorer.mdx":
 			destRelPath = filepath.Join("schema", assetName, "explorer.mdx")
 			enabled = false
+			plan.Files = append(plan.Files, PlannedFile{
+				Name:     formatTemplateName(name),
+				Path:     destRelPath,
+				Template: name,
+				Exists:   fileExists(filepath.Join(root, destRelPath)),
+				Enabled:  enabled,
+			})
 		case "table-detail.mdx":
-			destRelPath = filepath.Join("schema", assetName, "tables", "[table].mdx")
-			enabled = false
+			// Expand into one file per table
+			schema, err := s.repo.GetFullSchema(assetName)
+			if err == nil {
+				for _, table := range schema.Tables {
+					tableDestRelPath := filepath.Join("schema", assetName, "tables", table.Name+".mdx")
+					plan.Files = append(plan.Files, PlannedFile{
+						Name:     fmt.Sprintf("Table %s", table.Name),
+						Path:     tableDestRelPath,
+						Template: name,
+						Exists:   fileExists(filepath.Join(root, tableDestRelPath)),
+						Enabled:  true,
+					})
+					// Add directory for tables
+					dirMap[filepath.Join("schema", assetName, "tables")] = true
+				}
+			}
 		default:
 			// Fallback: maintain structure but prefix with schema/asset
 			if dirName == "." {
@@ -118,28 +159,23 @@ func (s *GenerationService) GetGenerationPlan(config *domain.HostConfig, assetNa
 				destRelPath = filepath.Join("schema", assetName, dirName, baseName)
 			}
 			enabled = false
+			plan.Files = append(plan.Files, PlannedFile{
+				Name:     formatTemplateName(name),
+				Path:     destRelPath,
+				Template: name,
+				Exists:   fileExists(filepath.Join(root, destRelPath)),
+				Enabled:  enabled,
+			})
 		}
+	}
 
-		// Add all parent directories to plan
-		curr := filepath.Dir(destRelPath)
+	// Ensure all directories in the plan are tracked
+	for _, file := range plan.Files {
+		curr := filepath.Dir(file.Path)
 		for curr != "." && curr != "/" {
 			dirMap[curr] = true
 			curr = filepath.Dir(curr)
 		}
-
-		destFullPath := filepath.Join(root, destRelPath)
-		exists := false
-		if _, err := os.Stat(destFullPath); err == nil {
-			exists = true
-		}
-
-		plan.Files = append(plan.Files, PlannedFile{
-			Name:     formatTemplateName(name),
-			Path:     destRelPath,
-			Template: name,
-			Exists:   exists,
-			Enabled:  enabled,
-		})
 	}
 
 	// Move directories to plan
@@ -225,10 +261,27 @@ func (s *GenerationService) GenerateSchemaPage(config *domain.HostConfig, assetN
 		}
 
 		destPath := filepath.Join(config.GeneratePath, file.Path)
+		var executionData interface{} = data
+
+		// If it's a table detail page, provide the specific table data
+		if strings.Contains(file.Path, "/tables/") {
+			tableName := strings.TrimSuffix(filepath.Base(file.Path), ".mdx")
+			for _, table := range schema.Tables {
+				if table.Name == tableName {
+					executionData = TableGenerationData{
+						FileTable:   table,
+						Root:        data,
+						DisplayName: table.Name,
+					}
+					break
+				}
+			}
+		}
+
 		if dryRun {
 			// Just validate template execution
 			var buf bytes.Buffer
-			if err := tmpl.Execute(&buf, data); err != nil {
+			if err := tmpl.Execute(&buf, executionData); err != nil {
 				return fmt.Errorf("dry run failed for %s: %w", file.Name, err)
 			}
 			continue
@@ -241,7 +294,7 @@ func (s *GenerationService) GenerateSchemaPage(config *domain.HostConfig, assetN
 
 		// 5. Execute template
 		var buf bytes.Buffer
-		if err := tmpl.Execute(&buf, data); err != nil {
+		if err := tmpl.Execute(&buf, executionData); err != nil {
 			return fmt.Errorf("failed to execute template for %s: %w", file.Name, err)
 		}
 

@@ -53,5 +53,8 @@ type RegistryRepository interface {
 	SaveFileArchive(archive domain.FileArchive) error
 	DeleteFileArchive(id int) error
 
+	// Org Structure operations
+	SaveOrgStructure(payload interface{}) error
+
 	GetUserRepo() UserRepository
 }

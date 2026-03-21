@@ -1,6 +1,6 @@
 -- +goose Up
 -- +goose StatementBegin
-CREATE TABLE IF NOT EXISTS file_archive (
+CREATE TABLE IF NOT EXISTS mnt_file_archive (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     type TEXT,
@@ -14,5 +14,5 @@ CREATE TABLE IF NOT EXISTS file_archive (
 
 -- +goose Down
 -- +goose StatementBegin
-DROP TABLE IF EXISTS file_archive;
+DROP TABLE IF EXISTS mnt_file_archive;
 -- +goose StatementEnd

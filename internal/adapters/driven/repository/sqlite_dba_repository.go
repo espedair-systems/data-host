@@ -30,11 +30,11 @@ func (r *SQLiteDBARepository) LoadSchema(fs domain.FileSchema) error {
 
 	// 1. Insert Schema
 	var schemaID int64
-	err = tx.QueryRowContext(ctx, "INSERT INTO schemas (name, desc, created_at, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) RETURNING id",
+	err = tx.QueryRowContext(ctx, "INSERT INTO db_schemas (name, desc, created_at, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) RETURNING id",
 		fs.Name, fs.Desc).Scan(&schemaID)
 	if err != nil {
 		// Try without RETURNING if sqlite version is old
-		res, err2 := tx.ExecContext(ctx, "INSERT INTO schemas (name, desc) VALUES (?, ?)", fs.Name, fs.Desc)
+		res, err2 := tx.ExecContext(ctx, "INSERT INTO db_schemas (name, desc) VALUES (?, ?)", fs.Name, fs.Desc)
 		if err2 != nil {
 			return err2
 		}
@@ -46,7 +46,7 @@ func (r *SQLiteDBARepository) LoadSchema(fs domain.FileSchema) error {
 
 	// 2. Insert Tables
 	for _, t := range fs.Tables {
-		res, err := tx.ExecContext(ctx, "INSERT INTO tables (schema_id, name, type, comment, def) VALUES (?, ?, ?, ?, ?)",
+		res, err := tx.ExecContext(ctx, "INSERT INTO db_tables (schema_id, name, type, comment, def) VALUES (?, ?, ?, ?, ?)",
 			schemaID, t.Name, t.Type, t.Comment, t.Def)
 		if err != nil {
 			return fmt.Errorf("error inserting table %s: %w", t.Name, err)
@@ -56,7 +56,7 @@ func (r *SQLiteDBARepository) LoadSchema(fs domain.FileSchema) error {
 
 		// Insert Columns
 		for _, c := range t.Columns {
-			_, err := tx.ExecContext(ctx, "INSERT INTO columns (table_id, name, type, nullable, default_value, comment) VALUES (?, ?, ?, ?, ?, ?)",
+			_, err := tx.ExecContext(ctx, "INSERT INTO db_columns (table_id, name, type, nullable, default_value, comment) VALUES (?, ?, ?, ?, ?, ?)",
 				tableID, c.Name, c.Type, c.Nullable, c.Default, c.Comment)
 			if err != nil {
 				return fmt.Errorf("error inserting column %s in table %s: %w", c.Name, t.Name, err)
@@ -65,14 +65,14 @@ func (r *SQLiteDBARepository) LoadSchema(fs domain.FileSchema) error {
 
 		// Insert Indexes
 		for _, idx := range t.Indexes {
-			res, err := tx.ExecContext(ctx, "INSERT INTO indexes (table_id, name, def, comment) VALUES (?, ?, ?, ?)",
+			res, err := tx.ExecContext(ctx, "INSERT INTO db_indexes (table_id, name, def, comment) VALUES (?, ?, ?, ?)",
 				tableID, idx.Name, idx.Def, idx.Comment)
 			if err != nil {
 				return fmt.Errorf("error inserting index %s on table %s: %w", idx.Name, t.Name, err)
 			}
 			indexID, _ := res.LastInsertId()
 			for pos, colName := range idx.Columns {
-				_, err := tx.ExecContext(ctx, "INSERT INTO index_columns (index_id, column_name, position) VALUES (?, ?, ?)",
+				_, err := tx.ExecContext(ctx, "INSERT INTO db_index_columns (index_id, column_name, position) VALUES (?, ?, ?)",
 					indexID, colName, pos+1)
 				if err != nil {
 					return fmt.Errorf("error inserting index column %s for index %s: %w", colName, idx.Name, err)
@@ -82,7 +82,7 @@ func (r *SQLiteDBARepository) LoadSchema(fs domain.FileSchema) error {
 
 		// Insert Constraints
 		for _, con := range t.Constraints {
-			res, err := tx.ExecContext(ctx, "INSERT INTO constraints (table_id, name, type, def, referenced_table, comment) VALUES (?, ?, ?, ?, ?, ?)",
+			res, err := tx.ExecContext(ctx, "INSERT INTO db_constraints (table_id, name, type, def, referenced_table, comment) VALUES (?, ?, ?, ?, ?, ?)",
 				tableID, con.Name, con.Type, con.Def, con.ReferencedTable, con.Comment)
 			if err != nil {
 				return fmt.Errorf("error inserting constraint %s on table %s: %w", con.Name, t.Name, err)
@@ -90,7 +90,7 @@ func (r *SQLiteDBARepository) LoadSchema(fs domain.FileSchema) error {
 			constraintID, _ := res.LastInsertId()
 
 			for pos, colName := range con.Columns {
-				_, err := tx.ExecContext(ctx, "INSERT INTO constraint_columns (constraint_id, column_name, position) VALUES (?, ?, ?)",
+				_, err := tx.ExecContext(ctx, "INSERT INTO db_constraint_columns (constraint_id, column_name, position) VALUES (?, ?, ?)",
 					constraintID, colName, pos+1)
 				if err != nil {
 					return fmt.Errorf("error inserting constraint column %s for constraint %s: %w", colName, con.Name, err)
@@ -99,7 +99,7 @@ func (r *SQLiteDBARepository) LoadSchema(fs domain.FileSchema) error {
 
 			if con.ReferencedTable != "" {
 				for pos, colName := range con.ReferencedColumns {
-					_, err := tx.ExecContext(ctx, "INSERT INTO constraint_referenced_columns (constraint_id, column_name, position) VALUES (?, ?, ?)",
+					_, err := tx.ExecContext(ctx, "INSERT INTO db_constraint_referenced_columns (constraint_id, column_name, position) VALUES (?, ?, ?)",
 						constraintID, colName, pos+1)
 					if err != nil {
 						return fmt.Errorf("error inserting constraint ref column %s for constraint %s: %w", colName, con.Name, err)
@@ -111,7 +111,7 @@ func (r *SQLiteDBARepository) LoadSchema(fs domain.FileSchema) error {
 
 	// 3. Insert Relations
 	for _, rel := range fs.Relations {
-		res, err := tx.ExecContext(ctx, "INSERT INTO relations (schema_id, table_name, parent_table_name, cardinality, parent_cardinality, def, virtual) VALUES (?, ?, ?, ?, ?, ?, ?)",
+		res, err := tx.ExecContext(ctx, "INSERT INTO db_relations (schema_id, table_name, parent_table_name, cardinality, parent_cardinality, def, virtual) VALUES (?, ?, ?, ?, ?, ?, ?)",
 			schemaID, rel.Table, rel.ParentTable, rel.Cardinality, rel.ParentCardinality, rel.Def, rel.Virtual)
 		if err != nil {
 			return fmt.Errorf("error inserting relation between %s and %s: %w", rel.Table, rel.ParentTable, err)
@@ -119,7 +119,7 @@ func (r *SQLiteDBARepository) LoadSchema(fs domain.FileSchema) error {
 		relationID, _ := res.LastInsertId()
 
 		for pos, colName := range rel.Columns {
-			_, err := tx.ExecContext(ctx, "INSERT INTO relation_columns (relation_id, column_name, position) VALUES (?, ?, ?)",
+			_, err := tx.ExecContext(ctx, "INSERT INTO db_relation_columns (relation_id, column_name, position) VALUES (?, ?, ?)",
 				relationID, colName, pos+1)
 			if err != nil {
 				return fmt.Errorf("error inserting relation column %s for relation %d: %w", colName, relationID, err)
@@ -127,7 +127,7 @@ func (r *SQLiteDBARepository) LoadSchema(fs domain.FileSchema) error {
 		}
 
 		for pos, colName := range rel.ParentColumns {
-			_, err := tx.ExecContext(ctx, "INSERT INTO relation_parent_columns (relation_id, column_name, position) VALUES (?, ?, ?)",
+			_, err := tx.ExecContext(ctx, "INSERT INTO db_relation_parent_columns (relation_id, column_name, position) VALUES (?, ?, ?)",
 				relationID, colName, pos+1)
 			if err != nil {
 				return fmt.Errorf("error inserting relation parent column %s for relation %d: %w", colName, relationID, err)
@@ -139,7 +139,7 @@ func (r *SQLiteDBARepository) LoadSchema(fs domain.FileSchema) error {
 }
 
 func (r *SQLiteDBARepository) GetSchemas() ([]ports.BlueprintSchema, error) {
-	rows, err := r.db.Query("SELECT id, name, desc, created_at, updated_at FROM schemas ORDER BY name ASC")
+	rows, err := r.db.Query("SELECT id, name, desc, created_at, updated_at FROM db_schemas ORDER BY name ASC")
 	if err != nil {
 		return nil, err
 	}
