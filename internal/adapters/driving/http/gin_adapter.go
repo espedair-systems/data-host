@@ -130,6 +130,7 @@ func (a *GinAdapter) Start(config domain.HostConfig, repo ports.RegistryReposito
 			site.GET("/published-data/:asset/:file", a.GetPublishedFile)
 			site.GET("/table-assets", a.GetTableAssets)
 			site.GET("/table-assets/:asset/tables", a.GetRegistryTables)
+			site.GET("/tables/:table/data", a.GetTableData)
 			site.GET("/schema-definition/:file", a.GetSchemaDefinition)
 			site.POST("/published-data/:asset/:file", authMW, auth.RequireRole(domain.RoleAdmin, domain.RoleEditor), a.SavePublishedFile)
 		}
@@ -140,6 +141,7 @@ func (a *GinAdapter) Start(config domain.HostConfig, repo ports.RegistryReposito
 			ingestion.POST("/validate", a.ValidateSchema)
 			ingestion.POST("/ingest", auth.RequireRole(domain.RoleAdmin), a.IngestSchema)
 			ingestion.GET("/archives", a.GetFileArchives)
+			ingestion.DELETE("/archives/:id", auth.RequireRole(domain.RoleAdmin), a.DeleteFileArchive)
 			ingestion.POST("/ingest-to-local-folder", auth.RequireRole(domain.RoleAdmin), a.IngestToFolder)
 			ingestion.POST("/generate/:asset", auth.RequireRole(domain.RoleAdmin), a.GenerateAsset)
 			ingestion.GET("/generate/:asset/plan", auth.RequireRole(domain.RoleAdmin), a.GetGenerationPlan)
@@ -256,6 +258,12 @@ func (a *GinAdapter) Start(config domain.HostConfig, repo ports.RegistryReposito
 				c.Data(200, "text/html; charset=utf-8", data)
 				return
 			}
+		}
+
+		// PRIORITY 4: Implicit /home/ prefix for scratchpad (for shorter URLs)
+		if strings.HasPrefix(path, "/scratchpad") {
+			c.Redirect(http.StatusTemporaryRedirect, "/home"+path)
+			return
 		}
 
 		// Final fallback: Signal 404 to TUI and return JSON

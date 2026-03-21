@@ -217,7 +217,16 @@ const TablesPage: React.FC = () => {
                                                     <span className="text-[10px] font-black tabular-nums">{table.columnCount}c</span>
                                                 </div>
                                             </TableCell>
-                                            <TableCell className="text-right px-8">
+                                             <TableCell className="text-right px-8 flex justify-end gap-2">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => navigate(`/curate/tables/${table.schemaName}.${table.name}/data`)}
+                                                    className="h-9 px-4 rounded-xl font-black uppercase text-[9px] tracking-widest gap-2 bg-primary/10 text-primary hover:bg-primary/20 transition-all"
+                                                >
+                                                    View Data
+                                                    <Grid className="h-3 w-3" />
+                                                </Button>
                                                 <Button
                                                     variant="ghost"
                                                     size="sm"

@@ -42,6 +42,7 @@ import PublishedSites from './pages/PublishedSites';
 import PublishedSchemaEditor from './pages/PublishedSchemaEditor';
 import TablesPages from './pages/TablesPages';
 import Tables from './pages/Tables';
+import TableData from './pages/TableData';
 import Steward from './pages/Steward';
 import Model from './pages/Model';
 import Secure from './pages/Secure';
@@ -64,6 +65,10 @@ import TestErd1 from './pages/TestErd1';
 import TestErd2 from './pages/TestErd2';
 import TestErd3 from './pages/TestErd3';
 import TestErd4 from './pages/TestErd4';
+import DataFlows from './pages/DataFlows';
+import OrgChart from './pages/OrgChart';
+import Lineage from './pages/Lineage';
+import Mappings from './pages/Mappings';
 import SchemaGeneration from './pages/SchemaGeneration';
 const SwaggerPage = lazy(() => import('./pages/Integrate/Swagger'));
 import { ColorModeProvider } from './context/ColorModeContext';
@@ -104,6 +109,7 @@ function App() {
                   <Route path="schema" element={<Schema />} />
                   <Route path="schema/generate/:asset" element={<SchemaGeneration />} />
                   <Route path="tables" element={<Tables />} />
+                  <Route path="tables/:table/data" element={<TableData />} />
                   <Route path="schema/edit" element={<TableEditor />} />
                   <Route path="schema/map" element={<MapPage />} />
                 </Route>
@@ -232,6 +238,11 @@ function App() {
 
                 <Route path="scratchpad">
                   <Route index element={<TestPlatform />} />
+                  <Route path="data-flows" element={<DataFlows />} />
+                  <Route path="org-chart" element={<OrgChart />} />
+                  <Route path="lineage" element={<Lineage />} />
+                  <Route path="mappings" element={<Mappings />} />
+                  <Route path="schema-gen" element={<SchemaGeneration />} />
                   <Route path="test">
                     <Route path="erd1" element={<TestErd1 />} />
                     <Route path="erd2" element={<TestErd2 />} />

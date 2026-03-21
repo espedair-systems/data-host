@@ -39,6 +39,8 @@ type RegistryRepository interface {
 	GetPublishedFile(assetName, fileName string) ([]byte, error)
 	SavePublishedFile(assetName, fileName string, content []byte) error
 	GetDatabaseStats() (domain.DatabaseStats, error)
+	GetTableData(tableName string, limit, offset int) (domain.TableData, error)
+	GetTableCount(tableName string) (int64, error)
 
 	GetWorkflows() ([]domain.DesignFile, error)
 	GetAstroTemplates() ([]domain.DesignFile, error)
@@ -49,6 +51,7 @@ type RegistryRepository interface {
 	// File Archive operations
 	GetFileArchives() ([]domain.FileArchive, error)
 	SaveFileArchive(archive domain.FileArchive) error
+	DeleteFileArchive(id int) error
 
 	GetUserRepo() UserRepository
 }

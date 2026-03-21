@@ -145,6 +145,14 @@ func (r *FilesystemRepository) GetDatabaseStats() (domain.DatabaseStats, error) 
 	return domain.DatabaseStats{}, nil
 }
 
+func (r *FilesystemRepository) GetTableData(tableName string, limit, offset int) (domain.TableData, error) {
+	return domain.TableData{}, fmt.Errorf("GetTableData not supported in filesystem mode")
+}
+
+func (r *FilesystemRepository) GetTableCount(tableName string) (int64, error) {
+	return 0, fmt.Errorf("GetTableCount not supported in filesystem mode")
+}
+
 func (r *FilesystemRepository) ExtractDatabaseSchema(name, desc string) (*domain.FileSchema, error) {
 	return nil, fmt.Errorf("ExtractDatabaseSchema not supported in filesystem mode")
 }
@@ -971,6 +979,10 @@ func (r *FilesystemRepository) GetFileArchives() ([]domain.FileArchive, error) {
 }
 
 func (r *FilesystemRepository) SaveFileArchive(archive domain.FileArchive) error {
+	return nil
+}
+
+func (r *FilesystemRepository) DeleteFileArchive(id int) error {
 	return nil
 }
 

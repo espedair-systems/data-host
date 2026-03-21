@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 )
@@ -1065,4 +1066,68 @@ func (r *SQLiteRepository) SaveFileArchive(archive domain.FileArchive) error {
 		VALUES (?, ?, ?, ?, ?)`,
 		archive.Name, archive.Type, archive.Description, archive.Hash, archive.Status)
 	return err
+}
+
+func (r *SQLiteRepository) DeleteFileArchive(id int) error {
+	_, err := r.db.Exec("DELETE FROM file_archive WHERE id = ?", id)
+	return err
+}
+
+func (r *SQLiteRepository) GetTableData(tableName string, limit, offset int) (domain.TableData, error) {
+	// Basic SQL injection prevention for table name
+	if strings.ContainsAny(tableName, " ;'\"--") {
+		return domain.TableData{}, fmt.Errorf("invalid table name")
+	}
+
+	query := fmt.Sprintf("SELECT * FROM %s LIMIT ? OFFSET ?", tableName)
+	rows, err := r.db.Query(query, limit, offset)
+	if err != nil {
+		return domain.TableData{}, err
+	}
+	defer rows.Close()
+
+	cols, err := rows.Columns()
+	if err != nil {
+		return domain.TableData{}, err
+	}
+
+	result := domain.TableData{
+		Columns: cols,
+		Rows:    []map[string]any{},
+	}
+
+	for rows.Next() {
+		columns := make([]any, len(cols))
+		columnPointers := make([]any, len(cols))
+		for i := range columns {
+			columnPointers[i] = &columns[i]
+		}
+
+		if err := rows.Scan(columnPointers...); err != nil {
+			return domain.TableData{}, err
+		}
+
+		m := make(map[string]any)
+		for i, colName := range cols {
+			val := columns[i]
+			b, ok := val.([]byte)
+			if ok {
+				m[colName] = string(b)
+			} else {
+				m[colName] = val
+			}
+		}
+		result.Rows = append(result.Rows, m)
+	}
+
+	return result, nil
+}
+
+func (r *SQLiteRepository) GetTableCount(tableName string) (int64, error) {
+	if strings.ContainsAny(tableName, " ;'\"--") {
+		return 0, fmt.Errorf("invalid table name")
+	}
+	var count int64
+	err := r.db.QueryRow(fmt.Sprintf("SELECT COUNT(*) FROM %s", tableName)).Scan(&count)
+	return count, err
 }

@@ -14,6 +14,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -541,6 +542,38 @@ func (a *GinAdapter) GetFileArchives(c *gin.Context) {
 	c.JSON(http.StatusOK, archives)
 }
 
+// DeleteFileArchive godoc
+// @Summary      Delete a file archive entry
+// @Description  Remove an entry from the file archive based on ID
+// @Tags         Ingestion
+// @Param        id   path      int  true  "Archive ID"
+// @Success      200  {object}  map[string]string
+// @Failure      400  {object}  domain.ErrorResponse
+// @Failure      500  {object}  domain.ErrorResponse
+// @Router       /ingestion/archives/{id} [delete]
+func (a *GinAdapter) DeleteFileArchive(c *gin.Context) {
+	idStr := c.Param("id")
+	var id int
+	if _, err := fmt.Sscanf(idStr, "%d", &id); err != nil {
+		c.JSON(http.StatusBadRequest, domain.ErrorResponse{
+			Error:   "Bad Request",
+			Message: "invalid archive ID",
+			Code:    http.StatusBadRequest,
+		})
+		return
+	}
+
+	if err := a.repo.DeleteFileArchive(id); err != nil {
+		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{
+			Error:   "Internal Server Error",
+			Message: err.Error(),
+			Code:    http.StatusInternalServerError,
+		})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"status": "success"})
+}
+
 func (a *GinAdapter) UpdateSelection(c *gin.Context) {
 	var req domain.GuidelineSelectionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -931,6 +964,15 @@ func (a *GinAdapter) IngestToFolder(c *gin.Context) {
 		return
 	}
 
+	// Record in audit log
+	_ = a.repo.SaveFileArchive(domain.FileArchive{
+		Name:        schema.Name,
+		Type:        "LOCAL_INGEST",
+		Description: fmt.Sprintf("Extracted from nominated database: %s", schema.Name),
+		Status:      "SUCCESS",
+		Hash:        fmt.Sprintf("sha256:%x", []byte(schema.Name+time.Now().String())), // Simple hash placeholder
+	})
+
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "success",
 		"message": fmt.Sprintf("Schema '%s' saved to data-services folder.", schema.Name),
@@ -1085,4 +1127,45 @@ func (a *GinAdapter) UpdateGithubSettings(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"status": "success"})
+}
+
+// GetTableData godoc
+// @Summary      Get table data
+// @Description  Retrieve rows and columns from a specific table with pagination
+// @Tags         Site
+// @Produce      json
+// @Param        table   path      string  true   "Table Name"
+// @Param        limit   query     int     false  "Limit (default 50)"
+// @Param        offset  query     int     false  "Offset (default 0)"
+// @Success      200     {object}  domain.TableData
+// @Failure      400     {object}  domain.ErrorResponse
+// @Failure      500     {object}  domain.ErrorResponse
+// @Router       /site/tables/{table}/data [get]
+func (a *GinAdapter) GetTableData(c *gin.Context) {
+	tableName := c.Param("table")
+	limitStr := c.DefaultQuery("limit", "50")
+	offsetStr := c.DefaultQuery("offset", "0")
+
+	limit, _ := strconv.Atoi(limitStr)
+	offset, _ := strconv.Atoi(offsetStr)
+
+	data, err := a.repo.GetTableData(tableName, limit, offset)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{
+			Error:   "Internal Server Error",
+			Message: err.Error(),
+			Code:    http.StatusInternalServerError,
+		})
+		return
+	}
+
+	count, _ := a.repo.GetTableCount(tableName)
+
+	c.JSON(http.StatusOK, gin.H{
+		"columns": data.Columns,
+		"rows":    data.Rows,
+		"total":   count,
+		"limit":   limit,
+		"offset":  offset,
+	})
 }

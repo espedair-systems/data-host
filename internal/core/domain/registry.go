@@ -141,6 +141,12 @@ type RegistryTable struct {
 	InDatabase bool   `json:"inDatabase"`
 }
 
+// @Description Table data result
+type TableData struct {
+	Columns []string         `json:"columns"`
+	Rows    []map[string]any `json:"rows"`
+}
+
 // @Description File in design directories
 type DesignFile struct {
 	Name         string `json:"name"`

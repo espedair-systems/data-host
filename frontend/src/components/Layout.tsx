@@ -41,7 +41,9 @@ import {
   Key,
   Users,
   Bot,
-  Sparkles
+  Sparkles,
+  History,
+  Network
 } from 'lucide-react';
 import { useNavigate, useLocation, Outlet, Link } from 'react-router-dom';
 import {
@@ -783,8 +785,32 @@ const Layout: React.FC = () => {
               <div className="ml-9 border-l border-muted pl-4 space-y-1">
                 <NavButton
                   item={{ text: 'ERD sandbox', icon: <Cpu className="h-4 w-4" /> }}
-                  selected={isActive('/scratchpad')}
+                  selected={isActive('/scratchpad') && location.pathname === '/scratchpad'}
                   onClick={() => navigate('/scratchpad')}
+                  className="h-8 text-xs"
+                />
+                <NavButton
+                  item={{ text: 'DataFlows', icon: <Workflow className="h-4 w-4" /> }}
+                  selected={location.pathname === '/scratchpad/data-flows'}
+                  onClick={() => navigate('/scratchpad/data-flows')}
+                  className="h-8 text-xs"
+                />
+                <NavButton
+                  item={{ text: 'Org Chart', icon: <Network className="h-4 w-4" /> }}
+                  selected={location.pathname === '/scratchpad/org-chart'}
+                  onClick={() => navigate('/scratchpad/org-chart')}
+                  className="h-8 text-xs"
+                />
+                <NavButton
+                  item={{ text: 'Lineage', icon: <History className="h-4 w-4" /> }}
+                  selected={location.pathname === '/scratchpad/lineage'}
+                  onClick={() => navigate('/scratchpad/lineage')}
+                  className="h-8 text-xs"
+                />
+                <NavButton
+                  item={{ text: 'Mappings', icon: <TableIcon className="h-4 w-4" /> }}
+                  selected={location.pathname === '/scratchpad/mappings'}
+                  onClick={() => navigate('/scratchpad/mappings')}
                   className="h-8 text-xs"
                 />
               </div>

@@ -9,7 +9,8 @@ import {
     LayoutDashboard,
     Search,
     Filter,
-    Activity
+    Activity,
+    Workflow
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -91,6 +92,15 @@ const TestPlatform: React.FC = () => {
             color: 'bg-sky-500/10',
             iconColor: 'text-sky-500',
             icon: <LayoutDashboard className="h-6 w-6" />
+        },
+        {
+            id: 'data-flow',
+            name: 'Linear Pipeline',
+            defaultSchema: 'blog_app',
+            description: 'Operational data flow visualizer. Maps directed acyclic graphs for ETL pipelines, streaming transformations, and metadata enrichment.',
+            color: 'bg-purple-500/10',
+            iconColor: 'text-purple-500',
+            icon: <Workflow className="h-6 w-6" />
         }
     ];
 
@@ -103,7 +113,11 @@ const TestPlatform: React.FC = () => {
 
     const handleErdClick = (erdId: string) => {
         const schema = selectedSchemas[erdId] || (erds.find(e => e.id === erdId)?.defaultSchema);
-        navigate(`/scratchpad/test/${erdId}?schema=${encodeURIComponent(schema || '')}`);
+        if (erdId === 'data-flow') {
+            navigate(`/scratchpad/data-flows?schema=${encodeURIComponent(schema || '')}`);
+        } else {
+            navigate(`/scratchpad/test/${erdId}?schema=${encodeURIComponent(schema || '')}`);
+        }
     };
 
     const handleSchemaChange = (erdId: string, value: string) => {

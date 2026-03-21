@@ -117,6 +117,18 @@ const TableEditor: React.FC = () => {
         setEditedTable({ ...editedTable, columns: newCols });
     };
 
+    const addColumn = () => {
+        if (!editedTable) return;
+        const newCols = [...editedTable.columns, { name: 'new_column', type: 'STRING', description: '' }];
+        setEditedTable({ ...editedTable, columns: newCols });
+    };
+
+    const deleteColumn = (index: number) => {
+        if (!editedTable) return;
+        const newCols = editedTable.columns.filter((_, i) => i !== index);
+        setEditedTable({ ...editedTable, columns: newCols });
+    };
+
     if (loading) return (
         <div className="p-6 space-y-10 max-w-7xl mx-auto animate-in fade-in duration-500 font-sans">
             <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-4 font-medium italic">
@@ -267,7 +279,11 @@ const TableEditor: React.FC = () => {
                                 <Columns className="h-5 w-5 text-primary/30" />
                                 <h2 className="text-xl font-black tracking-tight uppercase italic leading-none">Attribute <span className="text-muted-foreground/30 not-italic">Matrix</span></h2>
                             </div>
-                            <Button variant="outline" className="h-9 px-4 rounded-xl border-dashed border-primary/30 text-primary hover:bg-primary/5 hover:border-primary/50 font-black uppercase tracking-widest text-[9px] gap-2 transition-all">
+                            <Button 
+                                variant="outline" 
+                                onClick={addColumn}
+                                className="h-9 px-4 rounded-xl border-dashed border-primary/30 text-primary hover:bg-primary/5 hover:border-primary/50 font-black uppercase tracking-widest text-[9px] gap-2 transition-all"
+                            >
                                 <Plus className="h-3 w-3" />
                                 Instantiate Attribute
                             </Button>
@@ -316,6 +332,7 @@ const TableEditor: React.FC = () => {
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
+                                                    onClick={() => deleteColumn(idx)}
                                                     className="h-9 w-9 rounded-xl text-slate-300 hover:text-rose-600 hover:bg-rose-500/10 transition-all group/del"
                                                 >
                                                     <Trash2 className="h-4 w-4 group-hover/del:scale-110 transition-transform" />

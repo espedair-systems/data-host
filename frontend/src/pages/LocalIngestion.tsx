@@ -58,8 +58,7 @@ const LocalIngestion: React.FC = () => {
             const token = localStorage.getItem('token');
             const url = target === 'sqlite' ? '/api/ingestion/ingest' : '/api/ingestion/ingest-to-local-folder';
 
-            // Dummy schema for now since extraction is mocked
-            const dummySchema = {
+            const payload = {
                 name: assetName,
                 desc: `Extracted from ${dbSource} nominated database`,
                 tables: [],
@@ -72,7 +71,7 @@ const LocalIngestion: React.FC = () => {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify(dummySchema)
+                body: JSON.stringify(payload)
             });
 
             if (resp.ok) {
@@ -145,25 +144,13 @@ const LocalIngestion: React.FC = () => {
                                         <SelectItem value="data-host" className="rounded-xl h-11">
                                             <div className="flex items-center gap-2">
                                                 <div className="w-2 h-2 rounded-full bg-primary" />
-                                                <span>Data Host (Primary SQLite)</span>
+                                                <span>Data Host (System Registry)</span>
                                             </div>
                                         </SelectItem>
-                                        <SelectItem value="odoo" className="rounded-xl h-11">
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-2 h-2 rounded-full bg-purple-500" />
-                                                <span>Odoo Production (Postgres)</span>
-                                            </div>
-                                        </SelectItem>
-                                        <SelectItem value="sap" className="rounded-xl h-11">
+                                        <SelectItem value="external" className="rounded-xl h-11">
                                             <div className="flex items-center gap-2">
                                                 <div className="w-2 h-2 rounded-full bg-blue-500" />
-                                                <span>SAP HANA (Local)</span>
-                                            </div>
-                                        </SelectItem>
-                                        <SelectItem value="legacy_crm" className="rounded-xl h-11">
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-2 h-2 rounded-full bg-amber-500" />
-                                                <span>Legacy CRM (MySQL)</span>
+                                                <span>External SQL (Simulation)</span>
                                             </div>
                                         </SelectItem>
                                     </SelectContent>
@@ -189,7 +176,7 @@ const LocalIngestion: React.FC = () => {
                                     </div>
                                     <div>
                                         <h4 className="text-sm font-black uppercase tracking-tight">Discovery Scan</h4>
-                                        <p className="text-[10px] font-bold text-muted-foreground/60 uppercase">Analyze 142 tables and 1.2k relations</p>
+                                        <p className="text-[10px] font-bold text-muted-foreground/60 uppercase">Analyze database schemas and entity relationships</p>
                                     </div>
                                 </div>
                                 <Button

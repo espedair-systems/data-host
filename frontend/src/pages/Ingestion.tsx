@@ -16,7 +16,8 @@ import {
     Check,
     Cpu,
     BookOpen,
-    Layers
+    Layers,
+    Trash2
 } from 'lucide-react';
 import {
     Card,
@@ -247,6 +248,27 @@ const IngestionPage: React.FC = () => {
         }
     };
 
+    const handleDeleteArchive = async (id: number) => {
+        if (!window.confirm("Are you sure you want to delete this archive entry?")) return;
+
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`/api/ingestion/archives/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (response.ok) {
+                toast.success("Archive Entry Removed");
+                fetchArchives();
+            } else {
+                toast.error("Failed to Delete");
+            }
+        } catch (err) {
+            toast.error("Network Error");
+        }
+    };
+
     return (
         <div className="p-6 space-y-10 max-w-6xl mx-auto animate-in fade-in duration-500">
             <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-4 font-medium px-2">
@@ -376,11 +398,21 @@ const IngestionPage: React.FC = () => {
                                                     {archive?.createdAt ? new Date(archive.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '---'}
                                                 </div>
                                             </div>
-                                            <Link to={`/model/entities?schema=${archive?.name}`}>
-                                                <Button variant="ghost" size="icon" className="rounded-2xl h-14 w-14 hover:bg-primary/10 hover:text-primary transition-all group-hover:translate-x-1">
-                                                    <ChevronRight className="h-6 w-6" />
+                                            <div className="flex items-center gap-2">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="rounded-2xl h-14 w-14 hover:bg-destructive/10 hover:text-destructive transition-all"
+                                                    onClick={() => handleDeleteArchive(archive.id)}
+                                                >
+                                                    <Trash2 className="h-5 w-5" />
                                                 </Button>
-                                            </Link>
+                                                <Link to={`/model/entities?schema=${archive?.name}`}>
+                                                    <Button variant="ghost" size="icon" className="rounded-2xl h-14 w-14 hover:bg-primary/10 hover:text-primary transition-all group-hover:translate-x-1">
+                                                        <ChevronRight className="h-6 w-6" />
+                                                    </Button>
+                                                </Link>
+                                            </div>
                                         </div>
                                     </Card>
                                 ))
