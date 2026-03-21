@@ -38,7 +38,7 @@ interface ValidationResult {
     message: string;
     existing?: any;
     new?: any;
-    type?: 'SCHEMA' | 'ORG';
+    type?: 'SCHEMA' | 'ORG' | 'DFD';
     error?: string;
     details?: string[];
     fileName?: string;
@@ -173,6 +173,20 @@ const IngestionPage: React.FC = () => {
                 return;
             }
 
+            // SPECIAL CASE: Data Flow Diagram Data
+            if ((schema.elements && schema.elements.nodes) || schema.type === "DFD") {
+                setResult({
+                    status: 'success',
+                    message: 'Data Flow Diagram Authenticated',
+                    type: 'DFD' as any,
+                    new: schema,
+                    fileName: file.name
+                });
+                toast.success("DFD Structure Recognized", { description: "Data flow context valid." });
+                setIsUploading(false);
+                return;
+            }
+
             const token = localStorage.getItem('token');
             const response = await fetch('/api/ingestion/validate', {
                 method: 'POST',
@@ -229,7 +243,8 @@ const IngestionPage: React.FC = () => {
         if (!result || !result.new) return;
 
         const isOrg = (result as any).type === "ORG";
-        const payload = isOrg ? { ...result.new, fileName: result.fileName } : { ...result.new, fileName: result.fileName };
+        const isDFD = (result as any).type === "DFD";
+        const payload = (isOrg || isDFD) ? { ...result.new, fileName: result.fileName } : { ...result.new, fileName: result.fileName };
 
         // If conflict, filter elements based on selection
         if (!isOrg && result.status === 'conflict') {
@@ -241,7 +256,10 @@ const IngestionPage: React.FC = () => {
         setIsUploading(true);
         try {
             const token = localStorage.getItem('token');
-            const endpoint = isOrg ? '/api/ingestion/ingest-org' : '/api/ingestion/ingest';
+            let endpoint = '/api/ingestion/ingest';
+            if (isOrg) endpoint = '/api/ingestion/ingest-org';
+            else if (isDFD) endpoint = '/api/ingestion/ingest-dfd';
+
             const response = await fetch(endpoint, {
                 method: 'POST',
                 headers: {
@@ -504,6 +522,8 @@ const IngestionPage: React.FC = () => {
                                     <div className="p-8 bg-emerald-500/20 rounded-[2rem] text-emerald-600 shadow-2xl shadow-emerald-500/30 relative z-10 scale-110">
                                         {(result as any).type === "ORG" ? (
                                             <Network className="h-12 w-12" />
+                                        ) : (result as any).type === "DFD" ? (
+                                            <Layers className="h-12 w-12" />
                                         ) : (
                                             <Database className="h-12 w-12" />
                                         )}
@@ -515,6 +535,8 @@ const IngestionPage: React.FC = () => {
                                         <p className="text-xs text-emerald-600/50 font-black uppercase tracking-[0.25em] mt-3">
                                             {(result as any).type === "ORG" ? (
                                                 `ORGANIZATIONAL MAP DETECTED [${result.new?.id || 'GLOBAL'}]`
+                                            ) : (result as any).type === "DFD" ? (
+                                                `DATA FLOW DIAGRAM DETECTED [${result.new?.processes?.length || 0} PROCESSES]`
                                             ) : (
                                                 `${result.new?.tables?.length || 0} CORE TABLES AUTHENTICATED`
                                             )}

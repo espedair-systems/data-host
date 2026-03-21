@@ -55,6 +55,11 @@ type RegistryRepository interface {
 
 	// Org Structure operations
 	SaveOrgStructure(payload interface{}) error
+	GetOrgStructure() (interface{}, error)
+
+	// DFD Structure operations
+	SaveDFDStructure(payload interface{}) error
+	GetDFDStructure() (interface{}, error)
 
 	GetUserRepo() UserRepository
 }

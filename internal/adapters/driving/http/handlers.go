@@ -207,6 +207,48 @@ func (a *GinAdapter) GetSiteSchemas(c *gin.Context) {
 	c.JSON(http.StatusOK, dashboards)
 }
 
+// GetOrgStructure returns the saved organizational structure
+// @Summary Get organizational structure
+// @Description Returns the reconstructed organizational chart graph
+// @Tags ingestion
+// @Produce json
+// @Success 200 {object} interface{}
+// @Failure 404 {object} domain.ErrorResponse
+// @Router /api/ingestion/ingest-org [get]
+func (a *GinAdapter) GetOrgStructure(c *gin.Context) {
+	org, err := a.repo.GetOrgStructure()
+	if err != nil {
+		c.JSON(http.StatusNotFound, domain.ErrorResponse{
+			Error:   "Not Found",
+			Message: "No organizational structure found: " + err.Error(),
+			Code:    http.StatusNotFound,
+		})
+		return
+	}
+	c.JSON(http.StatusOK, org)
+}
+
+// GetDFDStructure returns the saved DFD structure
+// @Summary Get DFD structure
+// @Description Returns the reconstructed Data Flow Diagram graph
+// @Tags ingestion
+// @Produce json
+// @Success 200 {object} interface{}
+// @Failure 404 {object} domain.ErrorResponse
+// @Router /api/ingestion/ingest-dfd [get]
+func (a *GinAdapter) GetDFDStructure(c *gin.Context) {
+	dfd, err := a.repo.GetDFDStructure()
+	if err != nil {
+		c.JSON(http.StatusNotFound, domain.ErrorResponse{
+			Error:   "Not Found",
+			Message: "No DFD structure found: " + err.Error(),
+			Code:    http.StatusNotFound,
+		})
+		return
+	}
+	c.JSON(http.StatusOK, dfd)
+}
+
 // GetSites returns the list of configured sites
 func (a *GinAdapter) GetSites(c *gin.Context) {
 	sites, err := a.repo.GetSites()
@@ -511,20 +553,38 @@ func (a *GinAdapter) IngestSchema(c *gin.Context) {
 	json.Unmarshal(body, &rawData)
 
 	// Detect type
+	ingestType := "schema"
 	isOrg := false
-	if _, ok := rawData["elements"]; ok {
-		isOrg = true
+	isDFD := false
+
+	if m, ok := rawData["metadata"].(map[string]interface{}); ok {
+		domain, _ := m["domain"].(string)
+		if domain == "organization" {
+			isOrg = true
+		} else if domain == "data-flow-diagram" {
+			isDFD = true
+		}
 	}
 
-	var schema domain.FileSchema
-	ingestType := "schema"
+	// Fallback detection for structural hints
+	if !isOrg && !isDFD {
+		if _, ok := rawData["elements"]; ok {
+			isOrg = true // Default to org if elements exists but no domain metadata
+		}
+	}
+
 	name := "data-host"
 	desc := ""
 
-	if isOrg {
-		ingestType = "org"
-		name = "org-structure"
-		desc = "Organizational Structure Data"
+	var schema domain.FileSchema
+	if isOrg || isDFD {
+		if isOrg {
+			ingestType = "org"
+			name = "org-structure"
+		} else {
+			ingestType = "dfd"
+			name = "dfd-structure"
+		}
 
 		// Extract name from metadata if present
 		if m, ok := rawData["metadata"].(map[string]interface{}); ok {
@@ -538,9 +598,16 @@ func (a *GinAdapter) IngestSchema(c *gin.Context) {
 			}
 		}
 
-		// Save the organizational structure to the database tables
-		if err := a.repo.SaveOrgStructure(rawData); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save organization structure: " + err.Error()})
+		// Save the structure to the database tables
+		var err error
+		if isOrg {
+			err = a.repo.SaveOrgStructure(rawData)
+		} else if isDFD {
+			err = a.repo.SaveDFDStructure(rawData)
+		}
+
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save structure: " + err.Error()})
 			return
 		}
 	} else {
@@ -585,6 +652,8 @@ func (a *GinAdapter) IngestSchema(c *gin.Context) {
 			ts := time.Now().Unix()
 			if isOrg {
 				fileName = fmt.Sprintf("%s_%d.org.json", name, ts)
+			} else if isDFD {
+				fileName = fmt.Sprintf("%s_%d.dfd.json", name, ts)
 			} else {
 				if schema.FileName != "" {
 					fileName = fmt.Sprintf("%d_%s", ts, schema.FileName)
@@ -697,6 +766,90 @@ func (a *GinAdapter) IngestOrg(c *gin.Context) {
 	})
 
 	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "Org structure ingested successfully"})
+}
+
+// IngestDFD performs ingestion for Data Flow Diagram structure data
+// @Summary Ingest DFD structure
+// @Description Saves the DFD structure JSON to the archive and updates the DFD tables
+// @Tags Ingestion
+// @Accept json
+// @Produce json
+// @Param data body interface{} true "DFD structure data"
+// @Success 200 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /ingestion/ingest-dfd [post]
+func (a *GinAdapter) IngestDFD(c *gin.Context) {
+	var payload interface{}
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON format: " + err.Error()})
+		return
+	}
+
+	// Extract name from metadata if present
+	name := "dfd-structure"
+	desc := "Data Flow Diagram Context Data"
+
+	if m, ok := payload.(map[string]interface{}); ok {
+		if meta, ok := m["metadata"].(map[string]interface{}); ok {
+			if title, ok := meta["title"].(string); ok {
+				name = title
+			} else if dom, ok := meta["domain"].(string); ok {
+				name = dom
+			}
+			if description, ok := meta["description"].(string); ok {
+				desc = description
+			}
+		}
+		if fname, ok := m["fileName"].(string); ok {
+			name = strings.TrimSuffix(fname, filepath.Ext(fname))
+		}
+	}
+
+	// Save the DFD structure to the database tables
+	if err := a.repo.SaveDFDStructure(payload); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save DFD structure: " + err.Error()})
+		return
+	}
+
+	// JSON formatting for storage
+	jsonBytes, _ := json.Marshal(payload)
+	hasher := sha256.New()
+	hasher.Write(jsonBytes)
+	fileHash := hex.EncodeToString(hasher.Sum(nil))
+
+	// 1. Archive to filesystem if path is configured
+	var fileName, filePath string
+	if a.config.ArchivePath != "" {
+		archiveDir := a.config.ArchivePath
+		if err := os.MkdirAll(archiveDir, 0755); err == nil {
+			if m, ok := payload.(map[string]interface{}); ok {
+				if fname, ok := m["fileName"].(string); ok {
+					fileName = fmt.Sprintf("%d_%s", time.Now().Unix(), fname)
+				}
+			}
+			if fileName == "" {
+				fileName = fmt.Sprintf("%s_%d.dfd.json", name, time.Now().Unix())
+			}
+			filePath = filepath.Join(archiveDir, fileName)
+			if raw, err := json.MarshalIndent(payload, "", "  "); err == nil {
+				_ = os.WriteFile(filePath, raw, 0644)
+				log.Info().Str("path", filePath).Msg("dfd structure archived to filesystem")
+			}
+		}
+	}
+
+	// 2. Record in file_archive (Database)
+	_ = a.repo.SaveFileArchive(domain.FileArchive{
+		Name:        name,
+		FileName:    fileName,
+		Path:        filePath,
+		Type:        "DFD",
+		Description: desc,
+		Hash:        fileHash,
+		Status:      "synced",
+	})
+
+	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "DFD structure ingested successfully"})
 }
 
 // GetFileArchives godoc

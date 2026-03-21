@@ -1291,3 +1291,127 @@ func (r *SQLiteRepository) SaveOrgStructure(payload interface{}) error {
 
 	return tx.Commit()
 }
+
+func (r *SQLiteRepository) SaveDFDStructure(payload interface{}) error {
+	log.Info().Msg("Saving DFD structure to database")
+
+	// 1. Save as raw JSON for easy retrieval of the whole tree
+	if err := r.saveConfig("dfd_structure", payload); err != nil {
+		log.Error().Err(err).Msg("Failed to save DFD structure JSON to config")
+		return err
+	}
+
+	data, ok := payload.(map[string]interface{})
+	if !ok {
+		log.Warn().Msg("payload is not a map, skipping table sync")
+		return nil
+	}
+
+	// 2. Sync with specialized dfd tables (migration 00011)
+	tx, err := r.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	// Clear existing data
+	tables := []string{"dfd_edges", "dfd_boundaries", "dfd_data_stores", "dfd_external_entities", "dfd_processes"}
+	for _, t := range tables {
+		_, _ = tx.Exec(fmt.Sprintf("DELETE FROM %s", t))
+	}
+
+	elements, ok := data["elements"].(map[string]interface{})
+	if !ok {
+		log.Warn().Msg("no elements found in payload, skipping table sync")
+		return nil
+	}
+
+	// Nodes: process, external_entity, data_store, boundary
+	if nodes, ok := elements["nodes"].([]interface{}); ok {
+		for _, n := range nodes {
+			node, ok := n.(map[string]interface{})
+			if !ok {
+				continue
+			}
+			nodeData, ok := node["data"].(map[string]interface{})
+			if !ok {
+				continue
+			}
+
+			id, _ := nodeData["id"].(string)
+			nodeType, _ := nodeData["type"].(string)
+			if id == "" || nodeType == "" {
+				continue
+			}
+			parent, _ := nodeData["parent"].(string)
+
+			switch nodeType {
+			case "process":
+				name, _ := nodeData["name"].(string)
+				pType, _ := nodeData["processType"].(string)
+				desc, _ := nodeData["description"].(string)
+				_, err = tx.Exec("INSERT INTO dfd_processes (id, name, process_type, description, parent) VALUES (?, ?, ?, ?, ?)", id, name, pType, desc, parent)
+			case "external_entity":
+				name, _ := nodeData["name"].(string)
+				desc, _ := nodeData["description"].(string)
+				_, err = tx.Exec("INSERT INTO dfd_external_entities (id, name, description, parent) VALUES (?, ?, ?, ?)", id, name, desc, parent)
+			case "data_store":
+				name, _ := nodeData["name"].(string)
+				desc, _ := nodeData["description"].(string)
+				_, err = tx.Exec("INSERT INTO dfd_data_stores (id, name, description, parent) VALUES (?, ?, ?, ?)", id, name, desc, parent)
+			case "boundary":
+				name, _ := nodeData["name"].(string)
+				bType, _ := nodeData["boundaryType"].(string)
+				_, err = tx.Exec("INSERT INTO dfd_boundaries (id, name, boundary_type, parent) VALUES (?, ?, ?, ?)", id, name, bType, parent)
+			}
+			if err != nil {
+				log.Error().Err(err).Msgf("Failed to insert node %s into database", id)
+			}
+		}
+	}
+
+	// Edges: data_flow
+	if edges, ok := elements["edges"].([]interface{}); ok {
+		for _, e := range edges {
+			edge, ok := e.(map[string]interface{})
+			if !ok {
+				continue
+			}
+			edgeData, ok := edge["data"].(map[string]interface{})
+			if !ok {
+				continue
+			}
+
+			id, _ := edgeData["id"].(string)
+			source, _ := edgeData["source"].(string)
+			target, _ := edgeData["target"].(string)
+			eType, _ := edgeData["type"].(string)
+			label, _ := edgeData["label"].(string)
+			classification, _ := edgeData["classification"].(string)
+			protocol, _ := edgeData["protocol"].(string)
+			frequency, _ := edgeData["frequency"].(string)
+
+			dataElementsRaw := ""
+			if de, ok := edgeData["dataElements"].([]interface{}); ok {
+				deBytes, _ := json.Marshal(de)
+				dataElementsRaw = string(deBytes)
+			}
+
+			if source != "" && target != "" {
+				_, err = tx.Exec("INSERT INTO dfd_edges (id, type, source, target, label, data_elements, classification, protocol, frequency) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", id, eType, source, target, label, dataElementsRaw, classification, protocol, frequency)
+				if err != nil {
+					log.Error().Err(err).Msgf("Failed to insert edge %s into database", id)
+				}
+			}
+		}
+	}
+
+	return tx.Commit()
+}
+func (r *SQLiteRepository) GetOrgStructure() (interface{}, error) {
+	return r.getConfig("organization")
+}
+
+func (r *SQLiteRepository) GetDFDStructure() (interface{}, error) {
+	return r.getConfig("dfd_structure")
+}

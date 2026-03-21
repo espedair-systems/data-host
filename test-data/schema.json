@@ -1,0 +1,2189 @@
+{
+    "name": "InsuranceExternalDataFeeds",
+    "desc": "External data feeds schema for third-party data integration. Includes credit bureau reports, motor vehicle records, market data, weather, demographics, regulatory information, and compliance screening data. Provides 27 feed tables organized across 6 business domains.",
+    "tables": [
+        {
+            "name": "EXT_CREDIT_BUREAU_TRW",
+            "type": "BASE TABLE",
+            "comment": "TRW credit bureau data \u2014 credit score, payment history, accounts",
+            "columns": [
+                {
+                    "name": "FEED_ID",
+                    "type": "VARCHAR(100)",
+                    "nullable": false,
+                    "comment": "Unique feed record identifier"
+                },
+                {
+                    "name": "FEED_DATE",
+                    "type": "DATE",
+                    "nullable": false,
+                    "comment": "Date data received from feed"
+                },
+                {
+                    "name": "INDIVIDUAL_ID",
+                    "type": "VARCHAR(100)",
+                    "nullable": false,
+                    "comment": "Individual identifier from bureau"
+                },
+                {
+                    "name": "CREDIT_SCORE",
+                    "type": "INTEGER",
+                    "nullable": true
+                },
+                {
+                    "name": "CREDIT_SCORE_REASON",
+                    "type": "VARCHAR(255)",
+                    "nullable": true
+                },
+                {
+                    "name": "ACCOUNTS_TOTAL",
+                    "type": "INTEGER",
+                    "nullable": true
+                },
+                {
+                    "name": "ACCOUNTS_ACTIVE",
+                    "type": "INTEGER",
+                    "nullable": true
+                },
+                {
+                    "name": "ACCOUNTS_DELINQUENT",
+                    "type": "INTEGER",
+                    "nullable": true
+                },
+                {
+                    "name": "REVOLVING_BALANCE",
+                    "type": "DECIMAL(18,2)",
+                    "nullable": true
+                },
+                {
+                    "name": "REVOLVING_LIMIT",
+                    "type": "DECIMAL(18,2)",
+                    "nullable": true
+                },
+                {
+                    "name": "INSTALLMENT_BALANCE",
+                    "type": "DECIMAL(18,2)",
+                    "nullable": true
+                },
+                {
+                    "name": "MORTGAGE_BALANCE",
+                    "type": "DECIMAL(18,2)",
+                    "nullable": true
+                },
+                {
+                    "name": "INQUIRIES_LAST_6M",
+                    "type": "INTEGER",
+                    "nullable": true
+                },
+                {
+                    "name": "PUBLIC_RECORDS",
+                    "type": "INTEGER",
+                    "nullable": true
+                },
+                {
+                    "name": "BANKRUPTCIES",
+                    "type": "INTEGER",
+                    "nullable": true
+                },
+                {
+                    "name": "COLLECTIONS",
+                    "type": "INTEGER",
+                    "nullable": true
+                },
+                {
+                    "name": "LOAD_DTS",
+                    "type": "TIMESTAMP",
+                    "nullable": false
+                },
+                {
+                    "name": "LOAD_SOURCE",
+                    "type": "VARCHAR(100)",
+                    "nullable": false
+                }
+            ],
+            "constraints": [
+                {
+                    "name": "PK__EXT_CREDIT_BUREAU_TRW",
+                    "type": "PRIMARY KEY",
+                    "def": "PRIMARY KEY (FEED_ID)",
+                    "table": "EXT_CREDIT_BUREAU_TRW",
+                    "columns": [
+                        "FEED_ID"
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "EXT_CREDIT_BUREAU_EQUIFAX",
+            "type": "BASE TABLE",
+            "comment": "Equifax credit bureau data",
+            "columns": [
+                {
+                    "name": "FEED_ID",
+                    "type": "VARCHAR(100)",
+                    "nullable": false
+                },
+                {
+                    "name": "FEED_DATE",
+                    "type": "DATE",
+                    "nullable": false
+                },
+                {
+                    "name": "INDIVIDUAL_ID",
+                    "type": "VARCHAR(100)",
+                    "nullable": false
+                },
+                {
+                    "name": "CREDIT_SCORE",
+                    "type": "INTEGER",
+                    "nullable": true
+                },
+                {
+                    "name": "CREDIT_SCORE_RANGE",
+                    "type": "VARCHAR(50)",
+                    "nullable": true
+                },
+                {
+                    "name": "FILE_VARIATIONS",
+                    "type": "INTEGER",
+                    "nullable": true
+                },
+                {
+                    "name": "CREDIT_ALERT_FLAGS",
+                    "type": "VARCHAR(255)",
+                    "nullable": true
+                },
+                {
+                    "name": "MAX_DELINQUENCY",
+                    "type": "INTEGER",
+                    "nullable": true
+                },
+                {
+                    "name": "RECENT_INQUIRIES",
+                    "type": "INTEGER",
+                    "nullable": true
+                },
+                {
+                    "name": "ACCOUNTS_STATUS",
+                    "type": "VARCHAR(255)",
+                    "nullable": true
+                },
+                {
+                    "name": "ACCOUNT_PAYMENT_HISTORY",
+                    "type": "VARCHAR(255)",
+                    "nullable": true
+                },
+                {
+                    "name": "DEROGATORY_ITEMS",
+                    "type": "TEXT",
+                    "nullable": true
+                },
+                {
+                    "name": "LOAD_DTS",
+                    "type": "TIMESTAMP",
+                    "nullable": false
+                },
+                {
+                    "name": "LOAD_SOURCE",
+                    "type": "VARCHAR(100)",
+                    "nullable": false
+                }
+            ],
+            "constraints": [
+                {
+                    "name": "PK__EXT_CREDIT_BUREAU_EQUIFAX",
+                    "type": "PRIMARY KEY",
+                    "def": "PRIMARY KEY (FEED_ID)",
+                    "table": "EXT_CREDIT_BUREAU_EQUIFAX",
+                    "columns": [
+                        "FEED_ID"
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "EXT_CREDIT_BUREAU_EXPERIAN",
+            "type": "BASE TABLE",
+            "comment": "Experian credit bureau data",
+            "columns": [
+                {
+                    "name": "FEED_ID",
+                    "type": "VARCHAR(100)",
+                    "nullable": false
+                },
+                {
+                    "name": "FEED_DATE",
+                    "type": "DATE",
+                    "nullable": false
+                },
+                {
+                    "name": "INDIVIDUAL_ID",
+                    "type": "VARCHAR(100)",
+                    "nullable": false
+                },
+                {
+                    "name": "FICO_SCORE",
+                    "type": "INTEGER",
+                    "nullable": true
+                },
+                {
+                    "name": "SCORE_MODEL",
+                    "type": "VARCHAR(50)",
+                    "nullable": true
+                },
+                {
+                    "name": "ACCOUNTS_OPEN",
+                    "type": "INTEGER",
+                    "nullable": true
+                },
+                {
+                    "name": "ACCOUNTS_CLOSED",
+                    "type": "INTEGER",
+                    "nullable": true
+                },
+                {
+                    "name": "BALANCE_TOTAL",
+                    "type": "DECIMAL(18,2)",
+                    "nullable": true
+                },
+                {
+                    "name": "MONTHS_SINCE_LAST_INQUIRY",
+                    "type": "INTEGER",
+                    "nullable": true
+                },
+                {
+                    "name": "AVERAGE_ACCOUNT_AGE",
+                    "type": "INTEGER",
+                    "nullable": true
+                },
+                {
+                    "name": "OLDEST_TRADE_LINE_AGE",
+                    "type": "INTEGER",
+                    "nullable": true
+                },
+                {
+                    "name": "RISK_INDICATORS",
+                    "type": "TEXT",
+                    "nullable": true
+                },
+                {
+                    "name": "LOAD_DTS",
+                    "type": "TIMESTAMP",
+                    "nullable": false
+                },
+                {
+                    "name": "LOAD_SOURCE",
+                    "type": "VARCHAR(100)",
+                    "nullable": false
+                }
+            ],
+            "constraints": [
+                {
+                    "name": "PK__EXT_CREDIT_BUREAU_EXPERIAN",
+                    "type": "PRIMARY KEY",
+                    "def": "PRIMARY KEY (FEED_ID)",
+                    "table": "EXT_CREDIT_BUREAU_EXPERIAN",
+                    "columns": [
+                        "FEED_ID"
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "EXT_IDENTITY_VERIFICATION",
+            "type": "BASE TABLE",
+            "comment": "Third-party identity verification and KYC data",
+            "columns": [
+                {
+                    "name": "FEED_ID",
+                    "type": "VARCHAR(100)",
+                    "nullable": false
+                },
+                {
+                    "name": "FEED_DATE",
+                    "type": "DATE",
+                    "nullable": false
+                },
+                {
+                    "name": "INDIVIDUAL_ID",
+                    "type": "VARCHAR(100)",
+                    "nullable": false
+                },
+                {
+                    "name": "FIRST_NAME",
+                    "type": "VARCHAR(100)",
+                    "nullable": true
+                },
+                {
+                    "name": "LAST_NAME",
+                    "type": "VARCHAR(100)",
+                    "nullable": true
+                },
+                {
+                    "name": "DATE_OF_BIRTH",
+                    "type": "DATE",
+                    "nullable": true
+                },
+                {
+                    "name": "SSN",
+                    "type": "VARCHAR(20)",
+                    "nullable": true,
+                    "comment": "Masked SSN"
+                },
+                {
+                    "name": "ADDRESS_MATCH_SCORE",
+                    "type": "INTEGER",
+                    "nullable": true
+                },
+                {
+                    "name": "NAME_MATCH_SCORE",
+                    "type": "INTEGER",
+                    "nullable": true
+                },
+                {
+                    "name": "DOB_MATCH_SCORE",
+                    "type": "INTEGER",
+                    "nullable": true
+                },
+                {
+                    "name": "PII_BREACH_FLAGS",
+                    "type": "VARCHAR(255)",
+                    "nullable": true
+                },
+                {
+                    "name": "ADDRESS_STABILITY_YEARS",
+                    "type": "INTEGER",
+                    "nullable": true
+                },
+                {
+                    "name": "SANCTIONED_LISTS_HIT",
+                    "type": "BOOLEAN",
+                    "nullable": true
+                },
+                {
+                    "name": "VERIFICATION_CONFIDENCE",
+                    "type": "DECIMAL(5,2)",
+                    "nullable": true
+                },
+                {
+                    "name": "LOAD_DTS",
+                    "type": "TIMESTAMP",
+                    "nullable": false
+                },
+                {
+                    "name": "LOAD_SOURCE",
+                    "type": "VARCHAR(100)",
+                    "nullable": false
+                }
+            ],
+            "constraints": [
+                {
+                    "name": "PK__EXT_IDENTITY_VERIFICATION",
+                    "type": "PRIMARY KEY",
+                    "def": "PRIMARY KEY (FEED_ID)",
+                    "table": "EXT_IDENTITY_VERIFICATION",
+                    "columns": [
+                        "FEED_ID"
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "EXT_MOTOR_VEHICLE_RECORD",
+            "type": "BASE TABLE",
+            "comment": "Motor Vehicle Report from state DMV databases",
+            "columns": [
+                {
+                    "name": "FEED_ID",
+                    "type": "VARCHAR(100)",
+                    "nullable": false
+                },
+                {
+                    "name": "FEED_DATE",
+                    "type": "DATE",
+                    "nullable": false
+                },
+                {
+                    "name": "DRIVER_ID",
+                    "type": "VARCHAR(100)",
+                    "nullable": false,
+                    "comment": "Driver license number and state"
+                },
+                {
+                    "name": "LICENSE_STATE",
+                    "type": "VARCHAR(10)",
+                    "nullable": false
+                },
+                {
+                    "name": "LICENSE_STATUS",
+                    "type": "VARCHAR(20)",
+                    "nullable": true,
+                    "comment": "VALID, SUSPENDED, REVOKED, EXPIRED"
+                },
+                {
+                    "name": "VIOLATIONS_LAST_3Y",
+                    "type": "INTEGER",
+                    "nullable": true
+                },
+                {
+                    "name": "VIOLATIONS_LAST_5Y",
+                    "type": "INTEGER",
+                    "nullable": true
+                },
+                {
+                    "name": "VIOLATIONS_LAST_10Y",
+                    "type": "INTEGER",
+                    "nullable": true
+                },
+                {
+                    "name": "VIOLATION_DETAILS",
+                    "type": "TEXT",
+                    "nullable": true
+                },
+                {
+                    "name": "ACCIDENTS_LAST_3Y",
+                    "type": "INTEGER",
+                    "nullable": true
+                },
+                {
+                    "name": "ACCIDENTS_LAST_5Y",
+                    "type": "INTEGER",
+                    "nullable": true
+                },
+                {
+                    "name": "ACCIDENT_DETAILS",
+                    "type": "TEXT",
+                    "nullable": true
+                },
+                {
+                    "name": "DUI_CONVICTIONS",
+                    "type": "INTEGER",
+                    "nullable": true
+                },
+                {
+                    "name": "RECKLESS_DRIVING_CONVICTIONS",
+                    "type": "INTEGER",
+                    "nullable": true
+                },
+                {
+                    "name": "POINTS_CURRENT",
+                    "type": "INTEGER",
+                    "nullable": true
+                },
+                {
+                    "name": "POINTS_SUSPENSION_THRESHOLD",
+                    "type": "INTEGER",
+                    "nullable": true
+                },
+                {
+                    "name": "COMMERCIAL_LICENSE_CLASS",
+                    "type": "VARCHAR(20)",
+                    "nullable": true
+                },
+                {
+                    "name": "ENDORSEMENTS",
+                    "type": "VARCHAR(255)",
+                    "nullable": true
+                },
+                {
+                    "name": "RESTRICTIONS",
+                    "type": "VARCHAR(255)",
+                    "nullable": true
+                },
+                {
+                    "name": "LOAD_DTS",
+                    "type": "TIMESTAMP",
+                    "nullable": false
+                },
+                {
+                    "name": "LOAD_SOURCE",
+                    "type": "VARCHAR(100)",
+                    "nullable": false
+                }
+            ],
+            "constraints": [
+                {
+                    "name": "PK__EXT_MOTOR_VEHICLE_RECORD",
+                    "type": "PRIMARY KEY",
+                    "def": "PRIMARY KEY (FEED_ID)",
+                    "table": "EXT_MOTOR_VEHICLE_RECORD",
+                    "columns": [
+                        "FEED_ID"
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "EXT_CLAIM_HISTORY_LEXIS",
+            "type": "BASE TABLE",
+            "comment": "LexisNexis CLUE (Comprehensive Loss Underwriting Exchange) report",
+            "columns": [
+                {
+                    "name": "FEED_ID",
+                    "type": "VARCHAR(100)",
+                    "nullable": false
+                },
+                {
+                    "name": "FEED_DATE",
+                    "type": "DATE",
+                    "nullable": false
+                },
+                {
+                    "name": "PROPERTY_ADDRESS",
+                    "type": "VARCHAR(255)",
+                    "nullable": false
+                },
+                {
+                    "name": "INSURANCE_SCORE",
+                    "type": "INTEGER",
+                    "nullable": true
+                },
+                {
+                    "name": "TOTAL_CLAIMS_LAST_5Y",
+                    "type": "INTEGER",
+                    "nullable": true
+                },
+                {
+                    "name": "CLAIM_DETAILS",
+                    "type": "TEXT",
+                    "nullable": true
+                },
+                {
+                    "name": "CATASTROPHE_LOSSES",
+                    "type": "INTEGER",
+                    "nullable": true
+                },
+                {
+                    "name": "WATER_DAMAGE_INCIDENTS",
+                    "type": "INTEGER",
+                    "nullable": true
+                },
+                {
+                    "name": "FIRE_INCIDENTS",
+                    "type": "INTEGER",
+                    "nullable": true
+                },
+                {
+                    "name": "THEFT_INCIDENTS",
+                    "type": "INTEGER",
+                    "nullable": true
+                },
+                {
+                    "name": "WEATHER_RELATED_LOSSES",
+                    "type": "INTEGER",
+                    "nullable": true
+                },
+                {
+                    "name": "TOTAL_LOSS_AMOUNT",
+                    "type": "DECIMAL(18,2)",
+                    "nullable": true
+                },
+                {
+                    "name": "AVERAGE_CLAIM_AMOUNT",
+                    "type": "DECIMAL(12,2)",
+                    "nullable": true
+                },
+                {
+                    "name": "PROPERTY_CONDITION_RATING",
+                    "type": "VARCHAR(20)",
+                    "nullable": true
+                },
+                {
+                    "name": "LOAD_DTS",
+                    "type": "TIMESTAMP",
+                    "nullable": false
+                },
+                {
+                    "name": "LOAD_SOURCE",
+                    "type": "VARCHAR(100)",
+                    "nullable": false
+                }
+            ],
+            "constraints": [
+                {
+                    "name": "PK__EXT_CLAIM_HISTORY_LEXIS",
+                    "type": "PRIMARY KEY",
+                    "def": "PRIMARY KEY (FEED_ID)",
+                    "table": "EXT_CLAIM_HISTORY_LEXIS",
+                    "columns": [
+                        "FEED_ID"
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "EXT_REINSURANCE_MARKET_DATA",
+            "type": "BASE TABLE",
+            "comment": "Reinsurance market pricing and capacity from brokers/market feeds",
+            "columns": [
+                {
+                    "name": "FEED_ID",
+                    "type": "VARCHAR(100)",
+                    "nullable": false
+                },
+                {
+                    "name": "FEED_DATE",
+                    "type": "DATE",
+                    "nullable": false
+                },
+                {
+                    "name": "MARKET_FEED_SOURCE",
+                    "type": "VARCHAR(100)",
+                    "nullable": false,
+                    "comment": "Willis Re, Aon, Guy Carpenter"
+                },
+                {
+                    "name": "TREATY_TYPE",
+                    "type": "VARCHAR(50)",
+                    "nullable": false
+                },
+                {
+                    "name": "BUSINESS_CLASS",
+                    "type": "VARCHAR(100)",
+                    "nullable": true
+                },
+                {
+                    "name": "MARKET_ATTACHMENT_POINT",
+                    "type": "DECIMAL(18,2)",
+                    "nullable": true
+                },
+                {
+                    "name": "MARKET_LIMIT",
+                    "type": "DECIMAL(18,2)",
+                    "nullable": true
+                },
+                {
+                    "name": "MARKET_PRICE",
+                    "type": "DECIMAL(8,4)",
+                    "nullable": true,
+                    "comment": "Rate per 100"
+                },
+                {
+                    "name": "MARKET_CAPACITY",
+                    "type": "DECIMAL(18,2)",
+                    "nullable": true
+                },
+                {
+                    "name": "CAPACITY_AVAILABLE",
+                    "type": "DECIMAL(18,2)",
+                    "nullable": true
+                },
+                {
+                    "name": "CAPACITY_PLACED",
+                    "type": "DECIMAL(18,2)",
+                    "nullable": true
+                },
+                {
+                    "name": "HARD_MARKET_FLAG",
+                    "type": "BOOLEAN",
+                    "nullable": true
+                },
+                {
+                    "name": "MARKET_TREND",
+                    "type": "VARCHAR(50)",
+                    "nullable": true,
+                    "comment": "UP, DOWN, STABLE"
+                },
+                {
+                    "name": "ACTIVE_PARTICIPANTS",
+                    "type": "INTEGER",
+                    "nullable": true
+                },
+                {
+                    "name": "NOTES",
+                    "type": "TEXT",
+                    "nullable": true
+                },
+                {
+                    "name": "LOAD_DTS",
+                    "type": "TIMESTAMP",
+                    "nullable": false
+                },
+                {
+                    "name": "LOAD_SOURCE",
+                    "type": "VARCHAR(100)",
+                    "nullable": false
+                }
+            ],
+            "constraints": [
+                {
+                    "name": "PK__EXT_REINSURANCE_MARKET_DATA",
+                    "type": "PRIMARY KEY",
+                    "def": "PRIMARY KEY (FEED_ID)",
+                    "table": "EXT_REINSURANCE_MARKET_DATA",
+                    "columns": [
+                        "FEED_ID"
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "EXT_ECONOMIC_INDICATORS",
+            "type": "BASE TABLE",
+            "comment": "Macroeconomic data \u2014 unemployment, inflation, interest rates, GDP",
+            "columns": [
+                {
+                    "name": "FEED_ID",
+                    "type": "VARCHAR(100)",
+                    "nullable": false
+                },
+                {
+                    "name": "FEED_DATE",
+                    "type": "DATE",
+                    "nullable": false
+                },
+                {
+                    "name": "REPORT_DATE",
+                    "type": "DATE",
+                    "nullable": false,
+                    "comment": "Date of the economic report"
+                },
+                {
+                    "name": "INDICATOR_NAME",
+                    "type": "VARCHAR(100)",
+                    "nullable": false
+                },
+                {
+                    "name": "INDICATOR_VALUE",
+                    "type": "DECIMAL(10,4)",
+                    "nullable": true
+                },
+                {
+                    "name": "PREVIOUS_VALUE",
+                    "type": "DECIMAL(10,4)",
+                    "nullable": true
+                },
+                {
+                    "name": "YOY_CHANGE_PCT",
+                    "type": "DECIMAL(8,4)",
+                    "nullable": true
+                },
+                {
+                    "name": "FORECAST_VALUE",
+                    "type": "DECIMAL(10,4)",
+                    "nullable": true
+                },
+                {
+                    "name": "REGION",
+                    "type": "VARCHAR(100)",
+                    "nullable": true
+                },
+                {
+                    "name": "SOURCE",
+                    "type": "VARCHAR(100)",
+                    "nullable": true,
+                    "comment": "BLS, FRED, Census Bureau"
+                },
+                {
+                    "name": "REVISION_FLAG",
+                    "type": "BOOLEAN",
+                    "nullable": true
+                },
+                {
+                    "name": "LOAD_DTS",
+                    "type": "TIMESTAMP",
+                    "nullable": false
+                },
+                {
+                    "name": "LOAD_SOURCE",
+                    "type": "VARCHAR(100)",
+                    "nullable": false
+                }
+            ],
+            "constraints": [
+                {
+                    "name": "PK__EXT_ECONOMIC_INDICATORS",
+                    "type": "PRIMARY KEY",
+                    "def": "PRIMARY KEY (FEED_ID)",
+                    "table": "EXT_ECONOMIC_INDICATORS",
+                    "columns": [
+                        "FEED_ID"
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "EXT_CURRENCY_RATES",
+            "type": "BASE TABLE",
+            "comment": "Daily currency exchange rates for reinsurance settlements",
+            "columns": [
+                {
+                    "name": "FEED_ID",
+                    "type": "VARCHAR(100)",
+                    "nullable": false
+                },
+                {
+                    "name": "FEED_DATE",
+                    "type": "DATE",
+                    "nullable": false
+                },
+                {
+                    "name": "QUOTE_DATE",
+                    "type": "DATE",
+                    "nullable": false
+                },
+                {
+                    "name": "BASE_CURRENCY",
+                    "type": "VARCHAR(10)",
+                    "nullable": false
+                },
+                {
+                    "name": "QUOTE_CURRENCY",
+                    "type": "VARCHAR(10)",
+                    "nullable": false
+                },
+                {
+                    "name": "EXCHANGE_RATE",
+                    "type": "DECIMAL(12,6)",
+                    "nullable": true
+                },
+                {
+                    "name": "RATE_SOURCE",
+                    "type": "VARCHAR(50)",
+                    "nullable": true,
+                    "comment": "Reuters, Bloomberg, ECB"
+                },
+                {
+                    "name": "BID_RATE",
+                    "type": "DECIMAL(12,6)",
+                    "nullable": true
+                },
+                {
+                    "name": "ASK_RATE",
+                    "type": "DECIMAL(12,6)",
+                    "nullable": true
+                },
+                {
+                    "name": "MIDPOINT_RATE",
+                    "type": "DECIMAL(12,6)",
+                    "nullable": true
+                },
+                {
+                    "name": "DAILY_CHANGE_PCT",
+                    "type": "DECIMAL(8,4)",
+                    "nullable": true
+                },
+                {
+                    "name": "LOAD_DTS",
+                    "type": "TIMESTAMP",
+                    "nullable": false
+                },
+                {
+                    "name": "LOAD_SOURCE",
+                    "type": "VARCHAR(100)",
+                    "nullable": false
+                }
+            ],
+            "constraints": [
+                {
+                    "name": "PK__EXT_CURRENCY_RATES",
+                    "type": "PRIMARY KEY",
+                    "def": "PRIMARY KEY (FEED_ID)",
+                    "table": "EXT_CURRENCY_RATES",
+                    "columns": [
+                        "FEED_ID"
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "EXT_INTEREST_RATES",
+            "type": "BASE TABLE",
+            "comment": "Interest rates (Treasury, LIBOR, Fed Funds) for cash flow modeling",
+            "columns": [
+                {
+                    "name": "FEED_ID",
+                    "type": "VARCHAR(100)",
+                    "nullable": false
+                },
+                {
+                    "name": "FEED_DATE",
+                    "type": "DATE",
+                    "nullable": false
+                },
+                {
+                    "name": "RATE_DATE",
+                    "type": "DATE",
+                    "nullable": false
+                },
+                {
+                    "name": "RATE_TYPE",
+                    "type": "VARCHAR(50)",
+                    "nullable": false,
+                    "comment": "3M_LIBOR, 10Y_TREASURY, PRIME_RATE"
+                },
+                {
+                    "name": "RATE_VALUE",
+                    "type": "DECIMAL(8,4)",
+                    "nullable": true
+                },
+                {
+                    "name": "PREVIOUS_VALUE",
+                    "type": "DECIMAL(8,4)",
+                    "nullable": true
+                },
+                {
+                    "name": "CHANGE_BPS",
+                    "type": "INTEGER",
+                    "nullable": true
+                },
+                {
+                    "name": "HISTORICAL_HIGH",
+                    "type": "DECIMAL(8,4)",
+                    "nullable": true
+                },
+                {
+                    "name": "HISTORICAL_LOW",
+                    "type": "DECIMAL(8,4)",
+                    "nullable": true
+                },
+                {
+                    "name": "FORECAST_VALUE",
+                    "type": "DECIMAL(8,4)",
+                    "nullable": true
+                },
+                {
+                    "name": "LOAD_DTS",
+                    "type": "TIMESTAMP",
+                    "nullable": false
+                },
+                {
+                    "name": "LOAD_SOURCE",
+                    "type": "VARCHAR(100)",
+                    "nullable": false
+                }
+            ],
+            "constraints": [
+                {
+                    "name": "PK__EXT_INTEREST_RATES",
+                    "type": "PRIMARY KEY",
+                    "def": "PRIMARY KEY (FEED_ID)",
+                    "table": "EXT_INTEREST_RATES",
+                    "columns": [
+                        "FEED_ID"
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "EXT_CREDIT_RATINGS_AGENCY",
+            "type": "BASE TABLE",
+            "comment": "Credit ratings from S&P, Moody's, Fitch for reinsurer/counterparty monitoring",
+            "columns": [
+                {
+                    "name": "FEED_ID",
+                    "type": "VARCHAR(100)",
+                    "nullable": false
+                },
+                {
+                    "name": "FEED_DATE",
+                    "type": "DATE",
+                    "nullable": false
+                },
+                {
+                    "name": "ENTITY_NAME",
+                    "type": "VARCHAR(255)",
+                    "nullable": false
+                },
+                {
+                    "name": "ENTITY_CODE",
+                    "type": "VARCHAR(20)",
+                    "nullable": true
+                },
+                {
+                    "name": "ENTITY_TYPE",
+                    "type": "VARCHAR(50)",
+                    "nullable": true,
+                    "comment": "REINSURER, BANK, BOND_ISSUER"
+                },
+                {
+                    "name": "RATING_AGENCY",
+                    "type": "VARCHAR(20)",
+                    "nullable": false,
+                    "comment": "SP, MOODYS, FITCH"
+                },
+                {
+                    "name": "RATING_LONG_TERM",
+                    "type": "VARCHAR(10)",
+                    "nullable": true
+                },
+                {
+                    "name": "RATING_SHORT_TERM",
+                    "type": "VARCHAR(10)",
+                    "nullable": true
+                },
+                {
+                    "name": "RATING_OUTLOOK",
+                    "type": "VARCHAR(20)",
+                    "nullable": true,
+                    "comment": "POSITIVE, STABLE, NEGATIVE"
+                },
+                {
+                    "name": "PREVIOUS_RATING",
+                    "type": "VARCHAR(10)",
+                    "nullable": true
+                },
+                {
+                    "name": "CHANGE_DATE",
+                    "type": "DATE",
+                    "nullable": true
+                },
+                {
+                    "name": "WATCH_STATUS",
+                    "type": "VARCHAR(50)",
+                    "nullable": true
+                },
+                {
+                    "name": "RATING_HISTORY",
+                    "type": "TEXT",
+                    "nullable": true
+                },
+                {
+                    "name": "LOAD_DTS",
+                    "type": "TIMESTAMP",
+                    "nullable": false
+                },
+                {
+                    "name": "LOAD_SOURCE",
+                    "type": "VARCHAR(100)",
+                    "nullable": false
+                }
+            ],
+            "constraints": [
+                {
+                    "name": "PK__EXT_CREDIT_RATINGS_AGENCY",
+                    "type": "PRIMARY KEY",
+                    "def": "PRIMARY KEY (FEED_ID)",
+                    "table": "EXT_CREDIT_RATINGS_AGENCY",
+                    "columns": [
+                        "FEED_ID"
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "EXT_WEATHER_HISTORICAL",
+            "type": "BASE TABLE",
+            "comment": "Historical weather data by location \u2014 temperature, precipitation, wind",
+            "columns": [
+                {
+                    "name": "FEED_ID",
+                    "type": "VARCHAR(100)",
+                    "nullable": false
+                },
+                {
+                    "name": "FEED_DATE",
+                    "type": "DATE",
+                    "nullable": false
+                },
+                {
+                    "name": "WEATHER_DATE",
+                    "type": "DATE",
+                    "nullable": false
+                },
+                {
+                    "name": "LOCATION_CODE",
+                    "type": "VARCHAR(50)",
+                    "nullable": false,
+                    "comment": "ZIP code or lat/long"
+                },
+                {
+                    "name": "LATITUDE",
+                    "type": "DECIMAL(10,6)",
+                    "nullable": true
+                },
+                {
+                    "name": "LONGITUDE",
+                    "type": "DECIMAL(10,6)",
+                    "nullable": true
+                },
+                {
+                    "name": "TEMPERATURE_HIGH_F",
+                    "type": "INTEGER",
+                    "nullable": true
+                },
+                {
+                    "name": "TEMPERATURE_LOW_F",
+                    "type": "INTEGER",
+                    "nullable": true
+                },
+                {
+                    "name": "TEMPERATURE_AVG_F",
+                    "type": "DECIMAL(5,1)",
+                    "nullable": true
+                },
+                {
+                    "name": "PRECIPITATION_INCHES",
+                    "type": "DECIMAL(6,2)",
+                    "nullable": true
+                },
+                {
+                    "name": "SNOW_INCHES",
+                    "type": "DECIMAL(6,2)",
+                    "nullable": true
+                },
+                {
+                    "name": "WIND_SPEED_AVG_MPH",
+                    "type": "INTEGER",
+                    "nullable": true
+                },
+                {
+                    "name": "WIND_GUST_MPH",
+                    "type": "INTEGER",
+                    "nullable": true
+                },
+                {
+                    "name": "WIND_DIRECTION",
+                    "type": "VARCHAR(10)",
+                    "nullable": true
+                },
+                {
+                    "name": "HUMIDITY_PCT",
+                    "type": "INTEGER",
+                    "nullable": true
+                },
+                {
+                    "name": "VISIBILITY_MILES",
+                    "type": "INTEGER",
+                    "nullable": true
+                },
+                {
+                    "name": "SEVERE_WEATHER_FLAGS",
+                    "type": "VARCHAR(255)",
+                    "nullable": true,
+                    "comment": "TORNADO, HAIL, FLOOD"
+                },
+                {
+                    "name": "LOAD_DTS",
+                    "type": "TIMESTAMP",
+                    "nullable": false
+                },
+                {
+                    "name": "LOAD_SOURCE",
+                    "type": "VARCHAR(100)",
+                    "nullable": false
+                }
+            ],
+            "constraints": [
+                {
+                    "name": "PK__EXT_WEATHER_HISTORICAL",
+                    "type": "PRIMARY KEY",
+                    "def": "PRIMARY KEY (FEED_ID)",
+                    "table": "EXT_WEATHER_HISTORICAL",
+                    "columns": [
+                        "FEED_ID"
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "EXT_WEATHER_FORECAST",
+            "type": "BASE TABLE",
+            "comment": "Weather forecast data for loss prevention and claims prediction",
+            "columns": [
+                {
+                    "name": "FEED_ID",
+                    "type": "VARCHAR(100)",
+                    "nullable": false
+                },
+                {
+                    "name": "FEED_DATE",
+                    "type": "DATE",
+                    "nullable": false
+                },
+                {
+                    "name": "FORECAST_ISSUE_TIME",
+                    "type": "TIMESTAMP",
+                    "nullable": false
+                },
+                {
+                    "name": "FORECAST_START_DATE",
+                    "type": "DATE",
+                    "nullable": false
+                },
+                {
+                    "name": "FORECAST_END_DATE",
+                    "type": "DATE",
+                    "nullable": false
+                },
+                {
+                    "name": "LOCATION_CODE",
+                    "type": "VARCHAR(50)",
+                    "nullable": false
+                },
+                {
+                    "name": "LATITUDE",
+                    "type": "DECIMAL(10,6)",
+                    "nullable": true
+                },
+                {
+                    "name": "LONGITUDE",
+                    "type": "DECIMAL(10,6)",
+                    "nullable": true
+                },
+                {
+                    "name": "FORECAST_CONFIDENCE",
+                    "type": "DECIMAL(5,2)",
+                    "nullable": true,
+                    "comment": "Confidence percentage"
+                },
+                {
+                    "name": "SEVERE_WEATHER_PROBABILITY",
+                    "type": "DECIMAL(5,2)",
+                    "nullable": true
+                },
+                {
+                    "name": "WIND_WARNING_FLAG",
+                    "type": "BOOLEAN",
+                    "nullable": true
+                },
+                {
+                    "name": "FLOOD_WARNING_FLAG",
+                    "type": "BOOLEAN",
+                    "nullable": true
+                },
+                {
+                    "name": "TORNADO_WARNING_FLAG",
+                    "type": "BOOLEAN",
+                    "nullable": true
+                },
+                {
+                    "name": "HAIL_WARNING_FLAG",
+                    "type": "BOOLEAN",
+                    "nullable": true
+                },
+                {
+                    "name": "WINTER_STORM_WARNING_FLAG",
+                    "type": "BOOLEAN",
+                    "nullable": true
+                },
+                {
+                    "name": "AIR_QUALITY_WARNING_FLAG",
+                    "type": "BOOLEAN",
+                    "nullable": true
+                },
+                {
+                    "name": "EXTENDED_FORECAST_14D",
+                    "type": "TEXT",
+                    "nullable": true
+                },
+                {
+                    "name": "LOAD_DTS",
+                    "type": "TIMESTAMP",
+                    "nullable": false
+                },
+                {
+                    "name": "LOAD_SOURCE",
+                    "type": "VARCHAR(100)",
+                    "nullable": false
+                }
+            ],
+            "constraints": [
+                {
+                    "name": "PK__EXT_WEATHER_FORECAST",
+                    "type": "PRIMARY KEY",
+                    "def": "PRIMARY KEY (FEED_ID)",
+                    "table": "EXT_WEATHER_FORECAST",
+                    "columns": [
+                        "FEED_ID"
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "EXT_CATASTROPHE_EXPOSED_RISK",
+            "type": "BASE TABLE",
+            "comment": "Real-time catastrophe exposure modeling from cat modeling vendors",
+            "columns": [
+                {
+                    "name": "FEED_ID",
+                    "type": "VARCHAR(100)",
+                    "nullable": false
+                },
+                {
+                    "name": "FEED_DATE",
+                    "type": "DATE",
+                    "nullable": false
+                },
+                {
+                    "name": "MODEL_RUN_TIMESTAMP",
+                    "type": "TIMESTAMP",
+                    "nullable": false
+                },
+                {
+                    "name": "MODEL_VENDOR",
+                    "type": "VARCHAR(100)",
+                    "nullable": false,
+                    "comment": "AIR, RMS, EQECAT, JBA"
+                },
+                {
+                    "name": "PERIL_TYPE",
+                    "type": "VARCHAR(50)",
+                    "nullable": false,
+                    "comment": "HURRICANE, EARTHQUAKE, TORNADO, WILDFIRE"
+                },
+                {
+                    "name": "EVENT_ID",
+                    "type": "VARCHAR(100)",
+                    "nullable": true
+                },
+                {
+                    "name": "LOCATION_CODE",
+                    "type": "VARCHAR(50)",
+                    "nullable": false
+                },
+                {
+                    "name": "PROBABILITY_12MONTH",
+                    "type": "DECIMAL(5,4)",
+                    "nullable": true
+                },
+                {
+                    "name": "RETURN_PERIOD",
+                    "type": "INTEGER",
+                    "nullable": true,
+                    "comment": "250yr, 500yr, 1000yr"
+                },
+                {
+                    "name": "AVG_ANNUAL_LOSS_AAL",
+                    "type": "DECIMAL(18,2)",
+                    "nullable": true
+                },
+                {
+                    "name": "PML_1_IN_100",
+                    "type": "DECIMAL(18,2)",
+                    "nullable": true
+                },
+                {
+                    "name": "PML_1_IN_500",
+                    "type": "DECIMAL(18,2)",
+                    "nullable": true
+                },
+                {
+                    "name": "PML_1_IN_1000",
+                    "type": "DECIMAL(18,2)",
+                    "nullable": true
+                },
+                {
+                    "name": "EXPECTED_LOSS_PCT",
+                    "type": "DECIMAL(8,4)",
+                    "nullable": true
+                },
+                {
+                    "name": "RISK_RANKING",
+                    "type": "VARCHAR(50)",
+                    "nullable": true,
+                    "comment": "LOW, MEDIUM, HIGH, EXTREME"
+                },
+                {
+                    "name": "LOAD_DTS",
+                    "type": "TIMESTAMP",
+                    "nullable": false
+                },
+                {
+                    "name": "LOAD_SOURCE",
+                    "type": "VARCHAR(100)",
+                    "nullable": false
+                }
+            ],
+            "constraints": [
+                {
+                    "name": "PK__EXT_CATASTROPHE_EXPOSED_RISK",
+                    "type": "PRIMARY KEY",
+                    "def": "PRIMARY KEY (FEED_ID)",
+                    "table": "EXT_CATASTROPHE_EXPOSED_RISK",
+                    "columns": [
+                        "FEED_ID"
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "EXT_DEMOGRAPHIC_DATA",
+            "type": "BASE TABLE",
+            "comment": "Census, household, and lifestyle demographic data",
+            "columns": [
+                {
+                    "name": "FEED_ID",
+                    "type": "VARCHAR(100)",
+                    "nullable": false
+                },
+                {
+                    "name": "FEED_DATE",
+                    "type": "DATE",
+                    "nullable": false
+                },
+                {
+                    "name": "ZIPCODE",
+                    "type": "VARCHAR(10)",
+                    "nullable": false
+                },
+                {
+                    "name": "CENSUS_TRACT",
+                    "type": "VARCHAR(20)",
+                    "nullable": true
+                },
+                {
+                    "name": "POPULATION",
+                    "type": "INTEGER",
+                    "nullable": true
+                },
+                {
+                    "name": "MEDIAN_AGE",
+                    "type": "DECIMAL(5,1)",
+                    "nullable": true
+                },
+                {
+                    "name": "MEDIAN_HOUSEHOLD_INCOME",
+                    "type": "DECIMAL(12,2)",
+                    "nullable": true
+                },
+                {
+                    "name": "PERCENT_HOMEOWNER",
+                    "type": "DECIMAL(5,2)",
+                    "nullable": true
+                },
+                {
+                    "name": "PERCENT_RENTER",
+                    "type": "DECIMAL(5,2)",
+                    "nullable": true
+                },
+                {
+                    "name": "PERCENT_COLLEGE_EDUCATED",
+                    "type": "DECIMAL(5,2)",
+                    "nullable": true
+                },
+                {
+                    "name": "PERCENT_UNEMPLOYMENT",
+                    "type": "DECIMAL(5,2)",
+                    "nullable": true
+                },
+                {
+                    "name": "AVERAGE_HOUSEHOLD_SIZE",
+                    "type": "DECIMAL(5,2)",
+                    "nullable": true
+                },
+                {
+                    "name": "CRIME_RATE_PER_1000",
+                    "type": "DECIMAL(8,2)",
+                    "nullable": true
+                },
+                {
+                    "name": "DIVORCE_RATE",
+                    "type": "DECIMAL(8,4)",
+                    "nullable": true
+                },
+                {
+                    "name": "FAMILY_LIFESTYLE_CODE",
+                    "type": "VARCHAR(20)",
+                    "nullable": true
+                },
+                {
+                    "name": "LOAD_DTS",
+                    "type": "TIMESTAMP",
+                    "nullable": false
+                },
+                {
+                    "name": "LOAD_SOURCE",
+                    "type": "VARCHAR(100)",
+                    "nullable": false
+                }
+            ],
+            "constraints": [
+                {
+                    "name": "PK__EXT_DEMOGRAPHIC_DATA",
+                    "type": "PRIMARY KEY",
+                    "def": "PRIMARY KEY (FEED_ID)",
+                    "table": "EXT_DEMOGRAPHIC_DATA",
+                    "columns": [
+                        "FEED_ID"
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "EXT_PROPERTY_VALUATION",
+            "type": "BASE TABLE",
+            "comment": "Property valuation and market data from Zillow, Core Logic, CIMIS",
+            "columns": [
+                {
+                    "name": "FEED_ID",
+                    "type": "VARCHAR(100)",
+                    "nullable": false
+                },
+                {
+                    "name": "FEED_DATE",
+                    "type": "DATE",
+                    "nullable": false
+                },
+                {
+                    "name": "PROPERTY_ADDRESS",
+                    "type": "VARCHAR(255)",
+                    "nullable": false
+                },
+                {
+                    "name": "PROPERTY_ZIP",
+                    "type": "VARCHAR(10)",
+                    "nullable": true
+                },
+                {
+                    "name": "PROPERTY_TYPE",
+                    "type": "VARCHAR(50)",
+                    "nullable": true,
+                    "comment": "SINGLE_FAMILY, CONDO, MULTI_FAMILY"
+                },
+                {
+                    "name": "YEAR_BUILT",
+                    "type": "INTEGER",
+                    "nullable": true
+                },
+                {
+                    "name": "SQUARE_FOOTAGE",
+                    "type": "INTEGER",
+                    "nullable": true
+                },
+                {
+                    "name": "BEDROOMS",
+                    "type": "INTEGER",
+                    "nullable": true
+                },
+                {
+                    "name": "BATHROOMS",
+                    "type": "DECIMAL(3,1)",
+                    "nullable": true
+                },
+                {
+                    "name": "ESTIMATED_VALUE",
+                    "type": "DECIMAL(18,2)",
+                    "nullable": true
+                },
+                {
+                    "name": "VALUATION_SOURCE",
+                    "type": "VARCHAR(100)",
+                    "nullable": true
+                },
+                {
+                    "name": "PRICE_PER_SQFT",
+                    "type": "DECIMAL(10,2)",
+                    "nullable": true
+                },
+                {
+                    "name": "MARKET_APPRECIATION_YOY",
+                    "type": "DECIMAL(8,4)",
+                    "nullable": true
+                },
+                {
+                    "name": "REPLACEMENT_COST",
+                    "type": "DECIMAL(18,2)",
+                    "nullable": true
+                },
+                {
+                    "name": "LAND_VALUE",
+                    "type": "DECIMAL(18,2)",
+                    "nullable": true
+                },
+                {
+                    "name": "LOAD_DTS",
+                    "type": "TIMESTAMP",
+                    "nullable": false
+                },
+                {
+                    "name": "LOAD_SOURCE",
+                    "type": "VARCHAR(100)",
+                    "nullable": false
+                }
+            ],
+            "constraints": [
+                {
+                    "name": "PK__EXT_PROPERTY_VALUATION",
+                    "type": "PRIMARY KEY",
+                    "def": "PRIMARY KEY (FEED_ID)",
+                    "table": "EXT_PROPERTY_VALUATION",
+                    "columns": [
+                        "FEED_ID"
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "EXT_REGULATORY_DATA",
+            "type": "BASE TABLE",
+            "comment": "Regulatory filings, enforcement actions, compliance alerts",
+            "columns": [
+                {
+                    "name": "FEED_ID",
+                    "type": "VARCHAR(100)",
+                    "nullable": false
+                },
+                {
+                    "name": "FEED_DATE",
+                    "type": "DATE",
+                    "nullable": false
+                },
+                {
+                    "name": "ENTITY_NAME",
+                    "type": "VARCHAR(255)",
+                    "nullable": false
+                },
+                {
+                    "name": "ENTITY_ID",
+                    "type": "VARCHAR(100)",
+                    "nullable": true
+                },
+                {
+                    "name": "ENTITY_TYPE",
+                    "type": "VARCHAR(50)",
+                    "nullable": true,
+                    "comment": "INSURER, AGENT, PRODUCER, CARRIER"
+                },
+                {
+                    "name": "REGULATORY_BODY",
+                    "type": "VARCHAR(100)",
+                    "nullable": false,
+                    "comment": "NAIC, State DOI, FBI"
+                },
+                {
+                    "name": "FILING_DATE",
+                    "type": "DATE",
+                    "nullable": true
+                },
+                {
+                    "name": "FILING_TYPE",
+                    "type": "VARCHAR(100)",
+                    "nullable": true,
+                    "comment": "FORM_ANNUAL, FORM_QUARTERLY, ENFORCEMENT"
+                },
+                {
+                    "name": "PRIMARY_ISSUE",
+                    "type": "VARCHAR(255)",
+                    "nullable": true
+                },
+                {
+                    "name": "ENFORCEMENT_ACTION",
+                    "type": "VARCHAR(50)",
+                    "nullable": true,
+                    "comment": "CONSENT_ORDER, FINE, SUSPENSION"
+                },
+                {
+                    "name": "AMOUNT_INVOLVED",
+                    "type": "DECIMAL(18,2)",
+                    "nullable": true
+                },
+                {
+                    "name": "STATUS",
+                    "type": "VARCHAR(50)",
+                    "nullable": true,
+                    "comment": "OPEN, RESOLVED, APPEALED"
+                },
+                {
+                    "name": "FILING_DETAILS",
+                    "type": "TEXT",
+                    "nullable": true
+                },
+                {
+                    "name": "LOAD_DTS",
+                    "type": "TIMESTAMP",
+                    "nullable": false
+                },
+                {
+                    "name": "LOAD_SOURCE",
+                    "type": "VARCHAR(100)",
+                    "nullable": false
+                }
+            ],
+            "constraints": [
+                {
+                    "name": "PK__EXT_REGULATORY_DATA",
+                    "type": "PRIMARY KEY",
+                    "def": "PRIMARY KEY (FEED_ID)",
+                    "table": "EXT_REGULATORY_DATA",
+                    "columns": [
+                        "FEED_ID"
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "EXT_COMPETITOR_PRICING",
+            "type": "BASE TABLE",
+            "comment": "Competitor rates and quotes for market intelligence",
+            "columns": [
+                {
+                    "name": "FEED_ID",
+                    "type": "VARCHAR(100)",
+                    "nullable": false
+                },
+                {
+                    "name": "FEED_DATE",
+                    "type": "DATE",
+                    "nullable": false
+                },
+                {
+                    "name": "QUOTE_DATE",
+                    "type": "DATE",
+                    "nullable": false
+                },
+                {
+                    "name": "COMPETITOR_NAME",
+                    "type": "VARCHAR(100)",
+                    "nullable": false
+                },
+                {
+                    "name": "PRODUCT_TYPE",
+                    "type": "VARCHAR(50)",
+                    "nullable": false
+                },
+                {
+                    "name": "CUSTOMER_PROFILE",
+                    "type": "VARCHAR(255)",
+                    "nullable": true,
+                    "comment": "Risk profile used for quote"
+                },
+                {
+                    "name": "QUOTED_PREMIUM",
+                    "type": "DECIMAL(10,2)",
+                    "nullable": true
+                },
+                {
+                    "name": "DEDUCTIBLE",
+                    "type": "DECIMAL(18,2)",
+                    "nullable": true
+                },
+                {
+                    "name": "COVERAGE_LIMIT",
+                    "type": "DECIMAL(18,2)",
+                    "nullable": true
+                },
+                {
+                    "name": "TERMS_CONDITIONS",
+                    "type": "TEXT",
+                    "nullable": true
+                },
+                {
+                    "name": "DISCOUNT_PROGRAM",
+                    "type": "VARCHAR(255)",
+                    "nullable": true
+                },
+                {
+                    "name": "EFFECTIVE_DATE",
+                    "type": "DATE",
+                    "nullable": true
+                },
+                {
+                    "name": "EXPIRATION_DATE",
+                    "type": "DATE",
+                    "nullable": true
+                },
+                {
+                    "name": "OUR_PREMIUM_COMPARISON",
+                    "type": "DECIMAL(10,2)",
+                    "nullable": true
+                },
+                {
+                    "name": "LOAD_DTS",
+                    "type": "TIMESTAMP",
+                    "nullable": false
+                },
+                {
+                    "name": "LOAD_SOURCE",
+                    "type": "VARCHAR(100)",
+                    "nullable": false
+                }
+            ],
+            "constraints": [
+                {
+                    "name": "PK__EXT_COMPETITOR_PRICING",
+                    "type": "PRIMARY KEY",
+                    "def": "PRIMARY KEY (FEED_ID)",
+                    "table": "EXT_COMPETITOR_PRICING",
+                    "columns": [
+                        "FEED_ID"
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "EXT_SANCTIONS_LISTS",
+            "type": "BASE TABLE",
+            "comment": "OFAC, UN, EU sanctions lists for compliance screening",
+            "columns": [
+                {
+                    "name": "FEED_ID",
+                    "type": "VARCHAR(100)",
+                    "nullable": false
+                },
+                {
+                    "name": "FEED_DATE",
+                    "type": "DATE",
+                    "nullable": false
+                },
+                {
+                    "name": "LIST_NAME",
+                    "type": "VARCHAR(100)",
+                    "nullable": false,
+                    "comment": "OFAC_SDN, UN_LIST, EU_CONSOLIDATED"
+                },
+                {
+                    "name": "LIST_UPDATE_DATE",
+                    "type": "DATE",
+                    "nullable": false
+                },
+                {
+                    "name": "ENTITY_NAME",
+                    "type": "VARCHAR(255)",
+                    "nullable": false
+                },
+                {
+                    "name": "ENTITY_TYPE",
+                    "type": "VARCHAR(50)",
+                    "nullable": true,
+                    "comment": "INDIVIDUAL, ORGANIZATION, VESSEL"
+                },
+                {
+                    "name": "PROGRAM",
+                    "type": "VARCHAR(100)",
+                    "nullable": true
+                },
+                {
+                    "name": "ACTION",
+                    "type": "VARCHAR(100)",
+                    "nullable": true,
+                    "comment": "BLOCKED, LICENSED, PROHIBITED"
+                },
+                {
+                    "name": "REMARKS",
+                    "type": "TEXT",
+                    "nullable": true
+                },
+                {
+                    "name": "ALIASES",
+                    "type": "TEXT",
+                    "nullable": true
+                },
+                {
+                    "name": "COUNTRY_CODE",
+                    "type": "VARCHAR(10)",
+                    "nullable": true
+                },
+                {
+                    "name": "MATCH_SCORE",
+                    "type": "DECIMAL(5,2)",
+                    "nullable": true
+                },
+                {
+                    "name": "LOAD_DTS",
+                    "type": "TIMESTAMP",
+                    "nullable": false
+                },
+                {
+                    "name": "LOAD_SOURCE",
+                    "type": "VARCHAR(100)",
+                    "nullable": false
+                }
+            ],
+            "constraints": [
+                {
+                    "name": "PK__EXT_SANCTIONS_LISTS",
+                    "type": "PRIMARY KEY",
+                    "def": "PRIMARY KEY (FEED_ID)",
+                    "table": "EXT_SANCTIONS_LISTS",
+                    "columns": [
+                        "FEED_ID"
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "EXT_PEP_LISTS",
+            "type": "BASE TABLE",
+            "comment": "Politically Exposed Persons (PEP) lists from third-party vendors",
+            "columns": [
+                {
+                    "name": "FEED_ID",
+                    "type": "VARCHAR(100)",
+                    "nullable": false
+                },
+                {
+                    "name": "FEED_DATE",
+                    "type": "DATE",
+                    "nullable": false
+                },
+                {
+                    "name": "PERSON_NAME",
+                    "type": "VARCHAR(255)",
+                    "nullable": false
+                },
+                {
+                    "name": "TITLE_POSITION",
+                    "type": "VARCHAR(255)",
+                    "nullable": true
+                },
+                {
+                    "name": "COUNTRY_CODE",
+                    "type": "VARCHAR(10)",
+                    "nullable": false
+                },
+                {
+                    "name": "COUNTRY_NAME",
+                    "type": "VARCHAR(100)",
+                    "nullable": true
+                },
+                {
+                    "name": "PEP_CATEGORY",
+                    "type": "VARCHAR(50)",
+                    "nullable": true,
+                    "comment": "HEAD_OF_STATE, MINISTER, OFFICIAL"
+                },
+                {
+                    "name": "RELATIONSHIP_TYPE",
+                    "type": "VARCHAR(50)",
+                    "nullable": true,
+                    "comment": "DIRECT, FAMILY, ASSOCIATE"
+                },
+                {
+                    "name": "RISK_LEVEL",
+                    "type": "VARCHAR(20)",
+                    "nullable": true,
+                    "comment": "LOW, MEDIUM, HIGH"
+                },
+                {
+                    "name": "SOURCE_LISTS",
+                    "type": "TEXT",
+                    "nullable": true
+                },
+                {
+                    "name": "LOAD_DTS",
+                    "type": "TIMESTAMP",
+                    "nullable": false
+                },
+                {
+                    "name": "LOAD_SOURCE",
+                    "type": "VARCHAR(100)",
+                    "nullable": false
+                }
+            ],
+            "constraints": [
+                {
+                    "name": "PK__EXT_PEP_LISTS",
+                    "type": "PRIMARY KEY",
+                    "def": "PRIMARY KEY (FEED_ID)",
+                    "table": "EXT_PEP_LISTS",
+                    "columns": [
+                        "FEED_ID"
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "EXT_AML_ALERTS",
+            "type": "BASE TABLE",
+            "comment": "Anti-Money Laundering alerts and monitoring flags",
+            "columns": [
+                {
+                    "name": "FEED_ID",
+                    "type": "VARCHAR(100)",
+                    "nullable": false
+                },
+                {
+                    "name": "FEED_DATE",
+                    "type": "DATE",
+                    "nullable": false
+                },
+                {
+                    "name": "ENTITY_ID",
+                    "type": "VARCHAR(100)",
+                    "nullable": false
+                },
+                {
+                    "name": "ALERT_TYPE",
+                    "type": "VARCHAR(50)",
+                    "nullable": false,
+                    "comment": "UNUSUAL_ACTIVITY, THRESHOLD_EXCEEDED"
+                },
+                {
+                    "name": "ALERT_SEVERITY",
+                    "type": "VARCHAR(20)",
+                    "nullable": true,
+                    "comment": "LOW, MEDIUM, HIGH, CRITICAL"
+                },
+                {
+                    "name": "TRANSACTION_AMOUNT",
+                    "type": "DECIMAL(18,2)",
+                    "nullable": true
+                },
+                {
+                    "name": "TRANSACTION_PATTERN",
+                    "type": "VARCHAR(100)",
+                    "nullable": true
+                },
+                {
+                    "name": "SUSPICIOUS_INDICATOR",
+                    "type": "VARCHAR(255)",
+                    "nullable": true
+                },
+                {
+                    "name": "ALERT_TIMESTAMP",
+                    "type": "TIMESTAMP",
+                    "nullable": false
+                },
+                {
+                    "name": "CLEARED_FLAG",
+                    "type": "BOOLEAN",
+                    "nullable": true
+                },
+                {
+                    "name": "CLEARED_DATE",
+                    "type": "DATE",
+                    "nullable": true
+                },
+                {
+                    "name": "INVESTIGATION_NOTES",
+                    "type": "TEXT",
+                    "nullable": true
+                },
+                {
+                    "name": "LOAD_DTS",
+                    "type": "TIMESTAMP",
+                    "nullable": false
+                },
+                {
+                    "name": "LOAD_SOURCE",
+                    "type": "VARCHAR(100)",
+                    "nullable": false
+                }
+            ],
+            "constraints": [
+                {
+                    "name": "PK__EXT_AML_ALERTS",
+                    "type": "PRIMARY KEY",
+                    "def": "PRIMARY KEY (FEED_ID)",
+                    "table": "EXT_AML_ALERTS",
+                    "columns": [
+                        "FEED_ID"
+                    ]
+                }
+            ]
+        }
+    ],
+    "relations": [],
+    "enums": [
+        {
+            "name": "feed_source",
+            "values": [
+                "TRW",
+                "EQUIFAX",
+                "EXPERIAN",
+                "LEXISNEXIS",
+                "DMV",
+                "AIR",
+                "RMS",
+                "EQECAT",
+                "NOAA",
+                "NWS"
+            ]
+        },
+        {
+            "name": "severity",
+            "values": [
+                "LOW",
+                "MEDIUM",
+                "HIGH",
+                "CRITICAL"
+            ]
+        },
+        {
+            "name": "risk_rating",
+            "values": [
+                "LOW",
+                "MEDIUM",
+                "HIGH",
+                "EXTREME"
+            ]
+        }
+    ],
+    "driver": {
+        "name": "external-feeds",
+        "database_version": "1.0",
+        "meta": {
+            "dict": {
+                "Source": "Third-party data providers and regulatory feeds"
+            }
+        }
+    },
+    "labels": [
+        {
+            "name": "external-feeds",
+            "virtual": false
+        },
+        {
+            "name": "third-party",
+            "virtual": false
+        },
+        {
+            "name": "insurance",
+            "virtual": false
+        },
+        {
+            "name": "regulatory-data",
+            "virtual": false
+        }
+    ],
+    "viewpoints": [
+        {
+            "name": "Credit & Identity",
+            "desc": "Credit bureau reports, identity verification, underwriting data",
+            "tables": [
+                "EXT_CREDIT_BUREAU_TRW",
+                "EXT_CREDIT_BUREAU_EQUIFAX",
+                "EXT_CREDIT_BUREAU_EXPERIAN",
+                "EXT_IDENTITY_VERIFICATION"
+            ]
+        },
+        {
+            "name": "Motor Vehicle & Claims History",
+            "desc": "Driver records, violation history, prior claims",
+            "tables": [
+                "EXT_MOTOR_VEHICLE_RECORD",
+                "EXT_CLAIM_HISTORY_LEXIS"
+            ]
+        },
+        {
+            "name": "Market & Financial",
+            "desc": "Reinsurance market data, economic indicators, rates, credit ratings",
+            "tables": [
+                "EXT_REINSURANCE_MARKET_DATA",
+                "EXT_ECONOMIC_INDICATORS",
+                "EXT_CURRENCY_RATES",
+                "EXT_INTEREST_RATES",
+                "EXT_CREDIT_RATINGS_AGENCY"
+            ]
+        },
+        {
+            "name": "Weather & Catastrophe",
+            "desc": "Weather history, forecasts, cat exposure modeling",
+            "tables": [
+                "EXT_WEATHER_HISTORICAL",
+                "EXT_WEATHER_FORECAST",
+                "EXT_CATASTROPHE_EXPOSED_RISK"
+            ]
+        },
+        {
+            "name": "Demographics & Valuation",
+            "desc": "Census data, property valuations, lifestyle, competitor pricing",
+            "tables": [
+                "EXT_DEMOGRAPHIC_DATA",
+                "EXT_PROPERTY_VALUATION",
+                "EXT_COMPETITOR_PRICING"
+            ]
+        },
+        {
+            "name": "Regulatory & Compliance",
+            "desc": "Regulatory data, sanctions screening, PEP lists, AML alerts",
+            "tables": [
+                "EXT_REGULATORY_DATA",
+                "EXT_SANCTIONS_LISTS",
+                "EXT_PEP_LISTS",
+                "EXT_AML_ALERTS"
+            ]
+        }
+    ]
+}

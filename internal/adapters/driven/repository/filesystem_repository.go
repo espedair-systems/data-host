@@ -1041,3 +1041,49 @@ func (r *FilesystemRepository) SaveOrgStructure(payload interface{}) error {
 	log.Info().Str("path", path).Msg("successfully saved org structure")
 	return nil
 }
+
+func (r *FilesystemRepository) SaveDFDStructure(payload interface{}) error {
+	log.Info().Msg("Saving DFD structure to filesystem")
+	data, err := json.MarshalIndent(payload, "", "  ")
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to marshal DFD structure")
+		return err
+	}
+
+	path := filepath.Join(r.getProjectRoot(), "system-dfd.json")
+	err = os.WriteFile(path, data, 0644)
+	if err != nil {
+		log.Error().Err(err).Str("path", path).Msg("Failed to write DFD structure to file")
+		return err
+	}
+
+	log.Info().Str("path", path).Msg("successfully saved DFD structure")
+	return nil
+}
+func (r *FilesystemRepository) GetOrgStructure() (interface{}, error) {
+	path := filepath.Join(r.getProjectRoot(), "system-organization.json")
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	var payload interface{}
+	if err := json.Unmarshal(data, &payload); err != nil {
+		return nil, err
+	}
+	return payload, nil
+}
+
+func (r *FilesystemRepository) GetDFDStructure() (interface{}, error) {
+	path := filepath.Join(r.getProjectRoot(), "system-dfd.json")
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	var payload interface{}
+	if err := json.Unmarshal(data, &payload); err != nil {
+		return nil, err
+	}
+	return payload, nil
+}
