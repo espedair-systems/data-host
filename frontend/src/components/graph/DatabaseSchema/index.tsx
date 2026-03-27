@@ -130,12 +130,19 @@ interface DatabaseSchemaProps {
     schema: any;
     focusTable?: string;
     compact?: boolean;
+    viewpoint?: string | null;
+    onViewpointChange?: (viewpoint: string | null) => void;
 }
 
-const DatabaseSchema: React.FC<DatabaseSchemaProps> = ({ schema, focusTable, compact = false }) => {
+const DatabaseSchema: React.FC<DatabaseSchemaProps> = ({ schema, focusTable, compact = false, viewpoint, onViewpointChange }) => {
     const { mode } = useColorMode();
     const [showOnlyKeys, setShowOnlyKeys] = useState(false);
     const [notationMode, setNotationMode] = useState<'chen' | 'crowsfoot'>('chen');
+    const [currentViewpoint, setCurrentViewpoint] = useState<string | null>(null);
+
+    useEffect(() => {
+        setCurrentViewpoint(viewpoint || null);
+    }, [schema, viewpoint]);
     
     const getNotationData = (isUnique: boolean) => {
         if (notationMode === 'crowsfoot') {
@@ -151,11 +158,23 @@ const DatabaseSchema: React.FC<DatabaseSchemaProps> = ({ schema, focusTable, com
     };
 
     const initialElements = useMemo(() => {
-        if (!schema || !schema.tables) return { nodes: [], edges: [] };
+        if (!schema || !schema.tables) return { elements: { nodes: [], edges: [] }, limitReached: false, totalCount: 0, limit: 0, tables: [] };
 
+        const erdLimit = schema.erd_limit || 20;
         let tablesToRender = schema.tables;
-        
-        if (focusTable) {
+        const isTruncated = !focusTable && !currentViewpoint && schema.tables.length > erdLimit;
+
+        if (isTruncated) {
+            // Sort by connection count
+            const connectionCounts: Record<string, number> = {};
+            schema.tables.forEach((t: any) => {
+                connectionCounts[t.name] = (t.constraints || []).length;
+            });
+            
+            tablesToRender = [...schema.tables]
+                .sort((a, b) => (connectionCounts[b.name] || 0) - (connectionCounts[a.name] || 0))
+                .slice(0, erdLimit);
+        } else if (focusTable) {
             const neighbors = new Set<string>();
             neighbors.add(focusTable);
 
@@ -186,11 +205,25 @@ const DatabaseSchema: React.FC<DatabaseSchemaProps> = ({ schema, focusTable, com
             }
 
             tablesToRender = schema.tables.filter((t: any) => neighbors.has(t.name));
+        } else if (currentViewpoint && schema.viewpoints) {
+            const vp = schema.viewpoints.find((v: any) => v.name === currentViewpoint);
+            if (vp) {
+                const tableNames = new Set<string>();
+                (vp.tables || []).forEach((tn: string) => tableNames.add(tn.toLowerCase().trim()));
+                (vp.groups || []).forEach((group: any) => {
+                    (group.tables || []).forEach((tn: string) => tableNames.add(tn.toLowerCase().trim()));
+                });
+                
+                tablesToRender = schema.tables.filter((t: any) => 
+                    tableNames.has(t.name.toLowerCase().trim())
+                );
+            }
         }
+        
+        const tablesArray = Array.isArray(tablesToRender) ? tablesToRender : [];
+        const renderedTableNames = new Set(tablesArray.map((t: any) => t.name));
 
-        const renderedTableNames = new Set(tablesToRender.map((t: any) => t.name));
-
-        const nodes: any[] = tablesToRender.map((table: any) => ({
+        const nodes: any[] = tablesArray.map((table: any) => ({
             id: table.name,
             type: 'table',
             data: {
@@ -295,15 +328,21 @@ const DatabaseSchema: React.FC<DatabaseSchemaProps> = ({ schema, focusTable, com
             });
         }
 
-        return getLayoutedElements(nodes, edges, 'LR', compact);
-    }, [schema, focusTable, mode, showOnlyKeys, notationMode, compact]);
+        return { 
+            elements: getLayoutedElements(nodes, edges, 'LR', compact),
+            limitReached: isTruncated,
+            totalCount: schema.tables.length,
+            limit: erdLimit,
+            tables: tablesArray
+        };
+    }, [schema, focusTable, mode, showOnlyKeys, notationMode, compact, currentViewpoint]);
 
-    const [nodes, setNodes, onNodesChange] = useNodesState(initialElements.nodes);
-    const [edges, setEdges, onEdgesChange] = useEdgesState(initialElements.edges);
+    const [nodes, setNodes, onNodesChange] = useNodesState(initialElements.elements.nodes);
+    const [edges, setEdges, onEdgesChange] = useEdgesState(initialElements.elements.edges);
 
     useEffect(() => {
-        setNodes(initialElements.nodes);
-        setEdges(initialElements.edges);
+        setNodes(initialElements.elements.nodes);
+        setEdges(initialElements.elements.edges);
     }, [initialElements, setNodes, setEdges]);
 
     const onConnect = useCallback(
@@ -354,6 +393,7 @@ const DatabaseSchema: React.FC<DatabaseSchemaProps> = ({ schema, focusTable, com
         <div className="w-full h-full bg-background/50 rounded-[2.5rem] border border-white/5 overflow-hidden shadow-2xl backdrop-blur-sm">
             <CrowFootDefs />
             <ReactFlow
+                key={`flow-${schema?.name || 'anonymous'}-${currentViewpoint || 'standard'}-${focusTable || 'none'}`}
                 nodes={nodes}
                 edges={edges}
                 onNodesChange={onNodesChange}
@@ -408,6 +448,51 @@ const DatabaseSchema: React.FC<DatabaseSchemaProps> = ({ schema, focusTable, com
                                 </div>
                             )}
                         </button>
+                    )}
+
+                    {schema.viewpoints && schema.viewpoints.length > 0 && (
+                        <div className="flex flex-col gap-2 bg-card/90 border-2 border-white/10 p-2 rounded-2xl shadow-2xl backdrop-blur-md">
+                            <h4 className="text-[8px] font-black uppercase tracking-[0.2em] px-2 text-muted-foreground/60">Viewpoint Matrix</h4>
+                            <select
+                                value={currentViewpoint || ''}
+                                onChange={(e) => {
+                                    const val = e.target.value || null;
+                                    setCurrentViewpoint(val);
+                                    onViewpointChange?.(val);
+                                }}
+                                className="bg-transparent border-none text-[10px] font-black uppercase tracking-widest text-primary focus:ring-0 outline-none cursor-pointer px-2"
+                            >
+                                <option value="" className="bg-card text-foreground">Standard (Top {schema.erd_limit || 20})</option>
+                                {schema.viewpoints.map((vp: any) => (
+                                    <option key={vp.name} value={vp.name} className="bg-card text-foreground">
+                                        {vp.name} ({vp.tables?.length || 0})
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
+
+                    {currentViewpoint && initialElements.tables.length === 0 && (
+                        <div className="bg-destructive/10 border-2 border-destructive/50 backdrop-blur-xl p-4 rounded-2xl shadow-2xl max-w-xs animate-in zoom-in duration-500">
+                            <h4 className="text-[10px] font-black uppercase tracking-widest text-destructive italic mb-2">Empty Viewpoint</h4>
+                            <p className="text-[10px] font-bold text-destructive/80 leading-relaxed uppercase">
+                                No entities found in this architectural slice. Check schema definitions for identifier mismatches.
+                            </p>
+                        </div>
+                    )}
+                    
+                    {initialElements.limitReached && (
+                        <div className="bg-amber-500/10 border-2 border-amber-500/50 backdrop-blur-xl p-4 rounded-2xl shadow-2xl max-w-xs animate-in slide-in-from-left duration-700">
+                            <div className="flex items-center gap-3 mb-2">
+                                <div className="p-1.5 rounded-lg bg-amber-500/20 text-amber-500">
+                                    <Key className="h-4 w-4 rotate-90" />
+                                </div>
+                                <h4 className="text-[10px] font-black uppercase tracking-widest text-amber-500 italic">Complexity Limit</h4>
+                            </div>
+                            <p className="text-[10px] font-bold text-amber-500/80 leading-relaxed uppercase">
+                                Visualizing {initialElements.limit} of {initialElements.totalCount} entities to maintain graph integrity. Use search or viewpoints for specific context.
+                            </p>
+                        </div>
                     )}
                 </Panel>
                 <Background 

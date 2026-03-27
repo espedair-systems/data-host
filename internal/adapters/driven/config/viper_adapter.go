@@ -56,6 +56,7 @@ func (v *ViperAdapter) Load() (domain.HostConfig, error) {
 	viper.SetDefault("dev_mode", true)
 	viper.SetDefault("site_path", "./sites")
 	viper.SetDefault("generate_path", "./generated")
+	viper.SetDefault("erd_limit", 20)
 
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
@@ -83,6 +84,7 @@ func (v *ViperAdapter) Load() (domain.HostConfig, error) {
 	config.DevMode = viper.GetBool("dev_mode")
 	config.SitePath = viper.GetString("site_path")
 	config.GeneratePath = viper.GetString("generate_path")
+	config.ERDLimit = viper.GetInt("erd_limit")
 	config.CORSAllowOrigins = viper.GetStringSlice("cors_allow_origins")
 	config.JWTSecret = viper.GetString("jwt_secret")
 

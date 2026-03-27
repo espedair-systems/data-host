@@ -15,6 +15,7 @@ type FileSchema struct {
 	Driver        *FileDriver     `json:"driver"`
 	Labels        []FileLabel     `json:"labels,omitempty"`
 	Viewpoints    []FileViewpoint `json:"viewpoints"`
+	ERDLimit      int             `json:"erd_limit,omitempty"`
 	ServiceConfig interface{}     `json:"service_config,omitempty"`
 }
 

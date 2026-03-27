@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Database, Download, Share2, Cpu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 import DatabaseSchema from '@/components/graph/DatabaseSchema';
 
 const TestErd2: React.FC = () => {
@@ -10,6 +11,7 @@ const TestErd2: React.FC = () => {
     const [searchParams] = useSearchParams();
     const focusTable = searchParams.get('table');
     const schemaParam = searchParams.get('schema');
+    const activeViewpoint = searchParams.get('viewpoint');
     
     const [schema, setSchema] = useState<any>(null);
     const [loading, setLoading] = useState(true);
@@ -100,6 +102,59 @@ const TestErd2: React.FC = () => {
                 </div>
             </header>
 
+            {/* Viewpoint Selector */}
+            {schema?.viewpoints && schema.viewpoints.length > 0 && (
+                <div className="flex flex-col gap-4 px-2 animate-in slide-in-from-top-4 duration-1000">
+                    <div className="flex items-center gap-3">
+                        <div className="h-[2px] w-8 bg-primary/30" />
+                        <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-primary/60 italic">Architectural Viewpoints</h3>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                        <Button
+                            variant={!activeViewpoint && !focusTable ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => {
+                                const params = new URLSearchParams(searchParams);
+                                params.delete('viewpoint');
+                                params.delete('table');
+                                navigate(`/scratchpad/test/erd2?${params.toString()}`);
+                            }}
+                            className={cn(
+                                "rounded-xl font-black text-[10px] uppercase tracking-widest h-10 px-4 transition-all border-white/5 shadow-xl backdrop-blur-md",
+                                !activeViewpoint && !focusTable ? "bg-primary shadow-primary/20 scale-105" : "bg-card/40 hover:bg-primary/10 hover:border-primary/30"
+                            )}
+                        >
+                            Global Overview
+                        </Button>
+                        {schema.viewpoints.map((vp: any) => (
+                            <Button
+                                key={vp.name}
+                                variant={activeViewpoint === vp.name ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => {
+                                    const params = new URLSearchParams(searchParams);
+                                    params.set('viewpoint', vp.name);
+                                    params.delete('table');
+                                    navigate(`/scratchpad/test/erd2?${params.toString()}`);
+                                }}
+                                className={cn(
+                                    "rounded-xl font-black text-[10px] uppercase tracking-widest h-10 px-4 transition-all border-white/5 shadow-xl backdrop-blur-md group",
+                                    activeViewpoint === vp.name ? "bg-primary shadow-primary/20 scale-105" : "bg-card/40 hover:bg-primary/10 hover:border-primary/30"
+                                )}
+                            >
+                                {vp.name}
+                                <span className={cn(
+                                    "ml-2 text-[8px] px-1.5 py-0.5 rounded-full",
+                                    activeViewpoint === vp.name ? "bg-white/20 text-white" : "bg-white/5 text-muted-foreground group-hover:bg-primary/20 group-hover:text-primary"
+                                )}>
+                                    {vp.tables?.length || 0}
+                                </span>
+                            </Button>
+                        ))}
+                    </div>
+                </div>
+            )}
+
             <div className="flex-grow relative min-h-[500px] group/canvas">
                 {loading ? (
                     <div className="absolute inset-0 flex items-center justify-center bg-card/50 backdrop-blur-sm rounded-[2.5rem] border border-white/5">
@@ -109,7 +164,19 @@ const TestErd2: React.FC = () => {
                         </div>
                     </div>
                 ) : schema ? (
-                    <DatabaseSchema schema={schema} focusTable={focusTable || undefined} compact={true} />
+                    <DatabaseSchema 
+                        schema={schema} 
+                        focusTable={focusTable || undefined} 
+                        compact={true} 
+                        viewpoint={activeViewpoint}
+                        onViewpointChange={(vp) => {
+                            const params = new URLSearchParams(searchParams);
+                            if (vp) params.set('viewpoint', vp);
+                            else params.delete('viewpoint');
+                            params.delete('table');
+                            navigate(`/scratchpad/test/erd2?${params.toString()}`);
+                        }}
+                    />
                 ) : (
                     <div className="absolute inset-0 flex items-center justify-center bg-card/50 backdrop-blur-sm rounded-[2.5rem] border border-white/5">
                         <div className="text-center space-y-4">

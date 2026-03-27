@@ -47,6 +47,7 @@ type HostConfig struct {
 	SitePath          string          `yaml:"site_path" mapstructure:"site_path" json:"site_path"`
 	GeneratePath      string          `yaml:"generate_path" mapstructure:"generate_path" json:"generate_path"`
 	ArchivePath       string          `yaml:"archive_path" mapstructure:"archive_path" json:"archive_path"`
+	ERDLimit          int             `yaml:"erd_limit" mapstructure:"erd_limit" json:"erd_limit"`
 	Sites             []SiteConfig    `yaml:"sites" mapstructure:"sites" json:"sites"`
 	Github            GithubConfig    `yaml:"github" mapstructure:"github" json:"github"`
 	LogFileEnabled    bool            `yaml:"log_file_enabled" mapstructure:"log_file_enabled" json:"log_file_enabled"`

@@ -400,6 +400,7 @@ func (r *SQLiteRepository) ExtractDatabaseSchema(name, desc string) (*domain.Fil
 	schema := &domain.FileSchema{
 		Name:      name,
 		Desc:      desc,
+		ERDLimit:  r.config.ERDLimit,
 		Tables:    []domain.FileTable{},
 		Relations: []domain.FileRelation{},
 	}
@@ -531,8 +532,9 @@ func (r *SQLiteRepository) GetFullSchema(name string) (*domain.FileSchema, error
 	}
 
 	result := &domain.FileSchema{
-		Name: name,
-		Desc: desc.String,
+		Name:     name,
+		Desc:     desc.String,
+		ERDLimit: r.config.ERDLimit,
 	}
 
 	if drvName.Valid {
@@ -998,6 +1000,7 @@ func (r *SQLiteRepository) applyOverrides(dash *domain.SchemaDashboard) {
 			}
 		}
 	}
+	dash.ERDLimit = r.config.ERDLimit
 }
 
 func (r *SQLiteRepository) GetSites() ([]domain.SiteConfig, error) {

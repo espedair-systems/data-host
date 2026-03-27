@@ -23,6 +23,7 @@ export const FocusErd: React.FC<FocusErdProps> = ({ schema, defaultViewpoint }) 
     const [currentViewpoint, setCurrentViewpoint] = useState<string | null>(null);
     const [selectedTable, setSelectedTable] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
+    const [isTruncated, setIsTruncated] = useState(false);
     const { mode } = useColorMode();
 
     useEffect(() => {
@@ -68,7 +69,9 @@ export const FocusErd: React.FC<FocusErdProps> = ({ schema, defaultViewpoint }) 
 
         // Filter tables based on viewpoint or search if schema is large
         let tablesToRender = schema.tables;
-        const isLargeSchema = schema.tables.length > 50;
+        const erdLimit = schema.erd_limit || 50;
+        const isLargeSchema = schema.tables.length > erdLimit;
+        setIsTruncated(!selectedTable && !currentViewpoint && isLargeSchema);
 
         if (selectedTable) {
             // Find the selected table and its neighbors
@@ -106,7 +109,7 @@ export const FocusErd: React.FC<FocusErdProps> = ({ schema, defaultViewpoint }) 
                 tablesToRender = schema.tables.filter((t: any) => vp.tables.includes(t.name));
             }
         } else if (isLargeSchema) {
-            // Show top 50 tables by connection count initially if no viewpoint selected
+            // Show top tables by connection count initially if no viewpoint selected
             const connectionCounts: Record<string, number> = {};
             schema.tables.forEach((t: any) => {
                 connectionCounts[t.name] = 0;
@@ -127,7 +130,7 @@ export const FocusErd: React.FC<FocusErdProps> = ({ schema, defaultViewpoint }) 
 
             tablesToRender = [...schema.tables]
                 .sort((a, b) => (connectionCounts[b.name] || 0) - (connectionCounts[a.name] || 0))
-                .slice(0, 50);
+                .slice(0, erdLimit);
         }
 
         const renderedTableNames = new Set(tablesToRender.map((t: any) => t.name));
@@ -464,7 +467,7 @@ export const FocusErd: React.FC<FocusErdProps> = ({ schema, defaultViewpoint }) 
                             }}
                             className="focus:border-primary/50 transition-all font-bold uppercase tracking-tight"
                         >
-                            <option value="" style={{ background: colors.bg }}>All Tables (Top 50)</option>
+                            <option value="" style={{ background: colors.bg }}>All Tables (Top {schema.erd_limit || 50})</option>
                             {schema.viewpoints.map((vp: any) => (
                                 <option key={vp.name} value={vp.name} style={{ background: colors.bg }}>
                                     View: {vp.name} ({vp.tables.length})
@@ -473,6 +476,18 @@ export const FocusErd: React.FC<FocusErdProps> = ({ schema, defaultViewpoint }) 
                         </select>
                     )}
                 </div>
+
+                {isTruncated && (
+                    <div className="mt-4 p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl animate-in fade-in slide-in-from-top-2 duration-500">
+                        <div className="flex items-center gap-2 mb-1">
+                            <div className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
+                            <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest italic">Display Limit Reach</span>
+                        </div>
+                        <p className="text-[9px] font-bold text-amber-500/70 leading-relaxed uppercase">
+                            Showing top {schema.erd_limit || 50} of {schema.tables.length} entities. Use search to find specific tables.
+                        </p>
+                    </div>
+                )}
 
                 {selectedTable && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', borderTop: `1px solid ${colors.hairline}`, paddingTop: '12px', marginTop: '4px' }}>

@@ -1185,7 +1185,7 @@ func (a *GinAdapter) GetMasterSchema(c *gin.Context) {
 		return
 	}
 
-	var val interface{}
+	var val map[string]interface{}
 	if err := json.Unmarshal(data, &val); err != nil {
 		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{
 			Error:   "Internal Server Error",
@@ -1194,6 +1194,7 @@ func (a *GinAdapter) GetMasterSchema(c *gin.Context) {
 		})
 		return
 	}
+	val["erd_limit"] = a.config.ERDLimit
 	c.JSON(http.StatusOK, val)
 }
 

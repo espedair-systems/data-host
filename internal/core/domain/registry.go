@@ -84,6 +84,7 @@ type SchemaDashboard struct {
 	CollectionStats *CollectionStats   `json:"collectionStats,omitempty"`
 	Collections     []CollectionDetail `json:"collections,omitempty"`
 	Validation      *ValidationResult  `json:"validation,omitempty"`
+	ERDLimit        int                `json:"erdLimit,omitempty"`
 }
 
 // @Description Blueprint schema record

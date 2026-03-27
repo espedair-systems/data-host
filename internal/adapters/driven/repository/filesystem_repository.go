@@ -573,7 +573,13 @@ func (r *FilesystemRepository) GetAllSchemaDashboards() ([]domain.SchemaDashboar
 	dataPath := filepath.Join(projectRoot, "data")
 	contentPath := filepath.Join(projectRoot, "src", "content", "docs", "registry")
 
-	return listSchemaDashboards(contentPath, dataPath)
+	dashes, err := listSchemaDashboards(contentPath, dataPath)
+	if err == nil {
+		for i := range dashes {
+			dashes[i].ERDLimit = r.config.ERDLimit
+		}
+	}
+	return dashes, err
 }
 
 func (r *FilesystemRepository) GetSchemaDashboard(moduleName string) (domain.SchemaDashboard, error) {
@@ -588,6 +594,7 @@ func (r *FilesystemRepository) GetSchemaDashboard(moduleName string) (domain.Sch
 
 	for _, d := range dashboards {
 		if d.Name == moduleName {
+			d.ERDLimit = r.config.ERDLimit
 			return d, nil
 		}
 	}
