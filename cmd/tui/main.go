@@ -49,8 +49,6 @@ func main() {
 		config = *appConfig.GetDefaults()
 	}
 
-	// Persist any new default fields to the config file
-	_ = appConfig.SaveWithComments(fullPath, &config)
 
 	// Create shared log channels EARLY
 	logChan := make(chan string, 1000)

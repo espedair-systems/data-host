@@ -166,11 +166,7 @@ func (r *FilesystemRepository) GetPublishedAssets() ([]domain.PublishedAsset, er
 	schemaLoader := gojsonschema.NewBytesLoader(masterData)
 
 	var assets []domain.PublishedAsset
-	sites := r.config.Sites
-	if len(sites) == 0 {
-		// Attempt to use ActiveSite fallback if no sites are explicitly defined in slice
-		sites = []domain.SiteConfig{r.config.ActiveSite()}
-	}
+	sites := r.getSites()
 
 	for _, site := range sites {
 		dataRoot := filepath.Join(site.DataPath, "data")
@@ -290,10 +286,7 @@ func isPathCovered(path string, sites []domain.SiteConfig) bool {
 
 func (r *FilesystemRepository) GetTableAssets() ([]domain.PublishedAsset, error) {
 	var allAssets []domain.PublishedAsset
-	sites := r.config.Sites
-	if len(sites) == 0 {
-		sites = []domain.SiteConfig{r.config.ActiveSite()}
-	}
+	sites := r.getSites()
 
 	for _, site := range sites {
 		dataRoot := filepath.Join(site.DataPath, "data")
@@ -333,10 +326,7 @@ func (r *FilesystemRepository) GetTableAssets() ([]domain.PublishedAsset, error)
 }
 
 func (r *FilesystemRepository) GetRegistryTables(assetName string) ([]domain.RegistryTable, error) {
-	sites := r.config.Sites
-	if len(sites) == 0 {
-		sites = []domain.SiteConfig{r.config.ActiveSite()}
-	}
+	sites := r.getSites()
 
 	var tablesRoot string
 	for _, site := range sites {
@@ -373,8 +363,40 @@ func (r *FilesystemRepository) GetRegistryTables(assetName string) ([]domain.Reg
 	return tables, nil
 }
 
+func resolvePath(base string, path string) string {
+	if filepath.IsAbs(path) || path == "" {
+		return path
+	}
+	// If the path is '.', we treat it as being the same as the base
+	if path == "." {
+		return base
+	}
+	return filepath.Join(base, path)
+}
+
+func (r *FilesystemRepository) getSites() []domain.SiteConfig {
+	sites, err := r.GetSites()
+	if err != nil || len(sites) == 0 {
+		return []domain.SiteConfig{r.config.ActiveSite()}
+	}
+	return sites
+}
+
 func (r *FilesystemRepository) getProjectRoot() string {
-	site := r.config.ActiveSite()
+	sites := r.getSites()
+	var site domain.SiteConfig
+	if len(sites) > 0 {
+		site = sites[0]
+		for _, s := range sites {
+			if s.Active {
+				site = s
+				break
+			}
+		}
+	} else {
+		site = r.config.ActiveSite()
+	}
+
 	if site.MountSource != "" {
 		return site.MountSource
 	}
@@ -506,10 +528,7 @@ func (r *FilesystemRepository) listDesignFiles(dir string) ([]domain.DesignFile,
 }
 
 func (r *FilesystemRepository) GetPublishedFile(assetName, fileName string) ([]byte, error) {
-	sites := r.config.Sites
-	if len(sites) == 0 {
-		sites = []domain.SiteConfig{r.config.ActiveSite()}
-	}
+	sites := r.getSites()
 
 	for _, site := range sites {
 		path := filepath.Join(site.DataPath, "data", assetName, fileName)
@@ -524,10 +543,7 @@ func (r *FilesystemRepository) GetPublishedFile(assetName, fileName string) ([]b
 }
 
 func (r *FilesystemRepository) SavePublishedFile(assetName, fileName string, content []byte) error {
-	sites := r.config.Sites
-	if len(sites) == 0 {
-		sites = []domain.SiteConfig{r.config.ActiveSite()}
-	}
+	sites := r.getSites()
 
 	var targetDir string
 	// Try to find if it already exists in any site
@@ -942,29 +958,30 @@ func (r *FilesystemRepository) GetSites() ([]domain.SiteConfig, error) {
 				if meta.Type != "" {
 					site.Type = meta.Type
 				}
+				baseDir := site.DataPath
 				if meta.DataPath != "" {
-					site.DataPath = meta.DataPath
+					site.DataPath = resolvePath(baseDir, meta.DataPath)
 				}
 				if meta.SitePath != "" {
-					site.SitePath = meta.SitePath
+					site.SitePath = resolvePath(baseDir, meta.SitePath)
 				}
 				if meta.SchemaPath != "" {
-					site.SchemaPath = meta.SchemaPath
+					site.SchemaPath = resolvePath(baseDir, meta.SchemaPath)
 				}
 				if meta.SiteDist != "" {
-					site.SiteDist = meta.SiteDist
+					site.SiteDist = resolvePath(baseDir, meta.SiteDist)
 				}
 				if meta.PublishURL != "" {
 					site.PublishURL = meta.PublishURL
 				}
 				if meta.MountPath != "" {
-					site.MountPath = meta.MountPath
+					site.MountPath = resolvePath(baseDir, meta.MountPath)
 				}
 				if meta.MountSource != "" {
-					site.MountSource = meta.MountSource
+					site.MountSource = resolvePath(baseDir, meta.MountSource)
 				}
 				if meta.MountDist != "" {
-					site.MountDist = meta.MountDist
+					site.MountDist = resolvePath(baseDir, meta.MountDist)
 				}
 
 				// Handle flexible boolean for 'active'

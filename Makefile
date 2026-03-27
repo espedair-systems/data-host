@@ -71,9 +71,9 @@ build-mac-arm64: build-frontend
 build-all: build-linux build-windows build-mac ## Build for all supported platforms
 
 push: build-linux-amd64 ## Push the AMD linux TUI binary to the test environment
-	@mkdir -p /run/media/jonk/Workspace/espedair/TEST/
-	@cp dist/linux_amd64/data-host-tui /run/media/jonk/Workspace/espedair/TEST/
-	@echo "TUI Binary pushed to /run/media/jonk/Workspace/espedair/TEST/"
+	@mkdir -p /home/jonk/projects/DATA_HOST/TEST/
+	@cp dist/linux_amd64/data-host-tui /home/jonk/projects/DATA_HOST/TEST/
+	@echo "TUI Binary pushed to /home/jonk/projects/DATA_HOST/TEST/"
 
 docker-bundle: docker-stage ## Build binary, UI, and package as Docker image
 	@echo "Creating Docker image..."
