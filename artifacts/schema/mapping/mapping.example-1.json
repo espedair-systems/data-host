@@ -1,0 +1,235 @@
+{
+  "$schema": "./mapping.schema.json",
+  "name": "customer_master_many_to_one_mapping",
+  "version": "1.0.0",
+  "description": "Many-to-one mapping that consolidates CRM and KYC source tables into a unified customer master target table.",
+  "source": "Customer domain mapping notes",
+  "generated_at_utc": "2026-03-28T16:00:00Z",
+  "governance": {
+    "owner": "Customer Data Domain",
+    "steward": "Customer Data Steward",
+    "approval_status": "approved",
+    "approved_at": "2026-03-28"
+  },
+  "table_registry": [
+    {
+      "table_id": "src.crm_customer",
+      "table_name": "crm.customer",
+      "database": "crm_db",
+      "schema": "crm",
+      "platform": "SQL Server",
+      "role": "source",
+      "description": "Core customer account attributes"
+    },
+    {
+      "table_id": "src.kyc_profile",
+      "table_name": "kyc.profile",
+      "database": "kyc_db",
+      "schema": "kyc",
+      "platform": "PostgreSQL",
+      "role": "source",
+      "description": "KYC-enriched customer profile details"
+    },
+    {
+      "table_id": "tgt.customer_master",
+      "table_name": "udp_gold.customer_master",
+      "database": "udp_analytics",
+      "schema": "udp_gold",
+      "platform": "BigQuery",
+      "role": "target",
+      "description": "Unified customer master table for reporting and subscription"
+    }
+  ],
+  "transformation_definitions": [
+    {
+      "transformation_id": "tr.normalize_email",
+      "type": "expression",
+      "expression": "LOWER(TRIM(email_address))",
+      "language": "sql",
+      "description": "Normalize email string for consistent matching"
+    },
+    {
+      "transformation_id": "tr.full_name",
+      "type": "concat",
+      "expression": "CONCAT(first_name, ' ', last_name)",
+      "language": "sql",
+      "description": "Build full name from first and last name"
+    },
+    {
+      "transformation_id": "tr.customer_status",
+      "type": "conditional",
+      "expression": "CASE WHEN is_active = 1 THEN 'ACTIVE' ELSE 'INACTIVE' END",
+      "language": "sql",
+      "description": "Standardize active status values"
+    }
+  ],
+  "rule_definitions": [
+    {
+      "rule_id": "rule.email_format",
+      "rule_type": "validation",
+      "severity": "high",
+      "expression": "email_address LIKE '%@%'",
+      "description": "Email must include @ symbol"
+    },
+    {
+      "rule_id": "rule.customer_id_not_null",
+      "rule_type": "quality",
+      "severity": "critical",
+      "expression": "customer_id IS NOT NULL",
+      "description": "Customer id is mandatory"
+    },
+    {
+      "rule_id": "rule.filter_deleted",
+      "rule_type": "filter",
+      "severity": "medium",
+      "expression": "is_deleted = 0",
+      "description": "Exclude deleted source records"
+    }
+  ],
+  "mapping_sets": [
+    {
+      "mapping_id": "map.customer_master_consolidation",
+      "mapping_name": "CRM and KYC to Customer Master",
+      "mapping_type": "many-to-one",
+      "description": "Consolidates CRM and KYC source records into a single unified customer master target.",
+      "sources": [
+        {
+          "table_id": "src.crm_customer",
+          "table_name": "crm.customer",
+          "alias": "c",
+          "filter": "c.is_deleted = 0"
+        },
+        {
+          "table_id": "src.kyc_profile",
+          "table_name": "kyc.profile",
+          "alias": "k",
+          "filter": "k.record_status = 'CURRENT'"
+        }
+      ],
+      "targets": [
+        {
+          "table_id": "tgt.customer_master",
+          "table_name": "udp_gold.customer_master",
+          "write_mode": "merge"
+        }
+      ],
+      "join_definitions": [
+        {
+          "left_table_id": "src.crm_customer",
+          "right_table_id": "src.kyc_profile",
+          "join_type": "left",
+          "condition": "c.customer_id = k.customer_id"
+        }
+      ],
+      "column_mappings": [
+        {
+          "target_table_id": "tgt.customer_master",
+          "target_column": "customer_id",
+          "target_data_type": "STRING",
+          "mapping_mode": "direct",
+          "source_columns": [
+            {
+              "table_id": "src.crm_customer",
+              "column": "customer_id"
+            }
+          ],
+          "rule_refs": [
+            "rule.customer_id_not_null"
+          ],
+          "nullable": false,
+          "description": "Primary customer identifier"
+        },
+        {
+          "target_table_id": "tgt.customer_master",
+          "target_column": "full_name",
+          "target_data_type": "STRING",
+          "mapping_mode": "expression",
+          "source_columns": [
+            {
+              "table_id": "src.crm_customer",
+              "column": "first_name"
+            },
+            {
+              "table_id": "src.crm_customer",
+              "column": "last_name"
+            }
+          ],
+          "transformation_ref": "tr.full_name",
+          "nullable": true,
+          "description": "Derived full name"
+        },
+        {
+          "target_table_id": "tgt.customer_master",
+          "target_column": "email",
+          "target_data_type": "STRING",
+          "mapping_mode": "expression",
+          "source_columns": [
+            {
+              "table_id": "src.kyc_profile",
+              "column": "email_address"
+            }
+          ],
+          "transformation_ref": "tr.normalize_email",
+          "rule_refs": [
+            "rule.email_format"
+          ],
+          "nullable": true,
+          "default_value": "unknown@example.com",
+          "description": "Normalized customer email"
+        },
+        {
+          "target_table_id": "tgt.customer_master",
+          "target_column": "customer_status",
+          "target_data_type": "STRING",
+          "mapping_mode": "conditional",
+          "source_columns": [
+            {
+              "table_id": "src.crm_customer",
+              "column": "is_active"
+            }
+          ],
+          "transformation_ref": "tr.customer_status",
+          "nullable": false,
+          "default_value": "INACTIVE",
+          "description": "Standardized customer status"
+        },
+        {
+          "target_table_id": "tgt.customer_master",
+          "target_column": "record_source",
+          "target_data_type": "STRING",
+          "mapping_mode": "constant",
+          "constant_value": "CRM_KYC_CONSOLIDATED",
+          "nullable": false,
+          "description": "Technical lineage marker"
+        }
+      ],
+      "rule_refs": [
+        "rule.filter_deleted"
+      ],
+      "execution": {
+        "load_type": "incremental",
+        "schedule": "daily",
+        "sla": "Customer master available by 07:00 daily",
+        "refresh_expectation": "Daily incremental merge"
+      },
+      "evidence_anchors": [
+        {
+          "source": "Customer mapping workshop",
+          "location": "domain mapping notes",
+          "detail": "Defines CRM+KYC consolidation rules"
+        },
+        {
+          "source": "Implementation spec",
+          "location": "customer_master ETL design",
+          "detail": "Defines merge and field-level transformations"
+        }
+      ]
+    }
+  ],
+  "stats": {
+    "mapping_set_count": 1,
+    "source_table_count": 2,
+    "target_table_count": 1,
+    "column_mapping_count": 5
+  }
+}

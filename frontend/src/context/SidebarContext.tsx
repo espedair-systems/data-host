@@ -3,15 +3,18 @@ import React, { createContext, useContext, useState, type ReactNode } from 'reac
 interface SidebarContextType {
     content: ReactNode | null;
     setContent: (content: ReactNode | null) => void;
+    isHidden: boolean;
+    setIsHidden: (hidden: boolean) => void;
 }
 
 const SidebarContext = createContext<SidebarContextType | undefined>(undefined);
 
 export const SidebarProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [content, setContent] = useState<ReactNode | null>(null);
+    const [isHidden, setIsHidden] = useState(false);
 
     return (
-        <SidebarContext.Provider value={{ content, setContent }}>
+        <SidebarContext.Provider value={{ content, setContent, isHidden, setIsHidden }}>
             {children}
         </SidebarContext.Provider>
     );

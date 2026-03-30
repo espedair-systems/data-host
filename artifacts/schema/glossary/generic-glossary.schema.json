@@ -1,0 +1,144 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://espedair.io/schema/generic-glossary",
+  "title": "Generic Glossary",
+  "description": "Universal glossary schema supporting multiple glossary types (business, regulatory, etc.) without information loss. Accommodates varying stat structures and optional fields across data sources.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "terms"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Reference to the schema definition"
+    },
+    "name": {
+      "type": "string",
+      "description": "Identifier name for the glossary (e.g., insignia_bim_business_glossary, apra_regulatory_glossary)"
+    },
+    "description": {
+      "type": "string",
+      "description": "Human-readable description of the glossary purpose and scope"
+    },
+    "source_file": {
+      "type": "string",
+      "description": "Optional source file location or identifier"
+    },
+    "generated_at_utc": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of when the glossary was generated"
+    },
+    "stats": {
+      "type": "object",
+      "description": "Optional statistics object; structure varies by glossary type. May contain: original_rows, unique_terms, duplicates_removed (business glossary) or total_terms, regulatory_standards, domains (regulatory glossary)",
+      "additionalProperties": {
+        "type": ["integer", "string", "number"]
+      }
+    },
+    "terms": {
+      "type": "array",
+      "description": "Array of glossary terms with metadata",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "full_name",
+          "name",
+          "asset_id",
+          "related_data_domains"
+        ],
+        "properties": {
+          "full_name": {
+            "type": "string",
+            "description": "Full formal name of the term"
+          },
+          "name": {
+            "type": "string",
+            "description": "Short or common name for the term (may be abbreviation)"
+          },
+          "asset_id": {
+            "type": "string",
+            "description": "Unique identifier for the term"
+          },
+          "definition": {
+            "type": "string",
+            "description": "Formal definition of the term"
+          },
+          "status": {
+            "type": "string",
+            "description": "Current status of the term (Approved, Proposed, Draft, Archived, etc.)"
+          },
+          "domain": {
+            "type": "string",
+            "description": "Domain classification (e.g., Business Glossary, APRA Regulatory Glossary)"
+          },
+          "community": {
+            "type": "string",
+            "description": "Community or organizational unit responsible for the term"
+          },
+          "domain_type": {
+            "type": "string",
+            "description": "Type of domain (e.g., Glossary, Data Domain)"
+          },
+          "domain_id": {
+            "type": "string",
+            "description": "Unique identifier for the domain"
+          },
+          "asset_type": {
+            "type": "string",
+            "description": "Type of asset (e.g., Business Term, Regulatory Term)"
+          },
+          "source_sheet": {
+            "type": "string",
+            "description": "Source sheet or document where term is defined (e.g., Glossary sheet, SRS 550.0)"
+          },
+          "related_data_domains": {
+            "type": "array",
+            "description": "Array of related data domains or regulatory areas",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "relates_to_name": {
+                  "type": "string",
+                  "description": "Name of the related domain"
+                },
+                "relates_to_full_name": {
+                  "type": "string",
+                  "description": "Full name of the related domain"
+                },
+                "relates_to_asset_type": {
+                  "type": "string",
+                  "description": "Asset type of the related domain"
+                },
+                "relates_to_community": {
+                  "type": "string",
+                  "description": "Community of the related domain"
+                },
+                "relates_to_domain_type": {
+                  "type": "string",
+                  "description": "Domain type of the related domain"
+                },
+                "relates_to_domain": {
+                  "type": "string",
+                  "description": "Domain name of the related entity"
+                },
+                "relates_to_domain_id": {
+                  "type": "string",
+                  "description": "Domain ID of the related entity"
+                },
+                "relates_to_asset_id": {
+                  "type": "string",
+                  "description": "Asset ID of the related entity"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

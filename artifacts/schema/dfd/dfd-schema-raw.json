@@ -1,0 +1,148 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://espedair.io/schema/dfd-context",
+  "title": "Data Flow Diagram Context Schema",
+  "description": "Schema for Data Flow Diagrams (DFD) including processes, external entities, data stores, and their data flow relationships.",
+  "type": "object",
+  "properties": {
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "domain": { "type": "string" },
+        "version": { "type": "string" },
+        "level": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "generatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["domain", "version", "title"]
+    },
+    "elements": {
+      "type": "object",
+      "properties": {
+        "nodes": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Node" }
+        },
+        "edges": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Edge" }
+        }
+      },
+      "required": ["nodes", "edges"]
+    },
+    "style": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/StyleRule" }
+    },
+    "layout": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "rankDir": { "type": "string" }
+      }
+    }
+  },
+  "required": ["metadata", "elements"],
+  "$defs": {
+    "Node": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "oneOf": [
+            { "$ref": "#/$defs/BoundaryNode" },
+            { "$ref": "#/$defs/ExternalEntityNode" },
+            { "$ref": "#/$defs/ProcessNode" },
+            { "$ref": "#/$defs/DataStoreNode" }
+          ]
+        },
+        "classes": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "required": ["data"]
+    },
+    "BoundaryNode": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "const": "boundary" },
+        "name": { "type": "string" },
+        "boundaryType": { "type": "string" },
+        "parent": { "type": "string" }
+      },
+      "required": ["id", "type", "name", "boundaryType"]
+    },
+    "ExternalEntityNode": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "const": "external_entity" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "parent": { "type": "string" }
+      },
+      "required": ["id", "type", "name"]
+    },
+    "ProcessNode": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "const": "process" },
+        "name": { "type": "string" },
+        "processType": { "type": "string" },
+        "description": { "type": "string" },
+        "parent": { "type": "string" }
+      },
+      "required": ["id", "type", "name"]
+    },
+    "DataStoreNode": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "const": "data_store" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "parent": { "type": "string" }
+      },
+      "required": ["id", "type", "name"]
+    },
+    "Edge": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "string" },
+            "type": { "const": "data_flow" },
+            "source": { "type": "string" },
+            "target": { "type": "string" },
+            "label": { "type": "string" },
+            "dataElements": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "classification": { "type": "string" },
+            "protocol": { "type": "string" },
+            "frequency": { "type": "string" }
+          },
+          "required": ["id", "type", "source", "target"]
+        },
+        "classes": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "required": ["data"]
+    },
+    "StyleRule": {
+      "type": "object",
+      "properties": {
+        "selector": { "type": "string" },
+        "style": { "type": "object" }
+      },
+      "required": ["selector", "style"]
+    }
+  }
+}

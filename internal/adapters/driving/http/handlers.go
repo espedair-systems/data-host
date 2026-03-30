@@ -459,10 +459,39 @@ func (a *GinAdapter) ValidateSchema(c *gin.Context) {
 		return
 	}
 
-	// Detect type
 	isOrg := false
+	isDFD := false
 	if _, ok := rawData["elements"]; ok {
-		isOrg = true
+		// Distinguish based on metadata domain if possible
+		if m, ok := rawData["metadata"].(map[string]interface{}); ok {
+			domain, _ := m["domain"].(string)
+			if domain == "data-flow-diagram" {
+				isDFD = true
+			} else {
+				isOrg = true
+			}
+		} else {
+			// Fallback to org if elements exists but no metadata
+			isOrg = true
+		}
+	}
+
+	isGlossary := false
+	isTaxonomy := false
+	if _, ok := rawData["taxonomy_type"]; ok {
+		isTaxonomy = true
+	} else if _, ok := rawData["terms"]; ok {
+		isGlossary = true
+	}
+
+	isBIM := false
+	if _, ok := rawData["entities"]; ok {
+		isBIM = true
+	}
+
+	isRDM := false
+	if _, ok := rawData["datasets"]; ok {
+		isRDM = true
 	}
 
 	schemaPath := "schema/services.schema.json"
@@ -470,6 +499,21 @@ func (a *GinAdapter) ValidateSchema(c *gin.Context) {
 	if isOrg {
 		schemaPath = "schema/org-schema-raw.json"
 		detectedType = "ORG_STRUCTURE"
+	} else if isDFD {
+		schemaPath = "schema/dfd-schema-raw.json"
+		detectedType = "DATA_FLOW_DIAGRAM"
+	} else if isGlossary {
+		schemaPath = "schema/business-glossary.schema.json"
+		detectedType = "BUSINESS_GLOSSARY"
+	} else if isBIM {
+		schemaPath = "schema/business-information-model.schema.json"
+		detectedType = "BUSINESS_INFORMATION_MODEL"
+	} else if isRDM {
+		schemaPath = "schema/reference-data/reference-data-management.schema.json"
+		detectedType = "REFERENCE_DATA_MANAGEMENT"
+	} else if isTaxonomy {
+		schemaPath = "schema/taxonomy/taxonomy.schema.json"
+		detectedType = "TAXONOMY"
 	}
 
 	// 1. JSON Schema Validation from embedded FS
@@ -497,7 +541,7 @@ func (a *GinAdapter) ValidateSchema(c *gin.Context) {
 	}
 
 	// 2. Further processing for DB schemas (diff preview)
-	if !isOrg {
+	if !isOrg && !isGlossary && !isDFD && !isTaxonomy {
 		var newSchema domain.FileSchema
 		_ = json.Unmarshal(body, &newSchema)
 
@@ -522,11 +566,24 @@ func (a *GinAdapter) ValidateSchema(c *gin.Context) {
 		return
 	}
 
-	// For ORG structure
+	// For ORG structure, Business Glossary or DFD
+	message := "Organizational structure is valid."
+	if isGlossary {
+		message = "Business glossary is valid and ready for ingestion."
+	} else if isBIM {
+		message = "Business information model is valid and ready for ingestion."
+	} else if isRDM {
+		message = "Reference data package is valid and ready for ingestion."
+	} else if isDFD {
+		message = "Data flow diagram is valid and ready for ingestion."
+	} else if isTaxonomy {
+		message = "Taxonomy definition is valid and ready for ingestion."
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"status":        "success",
 		"detected_type": detectedType,
-		"message":       "Organizational structure is valid.",
+		"message":       message,
 		"new":           rawData,
 	})
 }
@@ -556,6 +613,7 @@ func (a *GinAdapter) IngestSchema(c *gin.Context) {
 	ingestType := "schema"
 	isOrg := false
 	isDFD := false
+	isGlossary := false
 
 	if m, ok := rawData["metadata"].(map[string]interface{}); ok {
 		domain, _ := m["domain"].(string)
@@ -566,24 +624,59 @@ func (a *GinAdapter) IngestSchema(c *gin.Context) {
 		}
 	}
 
-	// Fallback detection for structural hints
-	if !isOrg && !isDFD {
-		if _, ok := rawData["elements"]; ok {
-			isOrg = true // Default to org if elements exists but no domain metadata
-		}
+	isTaxonomy := false
+	if _, ok := rawData["taxonomy_type"]; ok {
+		isTaxonomy = true
+	} else if _, ok := rawData["concepts"]; ok && !isGlossary {
+		isTaxonomy = true
+	}
+
+	if _, ok := rawData["terms"]; ok && !isTaxonomy {
+		isGlossary = true
+	}
+
+	isBIM := false
+	if _, ok := rawData["entities"]; ok {
+		isBIM = true
+	}
+
+	isRDM := false
+	if _, ok := rawData["datasets"]; ok {
+		isRDM = true
 	}
 
 	name := "data-host"
 	desc := ""
 
 	var schema domain.FileSchema
-	if isOrg || isDFD {
+	if isOrg || isDFD || isGlossary || isBIM || isRDM || isTaxonomy {
 		if isOrg {
 			ingestType = "org"
 			name = "org-structure"
-		} else {
+		} else if isDFD {
 			ingestType = "dfd"
 			name = "dfd-structure"
+		} else if isBIM {
+			ingestType = "bim"
+			name = "business-information-model"
+			if m, ok := rawData["name"].(string); ok {
+				name = m
+			}
+		} else if isRDM {
+			ingestType = "reference data"
+			name = "reference-data-package"
+			if n, ok := rawData["name"].(string); ok {
+				name = n
+			}
+		} else if isTaxonomy {
+			ingestType = "taxonomy"
+			name = "business-taxonomy"
+			if n, ok := rawData["name"].(string); ok {
+				name = n
+			}
+		} else {
+			ingestType = "glossary"
+			name = "business-glossary"
 		}
 
 		// Extract name from metadata if present
@@ -604,10 +697,53 @@ func (a *GinAdapter) IngestSchema(c *gin.Context) {
 			err = a.repo.SaveOrgStructure(rawData)
 		} else if isDFD {
 			err = a.repo.SaveDFDStructure(rawData)
+		} else if isGlossary {
+			var payload struct {
+				Name              string               `json:"name"`
+				Description       string               `json:"description"`
+				SourceFile        string               `json:"source_file"`
+				GeneratedAtUTC    string               `json:"generated_at_utc"`
+				Stats             struct {
+					OriginalRows      int `json:"original_rows"`
+					UniqueTerms       int `json:"unique_terms"`
+					DuplicatesRemoved int `json:"duplicates_removed"`
+				} `json:"stats"`
+				Terms []domain.GlossaryTerm `json:"terms"`
+			}
+			if unmarshalErr := json.Unmarshal(body, &payload); unmarshalErr == nil {
+				glossary := &domain.BusinessGlossary{
+					Name:              payload.Name,
+					Description:       payload.Description,
+					SourceFile:        payload.SourceFile,
+					GeneratedAtUTC:    payload.GeneratedAtUTC,
+					OriginalRows:      payload.Stats.OriginalRows,
+					UniqueTerms:       payload.Stats.UniqueTerms,
+					DuplicatesRemoved: payload.Stats.DuplicatesRemoved,
+				}
+				err = a.repo.SaveBusinessGlossary(glossary, payload.Terms)
+			} else {
+				err = unmarshalErr
+			}
+		} else if isBIM {
+			var model domain.BusinessInformationModel
+			if unmarshalErr := json.Unmarshal(body, &model); unmarshalErr == nil {
+				err = a.repo.SaveBIM(&model)
+			} else {
+				err = unmarshalErr
+			}
+		} else if isRDM {
+			var pkg domain.ReferenceDataPackage
+			if unmarshalErr := json.Unmarshal(body, &pkg); unmarshalErr == nil {
+				err = a.repo.SaveReferenceData(&pkg)
+			} else {
+				err = unmarshalErr
+			}
+		} else if isTaxonomy {
+			err = a.repo.SaveTaxonomy(rawData)
 		}
 
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save structure: " + err.Error()})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save data: " + err.Error()})
 			return
 		}
 	} else {
@@ -654,6 +790,10 @@ func (a *GinAdapter) IngestSchema(c *gin.Context) {
 				fileName = fmt.Sprintf("%s_%d.org.json", name, ts)
 			} else if isDFD {
 				fileName = fmt.Sprintf("%s_%d.dfd.json", name, ts)
+			} else if isRDM {
+				fileName = fmt.Sprintf("%s_%d.rdm.json", name, ts)
+			} else if isTaxonomy {
+				fileName = fmt.Sprintf("%s_%d.tax.json", name, ts)
 			} else {
 				if schema.FileName != "" {
 					fileName = fmt.Sprintf("%d_%s", ts, schema.FileName)
@@ -1500,4 +1640,338 @@ func (a *GinAdapter) GetTableData(c *gin.Context) {
 		"limit":   limit,
 		"offset":  offset,
 	})
+}
+
+// GetGlossaries returns the list of all business glossaries
+func (a *GinAdapter) GetGlossaries(c *gin.Context) {
+	glossaries, err := a.repo.GetGlossaries()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{
+			Error:   "Internal Server Error",
+			Message: err.Error(),
+			Code:    http.StatusInternalServerError,
+		})
+		return
+	}
+	c.JSON(http.StatusOK, glossaries)
+}
+
+// GetGlossary returns a specific glossary by ID
+func (a *GinAdapter) GetGlossary(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, domain.ErrorResponse{
+			Error:   "Bad Request",
+			Message: "invalid glossary ID",
+			Code:    http.StatusBadRequest,
+		})
+		return
+	}
+
+	glossary, err := a.repo.GetGlossaryByID(id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{
+			Error:   "Internal Server Error",
+			Message: err.Error(),
+			Code:    http.StatusInternalServerError,
+		})
+		return
+	}
+	if glossary == nil {
+		c.JSON(http.StatusNotFound, domain.ErrorResponse{
+			Error:   "Not Found",
+			Message: "glossary not found",
+			Code:    http.StatusNotFound,
+		})
+		return
+	}
+	c.JSON(http.StatusOK, glossary)
+}
+
+// GetGlossaryTerms returns terms for a specific glossary
+func (a *GinAdapter) GetGlossaryTerms(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, domain.ErrorResponse{
+			Error:   "Bad Request",
+			Message: "invalid glossary ID",
+			Code:    http.StatusBadRequest,
+		})
+		return
+	}
+
+	terms, err := a.repo.GetGlossaryTerms(id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{
+			Error:   "Internal Server Error",
+			Message: err.Error(),
+			Code:    http.StatusInternalServerError,
+		})
+		return
+	}
+	c.JSON(http.StatusOK, terms)
+}
+
+// GetGlossaryTerm returns a specific term by asset ID
+func (a *GinAdapter) GetGlossaryTerm(c *gin.Context) {
+	assetID := c.Param("asset_id")
+	term, err := a.repo.GetGlossaryTermByID(assetID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{
+			Error:   "Internal Server Error",
+			Message: err.Error(),
+			Code:    http.StatusInternalServerError,
+		})
+		return
+	}
+	if term == nil {
+		c.JSON(http.StatusNotFound, domain.ErrorResponse{
+			Error:   "Not Found",
+			Message: "term not found",
+			Code:    http.StatusNotFound,
+		})
+		return
+	}
+	c.JSON(http.StatusOK, term)
+}
+
+// IngestBusinessGlossary handles the ingestion of a business glossary JSON
+func (a *GinAdapter) IngestBusinessGlossary(c *gin.Context) {
+	var payload struct {
+		Name              string               `json:"name"`
+		Description       string               `json:"description"`
+		SourceFile        string               `json:"source_file"`
+		GeneratedAtUTC    string               `json:"generated_at_utc"`
+		Stats             struct {
+			OriginalRows      int `json:"original_rows"`
+			UniqueTerms       int `json:"unique_terms"`
+			DuplicatesRemoved int `json:"duplicates_removed"`
+		} `json:"stats"`
+		Terms []domain.GlossaryTerm `json:"terms"`
+	}
+
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		c.JSON(http.StatusBadRequest, domain.ErrorResponse{
+			Error:   "Bad Request",
+			Message: err.Error(),
+			Code:    http.StatusBadRequest,
+		})
+		return
+	}
+
+	glossary := &domain.BusinessGlossary{
+		Name:              payload.Name,
+		Description:       payload.Description,
+		SourceFile:        payload.SourceFile,
+		GeneratedAtUTC:    payload.GeneratedAtUTC,
+		OriginalRows:      payload.Stats.OriginalRows,
+		UniqueTerms:       payload.Stats.UniqueTerms,
+		DuplicatesRemoved: payload.Stats.DuplicatesRemoved,
+	}
+
+	if err := a.repo.SaveBusinessGlossary(glossary, payload.Terms); err != nil {
+		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{
+			Error:   "Internal Server Error",
+			Message: err.Error(),
+			Code:    http.StatusInternalServerError,
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "Business glossary ingested successfully", "id": glossary.ID})
+}
+
+// DeleteGlossary deletes a glossary and its terms
+func (a *GinAdapter) DeleteGlossary(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, domain.ErrorResponse{
+			Error:   "Bad Request",
+			Message: "invalid glossary ID",
+			Code:    http.StatusBadRequest,
+		})
+		return
+	}
+
+	if err := a.repo.DeleteGlossary(id); err != nil {
+		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{
+			Error:   "Internal Server Error",
+			Message: err.Error(),
+			Code:    http.StatusInternalServerError,
+		})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "Glossary deleted"})
+}
+
+// GetBIMModels returns all Business Information Models
+func (a *GinAdapter) GetBIMModels(c *gin.Context) {
+	models, err := a.repo.GetBIMModels()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{
+			Error:   "Internal Server Error",
+			Message: err.Error(),
+			Code:    http.StatusInternalServerError,
+		})
+		return
+	}
+	c.JSON(http.StatusOK, models)
+}
+
+// GetBIMModel returns a single Business Information Model by ID
+func (a *GinAdapter) GetBIMModel(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, domain.ErrorResponse{
+			Error:   "Bad Request",
+			Message: "invalid BIM model ID",
+			Code:    http.StatusBadRequest,
+		})
+		return
+	}
+
+	model, err := a.repo.GetBIMModelByID(id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{
+			Error:   "Internal Server Error",
+			Message: err.Error(),
+			Code:    http.StatusInternalServerError,
+		})
+		return
+	}
+	if model == nil {
+		c.JSON(http.StatusNotFound, domain.ErrorResponse{
+			Error:   "Not Found",
+			Message: "BIM model not found",
+			Code:    http.StatusNotFound,
+		})
+		return
+	}
+	c.JSON(http.StatusOK, model)
+}
+
+// GetBIMEntities returns all entities for a BIM model
+func (a *GinAdapter) GetBIMEntities(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, domain.ErrorResponse{
+			Error:   "Bad Request",
+			Message: "invalid BIM model ID",
+			Code:    http.StatusBadRequest,
+		})
+		return
+	}
+
+	entities, err := a.repo.GetBIMEntities(id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{
+			Error:   "Internal Server Error",
+			Message: err.Error(),
+			Code:    http.StatusInternalServerError,
+		})
+		return
+	}
+	c.JSON(http.StatusOK, entities)
+}
+
+// DeleteBIM deletes a Business Information Model and its entities
+func (a *GinAdapter) DeleteBIM(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, domain.ErrorResponse{
+			Error:   "Bad Request",
+			Message: "invalid BIM model ID",
+			Code:    http.StatusBadRequest,
+		})
+		return
+	}
+
+	if err := a.repo.DeleteBIM(id); err != nil {
+		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{
+			Error:   "Internal Server Error",
+			Message: err.Error(),
+			Code:    http.StatusInternalServerError,
+		})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "BIM model deleted"})
+}
+
+func (a *GinAdapter) GetReferenceDataPackages(c *gin.Context) {
+	pkgs, err := a.repo.GetReferenceDataPackages()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{
+			Error:   "Internal Server Error",
+			Message: err.Error(),
+			Code:    http.StatusInternalServerError,
+		})
+		return
+	}
+	c.JSON(http.StatusOK, pkgs)
+}
+
+func (a *GinAdapter) GetReferenceDataPackage(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, domain.ErrorResponse{
+			Error:   "Bad Request",
+			Message: "invalid RDM package ID",
+			Code:    http.StatusBadRequest,
+		})
+		return
+	}
+
+	pkg, err := a.repo.GetReferenceDataPackage(id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, domain.ErrorResponse{
+			Error:   "Not Found",
+			Message: "RDM package not found",
+			Code:    http.StatusNotFound,
+		})
+		return
+	}
+	c.JSON(http.StatusOK, pkg)
+}
+
+func (a *GinAdapter) GetReferenceDatasets(c *gin.Context) {
+	datasets, err := a.repo.GetReferenceDatasets()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{
+			Error:   "Internal Server Error",
+			Message: err.Error(),
+			Code:    http.StatusInternalServerError,
+		})
+		return
+	}
+	c.JSON(http.StatusOK, datasets)
+}
+
+func (a *GinAdapter) DeleteReferenceData(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, domain.ErrorResponse{
+			Error:   "Bad Request",
+			Message: "invalid RDM package ID",
+			Code:    http.StatusBadRequest,
+		})
+		return
+	}
+
+	if err := a.repo.DeleteReferenceData(id); err != nil {
+		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{
+			Error:   "Internal Server Error",
+			Message: err.Error(),
+			Code:    http.StatusInternalServerError,
+		})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "RDM package deleted"})
 }

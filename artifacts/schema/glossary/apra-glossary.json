@@ -1,0 +1,328 @@
+{
+  "$schema": "./apra-glossary.schema.json",
+  "name": "apra_regulatory_glossary",
+  "description": "APRA superannuation reporting standards glossary with regulatory definitions extracted from SRS 101.0 and related standards.",
+  "generated_at_utc": "2026-03-28T00:00:00+00:00",
+  "terms": [
+    {
+      "full_name": "Asset Allocation",
+      "name": "Asset Allocation",
+      "asset_id": "apra-001-asset-allocation",
+      "definition": "The process of distributing fund investments across different asset classes, securities, and exposures in accordance with the fund's investment strategy and risk management framework. For APRA reporting purposes, asset allocation must be reported quarterly under SRS 550.0 with particular focus on derivative instrument exposures and counterparty concentrations.",
+      "status": "Approved",
+      "domain": "APRA Regulatory Glossary",
+      "community": "01. Regulatory",
+      "domain_type": "Glossary",
+      "domain_id": "apra-regulatory-domain",
+      "asset_type": "Regulatory Term",
+      "source_sheet": "SRS 550.0",
+      "related_data_domains": [
+        {
+          "relates_to_name": "Risk Management",
+          "relates_to_full_name": "Risk Management",
+          "relates_to_asset_type": "Data Domain",
+          "relates_to_community": "01. Regulatory",
+          "relates_to_domain_type": "APRA Domain",
+          "relates_to_domain": "APRA Standards",
+          "relates_to_domain_id": "apra-risk-domain",
+          "relates_to_asset_id": "apra-srs-553"
+        }
+      ]
+    },
+    {
+      "full_name": "Counterparty",
+      "name": "Counterparty",
+      "asset_id": "apra-002-counterparty",
+      "definition": "A legal entity that enters into a derivative contract or financial arrangement with an RSE Licensee. For APRA reporting, counterparties must be identified using their Legal Entity Identifier (LEI) or interim identifier, and must be reported with all outstanding derivative exposures under SRS 550.0.",
+      "status": "Approved",
+      "domain": "APRA Regulatory Glossary",
+      "community": "01. Regulatory",
+      "domain_type": "Glossary",
+      "domain_id": "apra-regulatory-domain",
+      "asset_type": "Regulatory Term",
+      "source_sheet": "SRS 550.0",
+      "related_data_domains": [
+        {
+          "relates_to_name": "Counterparty Risk",
+          "relates_to_full_name": "Counterparty Risk",
+          "relates_to_asset_type": "Data Domain",
+          "relates_to_community": "01. Regulatory",
+          "relates_to_domain_type": "APRA Domain",
+          "relates_to_domain": "APRA Standards",
+          "relates_to_domain_id": "apra-risk-domain",
+          "relates_to_asset_id": "apra-srs-550"
+        }
+      ]
+    },
+    {
+      "full_name": "Derivative",
+      "name": "Derivative",
+      "asset_id": "apra-003-derivative",
+      "definition": "A financial instrument whose value is derived from an underlying asset or reference rate. For APRA purposes, this includes OTC derivatives, exchange-traded derivatives, and cleared derivatives. All derivatives must be reported quarterly under SRS 550.0, including hedges, with counterparty identification and valuation information.",
+      "status": "Approved",
+      "domain": "APRA Regulatory Glossary",
+      "community": "01. Regulatory",
+      "domain_type": "Glossary",
+      "domain_id": "apra-regulatory-domain",
+      "asset_type": "Regulatory Term",
+      "source_sheet": "SRS 550.0",
+      "related_data_domains": []
+    },
+    {
+      "full_name": "Fair Value",
+      "name": "Fair Value",
+      "asset_id": "apra-004-fair-value",
+      "definition": "The price at which an asset would be exchanged between knowledgeable, willing parties in an arm's length transaction. For APRA reporting under SRS 101.0, fair value is the primary valuation method for all investment assets and derivatives, measured on a mark-to-market basis at quarter end.",
+      "status": "Approved",
+      "domain": "APRA Regulatory Glossary",
+      "community": "01. Regulatory",
+      "domain_type": "Glossary",
+      "domain_id": "apra-regulatory-domain",
+      "asset_type": "Regulatory Term",
+      "source_sheet": "SRS 101.0",
+      "related_data_domains": [
+        {
+          "relates_to_name": "Valuation",
+          "relates_to_full_name": "Valuation",
+          "relates_to_asset_type": "Data Domain",
+          "relates_to_community": "01. Regulatory",
+          "relates_to_domain_type": "APRA Domain",
+          "relates_to_domain": "APRA Standards",
+          "relates_to_domain_id": "apra-valuation-domain",
+          "relates_to_asset_id": "apra-srs-550"
+        }
+      ]
+    },
+    {
+      "full_name": "Legal Entity Identifier",
+      "name": "LEI",
+      "asset_id": "apra-005-lei",
+      "definition": "A unique 20-character alphanumeric code assigned to legal entities by the Global Legal Entity Identifier Foundation (GLEIF). For APRA reporting under SRS 550.0, LEI is the preferred counterparty identifier format. If LEI is not available, an interim identifier may be used pending LEI registration completion.",
+      "status": "Approved",
+      "domain": "APRA Regulatory Glossary",
+      "community": "01. Regulatory",
+      "domain_type": "Glossary",
+      "domain_id": "apra-regulatory-domain",
+      "asset_type": "Regulatory Term",
+      "source_sheet": "SRS 550.0",
+      "related_data_domains": []
+    },
+    {
+      "full_name": "Margin (Collateral)",
+      "name": "Margin",
+      "asset_id": "apra-006-margin",
+      "definition": "Cash or securities held as collateral to secure exchange-traded and cleared derivatives positions, or exchanged with counterparties for OTC derivatives under credit support annexes. Margin arrangements must comply with CPS 226 requirements and be reported under SRS 550.0.",
+      "status": "Approved",
+      "domain": "APRA Regulatory Glossary",
+      "community": "01. Regulatory",
+      "domain_type": "Glossary",
+      "domain_id": "apra-regulatory-domain",
+      "asset_type": "Regulatory Term",
+      "source_sheet": "SRS 550.0",
+      "related_data_domains": [
+        {
+          "relates_to_name": "Collateral Management",
+          "relates_to_full_name": "Collateral Management",
+          "relates_to_asset_type": "Data Domain",
+          "relates_to_community": "01. Regulatory",
+          "relates_to_domain_type": "APRA Domain",
+          "relates_to_domain": "APRA Standards",
+          "relates_to_domain_id": "apra-collateral-domain",
+          "relates_to_asset_id": "apra-cps-226"
+        }
+      ]
+    },
+    {
+      "full_name": "Member",
+      "name": "Member",
+      "asset_id": "apra-007-member",
+      "definition": "An individual who has a superannuation entitlement in a regulated RSE. Members have benefits registered in the fund and are entitled to receive benefit payments in accordance with fund rules and superannuation law. For APRA reporting, member statistics and benefit data are reported under SRS 604.0 and related financial reporting standards.",
+      "status": "Approved",
+      "domain": "APRA Regulatory Glossary",
+      "community": "01. Regulatory",
+      "domain_type": "Glossary",
+      "domain_id": "apra-regulatory-domain",
+      "asset_type": "Regulatory Term",
+      "source_sheet": "SRS 101.0",
+      "related_data_domains": [
+        {
+          "relates_to_name": "Fund Structure",
+          "relates_to_full_name": "Fund Structure",
+          "relates_to_asset_type": "Data Domain",
+          "relates_to_community": "01. Regulatory",
+          "relates_to_domain_type": "APRA Domain",
+          "relates_to_domain": "APRA Standards",
+          "relates_to_domain_id": "apra-structure-domain",
+          "relates_to_asset_id": "apra-srs-605"
+        }
+      ]
+    },
+    {
+      "full_name": "MySuper Product",
+      "name": "MySuper Product",
+      "asset_id": "apra-008-mysuper",
+      "definition": "A standardized superannuation investment product that must be offered by RSE Licensees to members who do not make an active investment choice. MySuper products are subject to specific fee and performance standards under the Superannuation Industry (Supervision) Act 1993 and must be reported under SRS 606.1 and SRS 332.0.",
+      "status": "Approved",
+      "domain": "APRA Regulatory Glossary",
+      "community": "01. Regulatory",
+      "domain_type": "Glossary",
+      "domain_id": "apra-regulatory-domain",
+      "asset_type": "Regulatory Term",
+      "source_sheet": "SRS 604.0",
+      "related_data_domains": [
+        {
+          "relates_to_name": "Product Management",
+          "relates_to_full_name": "Product Management",
+          "relates_to_asset_type": "Data Domain",
+          "relates_to_community": "01. Regulatory",
+          "relates_to_domain_type": "APRA Domain",
+          "relates_to_domain": "APRA Standards",
+          "relates_to_domain_id": "apra-product-domain",
+          "relates_to_asset_id": "apra-srs-606"
+        }
+      ]
+    },
+    {
+      "full_name": "RSE Licensee",
+      "name": "RSE Licensee",
+      "asset_id": "apra-009-rse-licensee",
+      "definition": "A company or other legal entity that holds a current license issued by APRA to operate a Registrable Superannuation Entity (RSE). RSE Licensees are responsible for prudent management of fund assets, member benefits, and compliance with APRA reporting standards. All RSE Licensees must submit quarterly and annual returns across the SRS suite of standards.",
+      "status": "Approved",
+      "domain": "APRA Regulatory Glossary",
+      "community": "01. Regulatory",
+      "domain_type": "Glossary",
+      "domain_id": "apra-regulatory-domain",
+      "asset_type": "Regulatory Term",
+      "source_sheet": "SRS 101.0",
+      "related_data_domains": [
+        {
+          "relates_to_name": "Regulatory Authority",
+          "relates_to_full_name": "Regulatory Authority",
+          "relates_to_asset_type": "Data Domain",
+          "relates_to_community": "01. Regulatory",
+          "relates_to_domain_type": "APRA Domain",
+          "relates_to_domain": "APRA Standards",
+          "relates_to_domain_id": "apra-authority-domain",
+          "relates_to_asset_id": "apra-srs-604"
+        }
+      ]
+    },
+    {
+      "full_name": "Service Provider",
+      "name": "Service Provider",
+      "asset_id": "apra-010-service-provider",
+      "definition": "Any external organization that provides operational, technical, or professional services to an RSE Licensee, including custodians, administrators, investment managers, and auditors. RSE Licensees remain accountable for all service provider activities and data submissions, and must ensure service providers comply with data standards and documentation requirements for APRA reporting.",
+      "status": "Approved",
+      "domain": "APRA Regulatory Glossary",
+      "community": "01. Regulatory",
+      "domain_type": "Glossary",
+      "domain_id": "apra-regulatory-domain",
+      "asset_type": "Regulatory Term",
+      "source_sheet": "SRS 101.0",
+      "related_data_domains": []
+    },
+    {
+      "full_name": "Notional Amount",
+      "name": "Notional Amount",
+      "asset_id": "apra-011-notional",
+      "definition": "The reference amount used to calculate cash flows for derivative instruments, which may not equal the actual market value of the derivative. For swap contracts, this is typically the principal amount; for options, it is the struck amount. APRA requires both notional and mark-to-market values to be reported in SRS 550.0 for derivatives.",
+      "status": "Approved",
+      "domain": "APRA Regulatory Glossary",
+      "community": "01. Regulatory",
+      "domain_type": "Glossary",
+      "domain_id": "apra-regulatory-domain",
+      "asset_type": "Regulatory Term",
+      "source_sheet": "SRS 550.0",
+      "related_data_domains": []
+    },
+    {
+      "full_name": "Liquidity",
+      "name": "Liquidity",
+      "asset_id": "apra-012-liquidity",
+      "definition": "The ability to quickly convert investments to cash at fair value without significant loss due to market conditions or asset-specific factors. RSE Licensees must assess and report liquidity profiles of their investment portfolios quarterly under SRS 551.0 to ensure they can meet benefit payment obligations and redemption requests.",
+      "status": "Approved",
+      "domain": "APRA Regulatory Glossary",
+      "community": "01. Regulatory",
+      "domain_type": "Glossary",
+      "domain_id": "apra-regulatory-domain",
+      "asset_type": "Regulatory Term",
+      "source_sheet": "SRS 551.0",
+      "related_data_domains": [
+        {
+          "relates_to_name": "Risk Management",
+          "relates_to_full_name": "Risk Management",
+          "relates_to_asset_type": "Data Domain",
+          "relates_to_community": "01. Regulatory",
+          "relates_to_domain_type": "APRA Domain",
+          "relates_to_domain": "APRA Standards",
+          "relates_to_domain_id": "apra-risk-domain",
+          "relates_to_asset_id": "apra-srs-551"
+        }
+      ]
+    },
+    {
+      "full_name": "Repurchase Agreement",
+      "name": "Repo",
+      "asset_id": "apra-013-repo",
+      "definition": "A short-term transaction in which securities are sold with an agreement to repurchase them at a specified price and date, effectively acting as a collateralized loan. Repo arrangements, including securities lending and borrowing, must be reported quarterly under SRS 552.0 with details of underlying securities and counterparty information.",
+      "status": "Approved",
+      "domain": "APRA Regulatory Glossary",
+      "community": "01. Regulatory",
+      "domain_type": "Glossary",
+      "domain_id": "apra-regulatory-domain",
+      "asset_type": "Regulatory Term",
+      "source_sheet": "SRS 552.0",
+      "related_data_domains": []
+    },
+    {
+      "full_name": "Gross Exposure",
+      "name": "Gross Exposure",
+      "asset_id": "apra-014-gross-exposure",
+      "definition": "The total absolute value of long and short positions in a portfolio without netting offsetting positions, used to measure the total leverage and concentration of the fund. APRA requires gross exposure reporting under SRS 553.0 to assess the overall leverage and complexity of investment strategies employed by RSE Licensees.",
+      "status": "Approved",
+      "domain": "APRA Regulatory Glossary",
+      "community": "01. Regulatory",
+      "domain_type": "Glossary",
+      "domain_id": "apra-regulatory-domain",
+      "asset_type": "Regulatory Term",
+      "source_sheet": "SRS 553.0",
+      "related_data_domains": [
+        {
+          "relates_to_name": "Investment Analysis",
+          "relates_to_full_name": "Investment Analysis",
+          "relates_to_asset_type": "Data Domain",
+          "relates_to_community": "01. Regulatory",
+          "relates_to_domain_type": "APRA Domain",
+          "relates_to_domain": "APRA Standards",
+          "relates_to_domain_id": "apra-investment-domain",
+          "relates_to_asset_id": "apra-srs-553"
+        }
+      ]
+    },
+    {
+      "full_name": "Concentration Limit",
+      "name": "Concentration Limit",
+      "asset_id": "apra-015-concentration-limit",
+      "definition": "A maximum permissible exposure to a single counterparty, asset, or asset class, set by an RSE Licensee's investment policy and monitored for compliance. While APRA does not prescribe specific concentration limits, it requires detailed concentration reporting under SRS 550.0 and SRS 553.0 to assess concentration risk and prudential management.",
+      "status": "Approved",
+      "domain": "APRA Regulatory Glossary",
+      "community": "01. Regulatory",
+      "domain_type": "Glossary",
+      "domain_id": "apra-regulatory-domain",
+      "asset_type": "Regulatory Term",
+      "source_sheet": "SRS 550.0",
+      "related_data_domains": [
+        {
+          "relates_to_name": "Risk Limits",
+          "relates_to_full_name": "Risk Limits",
+          "relates_to_asset_type": "Data Domain",
+          "relates_to_community": "01. Regulatory",
+          "relates_to_domain_type": "APRA Domain",
+          "relates_to_domain": "APRA Standards",
+          "relates_to_domain_id": "apra-risk-domain",
+          "relates_to_asset_id": "apra-srs-550"
+        }
+      ]
+    }
+  ]
+}

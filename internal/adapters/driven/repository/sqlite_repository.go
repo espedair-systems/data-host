@@ -13,6 +13,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/rs/zerolog/log"
 )
@@ -1417,4 +1418,685 @@ func (r *SQLiteRepository) GetOrgStructure() (interface{}, error) {
 
 func (r *SQLiteRepository) GetDFDStructure() (interface{}, error) {
 	return r.getConfig("dfd_structure")
+}
+
+func (r *SQLiteRepository) GetGlossaries() ([]domain.BusinessGlossary, error) {
+	rows, err := r.db.Query("SELECT glossary_id, glossary_name, description, source_file, generated_at_utc, original_rows, unique_terms, duplicates_removed, created_at_utc FROM BIG_GLOSSARY ORDER BY created_at_utc DESC")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var results []domain.BusinessGlossary
+	for rows.Next() {
+		var g domain.BusinessGlossary
+		var desc, source, genAt sql.NullString
+		if err := rows.Scan(&g.ID, &g.Name, &desc, &source, &genAt, &g.OriginalRows, &g.UniqueTerms, &g.DuplicatesRemoved, &g.CreatedAt); err != nil {
+			return nil, err
+		}
+		g.Description = desc.String
+		g.SourceFile = source.String
+		g.GeneratedAtUTC = genAt.String
+		results = append(results, g)
+	}
+	return results, nil
+}
+
+func (r *SQLiteRepository) GetGlossaryByID(id int64) (*domain.BusinessGlossary, error) {
+	var g domain.BusinessGlossary
+	var desc, source, genAt sql.NullString
+	err := r.db.QueryRow("SELECT glossary_id, glossary_name, description, source_file, generated_at_utc, original_rows, unique_terms, duplicates_removed, created_at_utc FROM BIG_GLOSSARY WHERE glossary_id = ?", id).
+		Scan(&g.ID, &g.Name, &desc, &source, &genAt, &g.OriginalRows, &g.UniqueTerms, &g.DuplicatesRemoved, &g.CreatedAt)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	g.Description = desc.String
+	g.SourceFile = source.String
+	g.GeneratedAtUTC = genAt.String
+	return &g, nil
+}
+
+func (r *SQLiteRepository) GetGlossaryTerms(glossaryID int64) ([]domain.GlossaryTerm, error) {
+	rows, err := r.db.Query("SELECT term_row_id, glossary_id, asset_id, full_name, term_name, definition, status, domain, community, domain_type, domain_id, asset_type, source_sheet, created_at_utc FROM BIG_TERM WHERE glossary_id = ?", glossaryID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var results []domain.GlossaryTerm
+	for rows.Next() {
+		var t domain.GlossaryTerm
+		var termRowID int64
+		var def, status, dom, comm, domType, domID, assetType, sheet sql.NullString
+		if err := rows.Scan(&termRowID, &t.GlossaryID, &t.AssetID, &t.FullName, &t.Name, &def, &status, &dom, &comm, &domType, &domID, &assetType, &sheet, &t.CreatedAt); err != nil {
+			return nil, err
+		}
+		t.Definition = def.String
+		t.Status = status.String
+		t.Domain = dom.String
+		t.Community = comm.String
+		t.DomainType = domType.String
+		t.DomainID = domID.String
+		t.AssetType = assetType.String
+		t.SourceSheet = sheet.String
+
+		// Fetch related domains using term_row_id
+		relRows, err := r.db.Query("SELECT relation_id, term_row_id, relates_to_name, relates_to_full_name, relates_to_asset_type, relates_to_community, relates_to_domain_type, relates_to_domain, relates_to_domain_id, relates_to_asset_id, created_at_utc FROM BIG_TERM_RELATED_DATA_DOMAIN WHERE term_row_id = ?", termRowID)
+		if err == nil {
+			for relRows.Next() {
+				var rd domain.RelatedDataDomain
+				var relID, trID int64
+				var rName, rFullName, rAssetType, rComm, rDomType, rDom, rDomID, rAssetID sql.NullString
+				if err := relRows.Scan(&relID, &trID, &rName, &rFullName, &rAssetType, &rComm, &rDomType, &rDom, &rDomID, &rAssetID, &rd.CreatedAt); err == nil {
+					rd.ID = relID
+					rd.RelatesToName = rName.String
+					rd.RelatesToFullName = rFullName.String
+					rd.RelatesToAssetType = rAssetType.String
+					rd.RelatesToCommunity = rComm.String
+					rd.RelatesToDomainType = rDomType.String
+					rd.RelatesToDomain = rDom.String
+					rd.RelatesToDomainID = rDomID.String
+					rd.RelatesToAssetID = rAssetID.String
+					t.RelatedDataDomains = append(t.RelatedDataDomains, rd)
+				}
+			}
+			relRows.Close()
+		}
+
+		results = append(results, t)
+	}
+	return results, nil
+}
+
+func (r *SQLiteRepository) GetGlossaryTermByID(assetID string) (*domain.GlossaryTerm, error) {
+	var t domain.GlossaryTerm
+	var termRowID int64
+	var def, status, dom, comm, domType, domID, assetType, sheet sql.NullString
+	err := r.db.QueryRow("SELECT term_row_id, glossary_id, asset_id, full_name, term_name, definition, status, domain, community, domain_type, domain_id, asset_type, source_sheet, created_at_utc FROM BIG_TERM WHERE asset_id = ?", assetID).
+		Scan(&termRowID, &t.GlossaryID, &t.AssetID, &t.FullName, &t.Name, &def, &status, &dom, &comm, &domType, &domID, &assetType, &sheet, &t.CreatedAt)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	t.Definition = def.String
+	t.Status = status.String
+	t.Domain = dom.String
+	t.Community = comm.String
+	t.DomainType = domType.String
+	t.DomainID = domID.String
+	t.AssetType = assetType.String
+	t.SourceSheet = sheet.String
+
+	// Fetch related domains using term_row_id
+	relRows, err := r.db.Query("SELECT relation_id, term_row_id, relates_to_name, relates_to_full_name, relates_to_asset_type, relates_to_community, relates_to_domain_type, relates_to_domain, relates_to_domain_id, relates_to_asset_id, created_at_utc FROM BIG_TERM_RELATED_DATA_DOMAIN WHERE term_row_id = ?", termRowID)
+	if err == nil {
+		for relRows.Next() {
+			var rd domain.RelatedDataDomain
+			var relID, trID int64
+			var rName, rFullName, rAssetType, rComm, rDomType, rDom, rDomID, rAssetID sql.NullString
+			if err := relRows.Scan(&relID, &trID, &rName, &rFullName, &rAssetType, &rComm, &rDomType, &rDom, &rDomID, &rAssetID, &rd.CreatedAt); err == nil {
+				rd.ID = relID
+				rd.RelatesToName = rName.String
+				rd.RelatesToFullName = rFullName.String
+				rd.RelatesToAssetType = rAssetType.String
+				rd.RelatesToCommunity = rComm.String
+				rd.RelatesToDomainType = rDomType.String
+				rd.RelatesToDomain = rDom.String
+				rd.RelatesToDomainID = rDomID.String
+				rd.RelatesToAssetID = rAssetID.String
+				t.RelatedDataDomains = append(t.RelatedDataDomains, rd)
+			}
+		}
+		relRows.Close()
+	}
+
+	return &t, nil
+}
+
+func (r *SQLiteRepository) SaveBusinessGlossary(glossary *domain.BusinessGlossary, terms []domain.GlossaryTerm) error {
+	tx, err := r.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	res, err := tx.Exec("INSERT INTO BIG_GLOSSARY (glossary_name, description, source_file, generated_at_utc, original_rows, unique_terms, duplicates_removed) VALUES (?, ?, ?, ?, ?, ?, ?)",
+		glossary.Name, glossary.Description, glossary.SourceFile, glossary.GeneratedAtUTC, glossary.OriginalRows, glossary.UniqueTerms, glossary.DuplicatesRemoved)
+	if err != nil {
+		return err
+	}
+	glossaryID, _ := res.LastInsertId()
+	glossary.ID = glossaryID
+
+	for _, t := range terms {
+		res, err = tx.Exec("INSERT INTO BIG_TERM (glossary_id, asset_id, full_name, term_name, definition, status, domain, community, domain_type, domain_id, asset_type, source_sheet) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+			glossaryID, t.AssetID, t.FullName, t.Name, t.Definition, t.Status, t.Domain, t.Community, t.DomainType, t.DomainID, t.AssetType, t.SourceSheet)
+		if err != nil {
+			return err
+		}
+		termRowID, _ := res.LastInsertId()
+
+		for _, rd := range t.RelatedDataDomains {
+			_, err = tx.Exec("INSERT INTO BIG_TERM_RELATED_DATA_DOMAIN (term_row_id, relates_to_name, relates_to_full_name, relates_to_asset_type, relates_to_community, relates_to_domain_type, relates_to_domain, relates_to_domain_id, relates_to_asset_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+				termRowID, rd.RelatesToName, rd.RelatesToFullName, rd.RelatesToAssetType, rd.RelatesToCommunity, rd.RelatesToDomainType, rd.RelatesToDomain, rd.RelatesToDomainID, rd.RelatesToAssetID)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return tx.Commit()
+}
+
+func (r *SQLiteRepository) DeleteGlossary(id int64) error {
+	_, err := r.db.Exec("DELETE FROM BIG_GLOSSARY WHERE glossary_id = ?", id)
+	return err
+}
+
+func (r *SQLiteRepository) GetBIMModels() ([]domain.BusinessInformationModel, error) {
+	rows, err := r.db.Query("SELECT bim_model_id, model_name, description, source, generated_at_utc, total_entities, data_domains, data_concepts, duplicates_removed, created_at_utc FROM BIM_MODEL ORDER BY created_at_utc DESC")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var models []domain.BusinessInformationModel
+	for rows.Next() {
+		var m domain.BusinessInformationModel
+		var desc, source, genAt sql.NullString
+		err := rows.Scan(&m.ID, &m.Name, &desc, &source, &genAt, &m.Stats.TotalEntities, &m.Stats.DataDomains, &m.Stats.DataConcepts, &m.Stats.DuplicatesRemoved, &m.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+		m.Description = desc.String
+		m.Source = source.String
+		m.GeneratedAtUTC = genAt.String
+		models = append(models, m)
+	}
+	return models, nil
+}
+
+func (r *SQLiteRepository) GetBIMModelByID(id int64) (*domain.BusinessInformationModel, error) {
+	var m domain.BusinessInformationModel
+	var desc, source, genAt sql.NullString
+	err := r.db.QueryRow("SELECT bim_model_id, model_name, description, source, generated_at_utc, total_entities, data_domains, data_concepts, duplicates_removed, created_at_utc FROM BIM_MODEL WHERE bim_model_id = ?", id).
+		Scan(&m.ID, &m.Name, &desc, &source, &genAt, &m.Stats.TotalEntities, &m.Stats.DataDomains, &m.Stats.DataConcepts, &m.Stats.DuplicatesRemoved, &m.CreatedAt)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	m.Description = desc.String
+	m.Source = source.String
+	m.GeneratedAtUTC = genAt.String
+	return &m, nil
+}
+
+func (r *SQLiteRepository) GetBIMEntities(modelID int64) ([]domain.BIMEntity, error) {
+	rows, err := r.db.Query("SELECT bim_entity_id, entity_name, asset_type, description, information_confidentiality_classification, created_at_utc FROM BIM_ENTITY WHERE bim_model_id = ?", modelID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var entities []domain.BIMEntity
+	for rows.Next() {
+		var e domain.BIMEntity
+		var desc, class sql.NullString
+		if err := rows.Scan(&e.ID, &e.Name, &e.AssetType, &desc, &class, &e.CreatedAt); err != nil {
+			return nil, err
+		}
+		e.Description = desc.String
+		e.InformationConfidentialityClassification = class.String
+		e.ModelID = modelID
+
+		// Fetch Roles
+		_ = r.db.QueryRow("SELECT data_owner_user_name, data_owner_first_name, data_owner_last_name, data_owner_group_name, business_steward_user_name, business_steward_first_name, business_steward_last_name, business_steward_group_name, data_custodian_user_name, data_custodian_first_name, data_custodian_last_name, data_custodian_group_name, data_steward_user_name, data_steward_first_name, data_steward_last_name, data_steward_group_name FROM BIM_ENTITY_ROLE WHERE bim_entity_id = ?", e.ID).
+			Scan(&e.Roles.DataOwnerUserName, &e.Roles.DataOwnerFirstName, &e.Roles.DataOwnerLastName, &e.Roles.DataOwnerGroupName, &e.Roles.BusinessStewardUserName, &e.Roles.BusinessStewardFirstName, &e.Roles.BusinessStewardLastName, &e.Roles.BusinessStewardGroupName, &e.Roles.DataCustodianUserName, &e.Roles.DataCustodianFirstName, &e.Roles.DataCustodianLastName, &e.Roles.DataCustodianGroupName, &e.Roles.DataStewardUserName, &e.Roles.DataStewardFirstName, &e.Roles.DataStewardLastName, &e.Roles.DataStewardGroupName)
+
+		// Fetch Relationships
+		relRows, err := r.db.Query("SELECT data_concept_groups_data_concept_name, data_concept_is_grouped_by_data_concept_name, data_concept_is_grouped_by_data_domain_name, data_domain_groups_data_concept_name, created_at_utc FROM BIM_ENTITY_RELATIONSHIP WHERE bim_entity_id = ?", e.ID)
+		if err == nil {
+			for relRows.Next() {
+				var rel domain.BIMEntityRelationship
+				var c1, c2, c3, c4 sql.NullString
+				if err := relRows.Scan(&c1, &c2, &c3, &c4, &rel.CreatedAt); err == nil {
+					rel.DataConceptGroupsDataConceptName = c1.String
+					rel.DataConceptIsGroupedByDataConceptName = c2.String
+					rel.DataConceptIsGroupedByDataDomainName = c3.String
+					rel.DataDomainGroupsDataConceptName = c4.String
+					e.Relationships = append(e.Relationships, rel)
+				}
+			}
+			relRows.Close()
+		}
+
+		entities = append(entities, e)
+	}
+	return entities, nil
+}
+
+func (r *SQLiteRepository) SaveBIM(model *domain.BusinessInformationModel) error {
+	tx, err := r.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	res, err := tx.Exec("INSERT INTO BIM_MODEL (model_name, description, source, generated_at_utc, total_entities, data_domains, data_concepts, duplicates_removed) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+		model.Name, model.Description, model.Source, model.GeneratedAtUTC, model.Stats.TotalEntities, model.Stats.DataDomains, model.Stats.DataConcepts, model.Stats.DuplicatesRemoved)
+	if err != nil {
+		return err
+	}
+	modelID, _ := res.LastInsertId()
+	model.ID = modelID
+
+	for _, e := range model.Entities {
+		res, err = tx.Exec("INSERT INTO BIM_ENTITY (bim_model_id, entity_name, asset_type, description, information_confidentiality_classification) VALUES (?, ?, ?, ?, ?)",
+			modelID, e.Name, e.AssetType, e.Description, e.InformationConfidentialityClassification)
+		if err != nil {
+			return err
+		}
+		entityID, _ := res.LastInsertId()
+
+		// Save Roles
+		_, err = tx.Exec("INSERT INTO BIM_ENTITY_ROLE (bim_entity_id, data_owner_user_name, data_owner_first_name, data_owner_last_name, data_owner_group_name, business_steward_user_name, business_steward_first_name, business_steward_last_name, business_steward_group_name, data_custodian_user_name, data_custodian_first_name, data_custodian_last_name, data_custodian_group_name, data_steward_user_name, data_steward_first_name, data_steward_last_name, data_steward_group_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+			entityID, e.Roles.DataOwnerUserName, e.Roles.DataOwnerFirstName, e.Roles.DataOwnerLastName, e.Roles.DataOwnerGroupName, e.Roles.BusinessStewardUserName, e.Roles.BusinessStewardFirstName, e.Roles.BusinessStewardLastName, e.Roles.BusinessStewardGroupName, e.Roles.DataCustodianUserName, e.Roles.DataCustodianFirstName, e.Roles.DataCustodianLastName, e.Roles.DataCustodianGroupName, e.Roles.DataStewardUserName, e.Roles.DataStewardFirstName, e.Roles.DataStewardLastName, e.Roles.DataStewardGroupName)
+		if err != nil {
+			return err
+		}
+
+		// Save Relationships
+		for _, rel := range e.Relationships {
+			_, err = tx.Exec("INSERT INTO BIM_ENTITY_RELATIONSHIP (bim_entity_id, data_concept_groups_data_concept_name, data_concept_is_grouped_by_data_concept_name, data_concept_is_grouped_by_data_domain_name, data_domain_groups_data_concept_name) VALUES (?, ?, ?, ?, ?)",
+				entityID, rel.DataConceptGroupsDataConceptName, rel.DataConceptIsGroupedByDataConceptName, rel.DataConceptIsGroupedByDataDomainName, rel.DataDomainGroupsDataConceptName)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return tx.Commit()
+}
+
+func (r *SQLiteRepository) DeleteBIM(id int64) error {
+	_, err := r.db.Exec("DELETE FROM BIM_MODEL WHERE bim_model_id = ?", id)
+	return err
+}
+
+func (r *SQLiteRepository) GetReferenceDataPackages() ([]domain.ReferenceDataPackage, error) {
+	rows, err := r.db.Query("SELECT ref_package_id, package_name, version, description, domain, source, generated_at_utc, created_at_utc FROM REF_PACKAGE ORDER BY created_at_utc DESC")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var packages []domain.ReferenceDataPackage
+	for rows.Next() {
+		var p domain.ReferenceDataPackage
+		var desc, src, gen, createdAt sql.NullString
+		if err := rows.Scan(&p.ID, &p.Name, &p.Version, &desc, &p.Domain, &src, &gen, &createdAt); err != nil {
+			return nil, err
+		}
+		p.Description = desc.String
+		p.Source = src.String
+		p.GeneratedAtUTC = gen.String
+		if createdAt.Valid {
+			// Try multiples formats if needed, but modernc sqlite usually returns ISO-like strings
+			t, _ := time.Parse("2006-01-02 15:04:05.999999999-07:00", createdAt.String)
+			if t.IsZero() {
+				t, _ = time.Parse("2006-01-02 15:04:05", createdAt.String)
+			}
+			p.CreatedAtUTC = t
+		}
+
+		// Fetch Governance
+		_ = r.db.QueryRow("SELECT data_owner, data_steward, approver, approval_status, approval_date FROM REF_PACKAGE_GOVERNANCE WHERE ref_package_id = ?", p.ID).
+			Scan(&p.Governance.DataOwner, &p.Governance.DataSteward, &p.Governance.Approver, &p.Governance.ApprovalStatus, &p.Governance.ApprovalDate)
+
+		packages = append(packages, p)
+	}
+	return packages, nil
+}
+
+func (r *SQLiteRepository) GetReferenceDataPackage(id int64) (*domain.ReferenceDataPackage, error) {
+	var p domain.ReferenceDataPackage
+	var desc, src, gen, createdAt sql.NullString
+	err := r.db.QueryRow("SELECT ref_package_id, package_name, version, description, domain, source, generated_at_utc, created_at_utc FROM REF_PACKAGE WHERE ref_package_id = ?", id).
+		Scan(&p.ID, &p.Name, &p.Version, &desc, &p.Domain, &src, &gen, &createdAt)
+	if err != nil {
+		return nil, err
+	}
+	p.Description = desc.String
+	p.Source = src.String
+	p.GeneratedAtUTC = gen.String
+	if createdAt.Valid {
+		t, _ := time.Parse("2006-01-02 15:04:05.999999999-07:00", createdAt.String)
+		if t.IsZero() {
+			t, _ = time.Parse("2006-01-02 15:04:05", createdAt.String)
+		}
+		p.CreatedAtUTC = t
+	}
+
+	// Fetch Governance
+	_ = r.db.QueryRow("SELECT data_owner, data_steward, approver, approval_status, approval_date FROM REF_PACKAGE_GOVERNANCE WHERE ref_package_id = ?", p.ID).
+		Scan(&p.Governance.DataOwner, &p.Governance.DataSteward, &p.Governance.Approver, &p.Governance.ApprovalStatus, &p.Governance.ApprovalDate)
+
+	// Fetch Datasets
+	rows, err := r.db.Query("SELECT ref_dataset_id, dataset_id, dataset_name, description, status, classification, source_system, update_frequency, effective_date_field, expiry_date_field FROM REF_DATASET WHERE ref_package_id = ?", p.ID)
+	if err == nil {
+		defer rows.Close()
+		for rows.Next() {
+			var d domain.ReferenceDataset
+			var desc, class, src, freq, eff, exp sql.NullString
+			if err := rows.Scan(&d.ID, &d.DatasetID, &d.DatasetName, &desc, &d.Status, &class, &src, &freq, &eff, &exp); err == nil {
+				d.Description = desc.String
+				d.Classification = class.String
+				d.SourceSystem = src.String
+				d.UpdateFrequency = freq.String
+				d.EffectiveDateField = eff.String
+				d.ExpiryDateField = exp.String
+
+				// Keys
+				keyRows, _ := r.db.Query("SELECT key_type, key_name FROM REF_DATASET_KEY WHERE ref_dataset_id = ?", d.ID)
+				for keyRows.Next() {
+					var kt, kn string
+					if err := keyRows.Scan(&kt, &kn); err == nil {
+						if kt == "business_key" {
+							d.Keys.BusinessKey = append(d.Keys.BusinessKey, kn)
+						} else {
+							d.Keys.SurrogateKey = kn
+						}
+					}
+				}
+				keyRows.Close()
+
+				// Attributes
+				attrRows, _ := r.db.Query("SELECT ref_dataset_attribute_id, attribute_name, data_type, nullable, description FROM REF_DATASET_ATTRIBUTE WHERE ref_dataset_id = ?", d.ID)
+				for attrRows.Next() {
+					var attr domain.ReferenceAttribute
+					var attrID int64
+					var desc sql.NullString
+					var nullable int
+					if err := attrRows.Scan(&attrID, &attr.Name, &attr.DataType, &nullable, &desc); err == nil {
+						attr.Nullable = nullable == 1
+						attr.Description = desc.String
+						// Allowed values
+						valRows, _ := r.db.Query("SELECT allowed_value FROM REF_DATASET_ATTRIBUTE_ALLOWED_VALUE WHERE ref_dataset_attribute_id = ?", attrID)
+						for valRows.Next() {
+							var val string
+							if err := valRows.Scan(&val); err == nil {
+								attr.AllowedValues = append(attr.AllowedValues, val)
+							}
+						}
+						valRows.Close()
+						d.Attributes = append(d.Attributes, attr)
+					}
+				}
+				attrRows.Close()
+
+				// Code Sets
+				codeRows, _ := r.db.Query("SELECT code, label, description, status, effective_from, effective_to, sort_order FROM REF_CODE_SET WHERE ref_dataset_id = ?", d.ID)
+				for codeRows.Next() {
+					var c domain.ReferenceCode
+					var desc, eff, exp sql.NullString
+					if err := codeRows.Scan(&c.Code, &c.Label, &desc, &c.Status, &eff, &exp, &c.SortOrder); err == nil {
+						c.Description = desc.String
+						c.EffectiveFrom = eff.String
+						c.EffectiveTo = exp.String
+						d.CodeSets = append(d.CodeSets, c)
+					}
+				}
+				codeRows.Close()
+
+				// Quality Rules
+				qRows, _ := r.db.Query("SELECT rule_id, rule_type, severity, expression, description FROM REF_QUALITY_RULE WHERE ref_dataset_id = ?", d.ID)
+				for qRows.Next() {
+					var q domain.ReferenceQualityRule
+					var exp, desc sql.NullString
+					if err := qRows.Scan(&q.RuleID, &q.RuleType, &q.Severity, &exp, &desc); err == nil {
+						q.Expression = exp.String
+						q.Description = desc.String
+						d.QualityRules = append(d.QualityRules, q)
+					}
+				}
+				qRows.Close()
+
+				// Lineage
+				lRows, _ := r.db.Query("SELECT direction, system_name FROM REF_LINEAGE WHERE ref_dataset_id = ?", d.ID)
+				for lRows.Next() {
+					var dir, sys string
+					if err := lRows.Scan(&dir, &sys); err == nil {
+						if dir == "upstream" {
+							d.Lineage.Upstream = append(d.Lineage.Upstream, sys)
+						} else {
+							d.Lineage.Downstream = append(d.Lineage.Downstream, sys)
+						}
+					}
+				}
+				lRows.Close()
+
+				// SLA
+				var sla domain.ReferenceSLA
+				var freq, lat, last sql.NullString
+				_ = r.db.QueryRow("SELECT refresh_frequency, latency_target, last_refresh_utc FROM REF_SLA WHERE ref_dataset_id = ?", d.ID).Scan(&freq, &lat, &last)
+				if freq.Valid || lat.Valid || last.Valid {
+					sla.RefreshFrequency = freq.String
+					sla.LatencyTarget = lat.String
+					sla.LastRefreshUTC = last.String
+					d.SLA = &sla
+				}
+
+				// Records
+				recRows, _ := r.db.Query("SELECT record_json FROM REF_RECORD WHERE ref_dataset_id = ?", d.ID)
+				for recRows.Next() {
+					var rJSON string
+					if err := recRows.Scan(&rJSON); err == nil {
+						var rec map[string]interface{}
+						if json.Unmarshal([]byte(rJSON), &rec) == nil {
+							d.Records = append(d.Records, rec)
+						}
+					}
+				}
+				recRows.Close()
+
+				p.Datasets = append(p.Datasets, d)
+			}
+		}
+	}
+
+	return &p, nil
+}
+
+func (r *SQLiteRepository) SaveReferenceData(pkg *domain.ReferenceDataPackage) error {
+	tx, err := r.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	res, err := tx.Exec("INSERT INTO REF_PACKAGE (package_name, version, description, domain, source, generated_at_utc) VALUES (?, ?, ?, ?, ?, ?)",
+		pkg.Name, pkg.Version, pkg.Description, pkg.Domain, pkg.Source, pkg.GeneratedAtUTC)
+	if err != nil {
+		return err
+	}
+	pkgID, _ := res.LastInsertId()
+
+	_, err = tx.Exec("INSERT INTO REF_PACKAGE_GOVERNANCE (ref_package_id, data_owner, data_steward, approver, approval_status, approval_date) VALUES (?, ?, ?, ?, ?, ?)",
+		pkgID, pkg.Governance.DataOwner, pkg.Governance.DataSteward, pkg.Governance.Approver, pkg.Governance.ApprovalStatus, pkg.Governance.ApprovalDate)
+	if err != nil {
+		return err
+	}
+
+	for _, d := range pkg.Datasets {
+		res, err = tx.Exec("INSERT INTO REF_DATASET (ref_package_id, dataset_id, dataset_name, description, status, classification, source_system, update_frequency, effective_date_field, expiry_date_field) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+			pkgID, d.DatasetID, d.DatasetName, d.Description, d.Status, d.Classification, d.SourceSystem, d.UpdateFrequency, d.EffectiveDateField, d.ExpiryDateField)
+		if err != nil {
+			return err
+		}
+		dsID, _ := res.LastInsertId()
+
+		// Keys
+		for _, bk := range d.Keys.BusinessKey {
+			_, _ = tx.Exec("INSERT INTO REF_DATASET_KEY (ref_dataset_id, key_type, key_name) VALUES (?, ?, ?)", dsID, "business_key", bk)
+		}
+		if d.Keys.SurrogateKey != "" {
+			_, _ = tx.Exec("INSERT INTO REF_DATASET_KEY (ref_dataset_id, key_type, key_name) VALUES (?, ?, ?)", dsID, "surrogate_key", d.Keys.SurrogateKey)
+		}
+
+		// Attributes
+		for _, a := range d.Attributes {
+			res, _ = tx.Exec("INSERT INTO REF_DATASET_ATTRIBUTE (ref_dataset_id, attribute_name, data_type, nullable, description) VALUES (?, ?, ?, ?, ?)",
+				dsID, a.Name, a.DataType, a.Nullable, a.Description)
+			attrID, _ := res.LastInsertId()
+			for _, v := range a.AllowedValues {
+				_, _ = tx.Exec("INSERT INTO REF_DATASET_ATTRIBUTE_ALLOWED_VALUE (ref_dataset_attribute_id, allowed_value) VALUES (?, ?)", attrID, v)
+			}
+		}
+
+		// Code Sets
+		for _, c := range d.CodeSets {
+			_, _ = tx.Exec("INSERT INTO REF_CODE_SET (ref_dataset_id, code, label, description, status, effective_from, effective_to, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+				dsID, c.Code, c.Label, c.Description, c.Status, c.EffectiveFrom, c.EffectiveTo, c.SortOrder)
+		}
+
+		// Quality Rules
+		for _, q := range d.QualityRules {
+			_, _ = tx.Exec("INSERT INTO REF_QUALITY_RULE (ref_dataset_id, rule_id, rule_type, severity, expression, description) VALUES (?, ?, ?, ?, ?, ?)",
+				dsID, q.RuleID, q.RuleType, q.Severity, q.Expression, q.Description)
+		}
+
+		// Lineage
+		for _, u := range d.Lineage.Upstream {
+			_, _ = tx.Exec("INSERT INTO REF_LINEAGE (ref_dataset_id, direction, system_name) VALUES (?, ?, ?)", dsID, "upstream", u)
+		}
+		for _, dw := range d.Lineage.Downstream {
+			_, _ = tx.Exec("INSERT INTO REF_LINEAGE (ref_dataset_id, direction, system_name) VALUES (?, ?, ?)", dsID, "downstream", dw)
+		}
+
+		// SLA
+		if d.SLA != nil {
+			_, _ = tx.Exec("INSERT INTO REF_SLA (ref_dataset_id, refresh_frequency, latency_target, last_refresh_utc) VALUES (?, ?, ?, ?)",
+				dsID, d.SLA.RefreshFrequency, d.SLA.LatencyTarget, d.SLA.LastRefreshUTC)
+		}
+
+		// Records
+		for _, rec := range d.Records {
+			recJSON, _ := json.Marshal(rec)
+			_, _ = tx.Exec("INSERT INTO REF_RECORD (ref_dataset_id, record_json) VALUES (?, ?)", dsID, string(recJSON))
+		}
+	}
+
+	return tx.Commit()
+}
+
+func (r *SQLiteRepository) DeleteReferenceData(id int64) error {
+	_, err := r.db.Exec("DELETE FROM REF_PACKAGE WHERE ref_package_id = ?", id)
+	return err
+}
+
+func (r *SQLiteRepository) GetReferenceDatasets() ([]domain.ReferenceDataset, error) {
+	rows, err := r.db.Query("SELECT ref_dataset_id, ref_package_id, dataset_id, dataset_name, description, status, classification, source_system, update_frequency, effective_date_field, expiry_date_field FROM REF_DATASET ORDER BY dataset_name ASC")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var datasets []domain.ReferenceDataset
+	for rows.Next() {
+		var d domain.ReferenceDataset
+		var desc, class, src, freq, eff, exp sql.NullString
+		if err := rows.Scan(&d.ID, &d.PackageID, &d.DatasetID, &d.DatasetName, &desc, &d.Status, &class, &src, &freq, &eff, &exp); err == nil {
+			d.Description = desc.String
+			d.Classification = class.String
+			d.SourceSystem = src.String
+			d.UpdateFrequency = freq.String
+			d.EffectiveDateField = eff.String
+			d.ExpiryDateField = exp.String
+
+			// Keys
+			keyRows, _ := r.db.Query("SELECT key_type, key_name FROM REF_DATASET_KEY WHERE ref_dataset_id = ?", d.ID)
+			for keyRows != nil && keyRows.Next() {
+				var kt, kn string
+				if err := keyRows.Scan(&kt, &kn); err == nil {
+					if kt == "business_key" {
+						d.Keys.BusinessKey = append(d.Keys.BusinessKey, kn)
+					} else {
+						d.Keys.SurrogateKey = kn
+					}
+				}
+			}
+			if keyRows != nil {
+				keyRows.Close()
+			}
+
+			// Attributes
+			attrRows, _ := r.db.Query("SELECT ref_dataset_attribute_id, attribute_name, data_type, nullable, description FROM REF_DATASET_ATTRIBUTE WHERE ref_dataset_id = ?", d.ID)
+			for attrRows != nil && attrRows.Next() {
+				var attr domain.ReferenceAttribute
+				var attrID int64
+				var attrDesc sql.NullString
+				var nullable int
+				if err := attrRows.Scan(&attrID, &attr.Name, &attr.DataType, &nullable, &attrDesc); err == nil {
+					attr.Nullable = nullable == 1
+					attr.Description = attrDesc.String
+					// Allowed values
+					valRows, _ := r.db.Query("SELECT allowed_value FROM REF_DATASET_ATTRIBUTE_ALLOWED_VALUE WHERE ref_dataset_attribute_id = ?", attrID)
+					for valRows != nil && valRows.Next() {
+						var val string
+						if err := valRows.Scan(&val); err == nil {
+							attr.AllowedValues = append(attr.AllowedValues, val)
+						}
+					}
+					if valRows != nil {
+						valRows.Close()
+					}
+					d.Attributes = append(d.Attributes, attr)
+				}
+			}
+			if attrRows != nil {
+				attrRows.Close()
+			}
+
+			// Code Sets
+			codeRows, _ := r.db.Query("SELECT code, label, description, status, effective_from, effective_to, sort_order FROM REF_CODE_SET WHERE ref_dataset_id = ?", d.ID)
+			for codeRows != nil && codeRows.Next() {
+				var c domain.ReferenceCode
+				var cDesc, effC, expC sql.NullString
+				if err := codeRows.Scan(&c.Code, &c.Label, &cDesc, &c.Status, &effC, &expC, &c.SortOrder); err == nil {
+					c.Description = cDesc.String
+					c.EffectiveFrom = effC.String
+					c.EffectiveTo = expC.String
+					d.CodeSets = append(d.CodeSets, c)
+				}
+			}
+			if codeRows != nil {
+				codeRows.Close()
+			}
+
+			// Records
+			recRows, _ := r.db.Query("SELECT record_json FROM REF_RECORD WHERE ref_dataset_id = ? LIMIT 10", d.ID)
+			for recRows != nil && recRows.Next() {
+				var rJSON string
+				if err := recRows.Scan(&rJSON); err == nil {
+					var rec map[string]interface{}
+					if json.Unmarshal([]byte(rJSON), &rec) == nil {
+						d.Records = append(d.Records, rec)
+					}
+				}
+			}
+			if recRows != nil {
+				recRows.Close()
+			}
+
+			datasets = append(datasets, d)
+		}
+	}
+	return datasets, nil
 }

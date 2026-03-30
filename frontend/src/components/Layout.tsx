@@ -43,7 +43,9 @@ import {
   Bot,
   Sparkles,
   History,
-  Network
+  Network,
+  PanelRight,
+  TableProperties
 } from 'lucide-react';
 import { useNavigate, useLocation, Outlet, Link } from 'react-router-dom';
 import {
@@ -62,7 +64,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import {
   Tooltip,
   TooltipContent,
@@ -131,9 +132,10 @@ const Layout: React.FC = () => {
   const [modelOpen, setModelOpen] = useState(false);
   const [secureOpen, setSecureOpen] = useState(false);
   const [integrateOpen, setIntegrateOpen] = useState(false);
+  const [analysisOpen, setAnalysisOpen] = useState(false);
   const [scratchpadOpen, setScratchpadOpen] = useState(false);
   const { mode, toggleColorMode } = useColorMode();
-  const { content: sidebarContent } = useSidebar();
+  const { content: sidebarContent, isHidden: isSidebarHidden, setIsHidden: setSidebarHidden } = useSidebar();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -379,6 +381,12 @@ const Layout: React.FC = () => {
                   className="h-8 text-xs"
                 />
                 <NavButton
+                  item={{ text: 'Business Information Model', icon: <Layers className="h-4 w-4" /> }}
+                  selected={location.pathname === '/steward/bim'}
+                  onClick={() => navigate('/steward/bim')}
+                  className="h-8 text-xs"
+                />
+                <NavButton
                   item={{ text: 'Critical Data', icon: <Zap className="h-4 w-4" /> }}
                   selected={location.pathname === '/steward/critical'}
                   onClick={() => navigate('/steward/critical')}
@@ -445,6 +453,51 @@ const Layout: React.FC = () => {
                   item={{ text: 'Model Insights', icon: <Sparkles className="h-4 w-4" /> }}
                   selected={location.pathname === '/ai-steward/insights'}
                   onClick={() => navigate('/ai-steward/insights')}
+                  className="h-8 text-xs"
+                />
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+
+          {/* Data Analysis Collapsible */}
+          <Collapsible
+            open={!collapsed && analysisOpen}
+            onOpenChange={setAnalysisOpen}
+            className="space-y-1"
+          >
+            <CollapsibleTrigger asChild>
+              <Button
+                variant="ghost"
+                className={cn(
+                  "w-full justify-start h-12 gap-4 px-3 transition-all duration-300",
+                  collapsed ? "justify-center px-0" : "",
+                  isActive('/analysis') ? "bg-primary/10 border-r-2 border-primary" : "hover:bg-muted"
+                )}
+              >
+                <div className="shrink-0">
+                  <BarChart3 className={cn("h-5 w-5", isActive('/analysis') ? "text-primary" : "")} />
+                </div>
+                {!collapsed && (
+                  <>
+                    <span className={cn("text-[10px] font-black uppercase tracking-widest flex-grow text-left", isActive('/analysis') ? "text-primary" : "")}>Data Analysis</span>
+                    <ChevronDown className={cn("h-4 w-4 transition-transform", analysisOpen ? "" : "-rotate-90")} />
+                  </>
+                )}
+              </Button>
+            </CollapsibleTrigger>
+
+            <CollapsibleContent className="space-y-1">
+              <div className="ml-9 border-l border-muted pl-4 space-y-1">
+                <NavButton
+                  item={{ text: 'Dashboard', icon: <DashboardIcon className="h-4 w-4" /> }}
+                  selected={location.pathname === '/analysis'}
+                  onClick={() => navigate('/analysis')}
+                  className="h-8 text-xs"
+                />
+                <NavButton
+                  item={{ text: 'Reference Data', icon: <TableProperties className="h-4 w-4" /> }}
+                  selected={location.pathname.startsWith('/analysis/rdm')}
+                  onClick={() => navigate('/analysis/rdm/list')}
                   className="h-8 text-xs"
                 />
               </div>
@@ -948,6 +1001,9 @@ const Layout: React.FC = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
 
+              <Button variant="outline" size="icon" onClick={() => setSidebarHidden(!isSidebarHidden)} className={cn("rounded-xl border-dashed border-muted-foreground/30", !isSidebarHidden && "bg-primary/10 text-primary border-primary/20")}>
+                <PanelRight className="h-4 w-4" />
+              </Button>
               <Button variant="outline" size="icon" onClick={toggleColorMode} className="rounded-xl border-dashed border-muted-foreground/30">
                 {mode === 'dark' ? <LightModeIcon className="h-4 w-4" /> : <DarkModeIcon className="h-4 w-4" />}
               </Button>
@@ -962,201 +1018,54 @@ const Layout: React.FC = () => {
               </div>
             </div>
 
-            {/* Design Rule: Static Right Sidebar based on data-design.md */}
-            <aside className="hidden lg:flex flex-col w-80 border-l bg-card/40 backdrop-blur-sm shrink-0 overflow-hidden">
-              <ScrollArea className="flex-1 h-0">
-                <div className="p-6 space-y-8">
-                  {/* Insights Section */}
-                  {sidebarContent ? (
-                    <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-500">
-                      {sidebarContent}
-                    </div>
-                  ) : location.pathname === '/cortext' ? (
-                    <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
-                      <div className="space-y-4">
-                        <div className="flex items-center gap-3">
-                          <Cpu className="h-4 w-4 text-primary" />
-                          <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Neural Context</h3>
-                        </div>
-                        <div className="space-y-4 bg-primary/5 p-4 rounded-3xl border border-primary/10">
-                          {[
-                            { label: 'Model', val: 'GPT-4o-Registry' },
-                            { label: 'Temp', val: '0.2 (Analytic)' },
-                            { label: 'Tokens', val: '4.2k Active' },
-                          ].map((row, i) => (
-                            <div key={i} className="flex justify-between items-center border-b border-primary/5 pb-2 last:border-0 last:pb-0">
-                              <span className="text-[9px] font-bold text-muted-foreground/40 uppercase">{row.label}</span>
-                              <span className="text-[10px] font-black italic">{row.val}</span>
-                            </div>
-                          ))}
-                        </div>
+            {!isSidebarHidden && (
+              <aside className="hidden lg:flex flex-col w-80 border-l bg-card/40 backdrop-blur-sm shrink-0 overflow-hidden animate-in slide-in-from-right-4 duration-300">
+                <ScrollArea className="flex-1 h-0">
+                  <div className="p-6 space-y-8">
+                    {/* Insights Section */}
+                    {sidebarContent ? (
+                      <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-500">
+                        {sidebarContent}
                       </div>
-
-                      <div className="space-y-4">
-                        <div className="flex items-center gap-3">
-                          <Zap className="h-4 w-4 text-amber-500" />
-                          <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Suggested Inquiries</h3>
-                        </div>
-                        <div className="space-y-2">
-                          {[
-                            "List all PII tables in Finance",
-                            "Who owns the Sales.Order schema?",
-                            "Show lineage for Customer_ID",
-                            "Explain Core.Accounting structure"
-                          ].map((q, i) => (
-                            <button
-                              key={i}
-                              onClick={() => {
-                                window.dispatchEvent(new CustomEvent('cortext-suggest', { detail: q }));
-                              }}
-                              className="w-full text-left p-3 rounded-2xl bg-muted/30 hover:bg-primary/10 hover:text-primary border border-transparent hover:border-primary/20 transition-all text-xs font-bold leading-tight"
-                            >
-                              {q}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="space-y-4">
-                        <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">
-                          {location.pathname.includes('/publish/schema') ? 'Published Insights' : 'System Insights'}
-                        </h3>
-                        {location.pathname.includes('/publish/schema') ? (
-                          <div className="grid grid-cols-2 gap-3">
-                            <div className="p-4 rounded-2xl bg-muted/30 border border-border/50">
-                              <div className="text-[8px] font-black uppercase tracking-widest text-muted-foreground/40 mb-1">Cataloged</div>
-                              <div className="text-xl font-black italic">148<span className="text-[10px] ml-1 opacity-40 not-italic">T</span></div>
-                            </div>
-                            <div className="p-4 rounded-2xl bg-muted/30 border border-border/50">
-                              <div className="text-[8px] font-black uppercase tracking-widest text-muted-foreground/40 mb-1">Coverage</div>
-                              <div className="text-xl font-black italic text-emerald-500">92<span className="text-[10px] ml-0.5 not-italic">%</span></div>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="p-4 rounded-2xl bg-muted/30 border border-border/50 space-y-3">
-                            <div className="flex items-center justify-between">
-                              <span className="text-[9px] font-bold text-muted-foreground/60 uppercase">API Integrity</span>
-                              <span className="text-[9px] font-black text-emerald-500 uppercase">Stable</span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <span className="text-[9px] font-bold text-muted-foreground/60 uppercase">Cache Layer</span>
-                              <span className="text-[9px] font-black text-primary uppercase">Hit: 88%</span>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-
-                      {!location.pathname.startsWith('/cortext') && (
+                    ) : (
+                      <>
+                        {/* Resource Links / Training Section - Always shown as Help */}
                         <div className="space-y-4">
-                          {location.pathname === '/integrate/swagger' ? (
-                            <>
-                              <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Getting Started</h3>
-                              <Card className="border-none shadow-sm bg-primary/5 rounded-2xl overflow-hidden group">
-                                <CardHeader className="pb-2">
-                                  <CardTitle className="text-[11px] font-black flex items-center gap-2 uppercase tracking-tighter">
-                                    <BookOpen className="h-3 w-3 text-primary" />
-                                    API Context
-                                  </CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-3 text-[10px]">
-                                  <p className="text-muted-foreground leading-relaxed">
-                                    The DataHost API follows RESTful principles and returns JSON-encoded responses.
-                                  </p>
-                                  <div className="space-y-1">
-                                    <div className="font-bold flex items-center gap-1.5">
-                                      <div className="w-1 h-1 rounded-full bg-primary" />
-                                      Base URL
-                                    </div>
-                                    <code className="block bg-muted/50 p-1.5 rounded text-[9px] break-all">
-                                      /api
-                                    </code>
-                                  </div>
-                                  <div className="space-y-1">
-                                    <div className="font-bold flex items-center gap-1.5">
-                                      <div className="w-1 h-1 rounded-full bg-primary" />
-                                      Authentication
-                                    </div>
-                                    <p className="text-muted-foreground">
-                                      Use <code className="text-primary font-bold">/auth/login</code> to obtain a JWT token.
-                                    </p>
-                                  </div>
-                                  <div className="pt-2 border-t border-muted/20">
-                                    <a
-                                      href="/swagger/index.html"
-                                      target="_blank"
-                                      rel="noreferrer"
-                                      className="flex items-center justify-between text-primary font-bold hover:underline"
-                                    >
-                                      Native UI
-                                      <ExternalLink className="h-3 w-3" />
-                                    </a>
-                                  </div>
-                                </CardContent>
-                              </Card>
-                            </>
-                          ) : (
-                            <>
-                              <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Quick Stats</h3>
-                              <Card className="border-none shadow-sm bg-primary/5 rounded-2xl overflow-hidden group">
-                                <div className="p-4 relative">
-                                  <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:scale-150 transition-transform">
-                                    <DatabaseIcon className="h-10 w-10" />
-                                  </div>
-                                  <div className="text-[8px] font-black uppercase tracking-widest text-primary/60 mb-2">Orchestrated Storage</div>
-                                  <div className="text-2xl font-black italic tracking-tighter">Local-DB-01</div>
-                                  <div className="mt-2 flex items-center gap-2">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                    <span className="text-[9px] font-bold text-muted-foreground uppercase italic px-1">Synchronization active</span>
-                                  </div>
-                                </div>
-                              </Card>
-                            </>
-                          )}
+                          <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Help & Training</h3>
+                          <div className="space-y-2">
+                            <button className="w-full flex items-center justify-between p-4 rounded-2xl bg-muted/30 hover:bg-muted/50 transition-colors group">
+                              <div className="flex items-center gap-3">
+                                <BookOpen className="h-4 w-4 text-blue-500" />
+                                <span className="text-xs font-bold">Guidelines</span>
+                              </div>
+                              <ExternalLink className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </button>
+                            <button className="w-full flex items-center justify-between p-4 rounded-2xl bg-muted/30 hover:bg-muted/50 transition-colors group">
+                              <div className="flex items-center gap-3">
+                                <Layers className="h-4 w-4 text-purple-500" />
+                                <span className="text-xs font-bold">Best Practices</span>
+                              </div>
+                              <ExternalLink className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </button>
+                          </div>
                         </div>
-                      )}
-                    </>
-                  )}
 
-                  {/* Resource Links / Training Section */}
-                  {!location.pathname.includes('/ingestion') && (
-                    <div className="space-y-4">
-                      <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Help & Training</h3>
-                      <div className="space-y-2">
-                        <button className="w-full flex items-center justify-between p-4 rounded-2xl bg-muted/30 hover:bg-muted/50 transition-colors group">
-                          <div className="flex items-center gap-3">
-                            <BookOpen className="h-4 w-4 text-blue-500" />
-                            <span className="text-xs font-bold">Guidelines</span>
+                        {/* Quick Info Card */}
+                        <div className="p-6 rounded-[2rem] bg-gradient-to-br from-indigo-500/10 to-purple-500/5 border border-indigo-500/20">
+                          <div className="space-y-3">
+                            <span className="px-2 py-1 rounded-lg bg-indigo-500 text-white text-[8px] font-black uppercase tracking-widest">Core v2.4</span>
+                            <h4 className="text-sm font-black italic uppercase tracking-tight">Data Host Management</h4>
+                            <p className="text-[10px] font-medium text-muted-foreground leading-relaxed">
+                              Data Host environment is synchronized with the meta-data registry policy.
+                            </p>
                           </div>
-                          <ExternalLink className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </button>
-                        <button className="w-full flex items-center justify-between p-4 rounded-2xl bg-muted/30 hover:bg-muted/50 transition-colors group">
-                          <div className="flex items-center gap-3">
-                            <Layers className="h-4 w-4 text-purple-500" />
-                            <span className="text-xs font-bold">Best Practices</span>
-                          </div>
-                          <ExternalLink className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Quick Info Card */}
-                  {location.pathname !== '/cortext' && !location.pathname.includes('/ingestion') && (
-                    <div className="p-6 rounded-[2rem] bg-gradient-to-br from-indigo-500/10 to-purple-500/5 border border-indigo-500/20">
-                      <div className="space-y-3">
-                        <span className="px-2 py-1 rounded-lg bg-indigo-500 text-white text-[8px] font-black uppercase tracking-widest">Core v2.4</span>
-                        <h4 className="text-sm font-black italic uppercase tracking-tight">Data Host Management</h4>
-                        <p className="text-[10px] font-medium text-muted-foreground leading-relaxed">
-                          Data Host environment is synchronized with the meta-data registry policy.
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </ScrollArea>
-            </aside>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </ScrollArea>
+              </aside>
+            )}
           </main>
         </div>
       </div>

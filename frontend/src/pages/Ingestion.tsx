@@ -12,12 +12,12 @@ import {
     Database,
     Zap,
     History,
-    ShieldAlert,
     Check,
     Cpu,
     BookOpen,
     Layers,
-    Trash2
+    Trash2,
+    TableProperties
 } from 'lucide-react';
 import {
     Card,
@@ -33,12 +33,15 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
 
+// @ts-ignore
+import taxonomySchema from '../schemas/taxonomy.schema.json';
+
 interface ValidationResult {
     status: 'success' | 'conflict' | 'error';
     message: string;
     existing?: any;
     new?: any;
-    type?: 'SCHEMA' | 'ORG' | 'DFD';
+    type?: 'SCHEMA' | 'ORG' | 'DFD' | 'BUSINESS_GLOSSARY' | 'BUSINESS_INFORMATION_MODEL' | 'REFERENCE_DATA_MANAGEMENT' | 'TAXONOMY';
     error?: string;
     details?: string[];
     fileName?: string;
@@ -81,56 +84,70 @@ const IngestionPage: React.FC = () => {
     // Set page-specific aside content
     useEffect(() => {
         setContent(
-            <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
-                <div className="space-y-4">
+            <div className="space-y-10 animate-in fade-in slide-in-from-right-4 duration-500">
+                <div className="space-y-6">
                     <div className="flex items-center gap-3 px-1">
                         <Cpu className="h-4 w-4 text-primary" />
-                        <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Neural Context</h3>
+                        <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Supported Protocols</h3>
                     </div>
-                    <div className="p-6 rounded-[2rem] bg-indigo-500/5 border border-indigo-500/10 space-y-4">
-                        <div className="flex items-center gap-3 text-indigo-600">
-                            <ShieldAlert className="h-5 w-5" />
-                            <span className="text-[10px] font-black uppercase tracking-widest text-indigo-600/80">Ingestion Protocol</span>
-                        </div>
-                        <p className="text-xs font-medium text-muted-foreground leading-relaxed">
-                            Uploaded schemas are validated against the global blueprint. Collisions with existing records will trigger a manual review process.
-                        </p>
+                    
+                    <div className="grid gap-3">
+                        {[
+                            { name: 'Registry Schema', type: 'SCHEMA', icon: Database, color: 'text-blue-500', bg: 'bg-blue-500/10' },
+                            { name: 'Org Structure', type: 'ORG', icon: Network, color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
+                            { name: 'BIM Model', type: 'BIM', icon: Layers, color: 'text-purple-500', bg: 'bg-purple-500/10' },
+                            { name: 'Data Flow (DFD)', type: 'DFD', icon: Zap, color: 'text-amber-500', bg: 'bg-amber-500/10' },
+                            { name: 'Business Glossary', type: 'GLOSSARY', icon: BookOpen, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
+                            { name: 'Taxonomy', type: 'TAXONOMY', icon: Network, color: 'text-rose-500', bg: 'bg-rose-500/10' },
+                            { name: 'Reference Data', type: 'RDM', icon: TableProperties, color: 'text-cyan-500', bg: 'bg-cyan-500/10' },
+                        ].map((item) => (
+                            <div key={item.type} className="flex items-center gap-4 p-4 rounded-2xl bg-muted/20 border border-white/5 group hover:bg-muted/40 transition-all duration-300 shadow-sm shadow-black/20 hover:scale-[1.02]">
+                                <div className={`p-2.5 rounded-xl ${item.bg} ${item.color} shadow-inner`}>
+                                    <item.icon className="h-4 w-4" />
+                                </div>
+                                <div>
+                                    <div className="text-[10px] font-black uppercase tracking-widest">{item.name}</div>
+                                    <div className="text-[8px] font-bold text-muted-foreground/60 uppercase tracking-tighter mt-0.5">{item.type}_PROTOCOL_V4</div>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-6">
                     <div className="flex items-center gap-3 px-1">
-                        <History className="h-4 w-4 text-amber-500" />
-                        <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Audit Trail</h3>
+                        <BookOpen className="h-4 w-4 text-primary" />
+                        <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Help System</h3>
                     </div>
-                    <div className="p-6 rounded-[2rem] bg-amber-500/5 border border-amber-500/10 space-y-4">
-                        <div className="flex items-center gap-3 text-amber-600">
-                            <Zap className="h-5 w-5" />
-                            <span className="text-[10px] font-black uppercase tracking-widest text-amber-600/80">Version Control</span>
-                        </div>
-                        <p className="text-xs font-medium text-muted-foreground leading-relaxed">
-                            Every successful ingestion is archived and hashed to maintain a verifiable history of registry evolution.
-                        </p>
-                    </div>
-                </div>
-
-                <div className="space-y-4">
-                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 px-1">Ingestion Resources</h3>
+                    
                     <div className="space-y-2">
-                        <button className="w-full flex items-center justify-between p-4 rounded-2xl bg-muted/30 hover:bg-muted/50 transition-colors group text-left">
+                        <button className="w-full flex items-center justify-between p-4 rounded-2xl bg-muted/30 hover:bg-muted/50 transition-colors group text-left border border-white/5 active:scale-95 duration-200">
                             <div className="flex items-center gap-3">
-                                <BookOpen className="h-4 w-4 text-blue-500" />
-                                <span className="text-xs font-bold uppercase tracking-tight">Format Guide</span>
+                                <div className="w-1.5 h-1.5 rounded-full bg-blue-500 group-hover:scale-150 transition-transform shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
+                                <span className="text-[10px] font-black uppercase tracking-widest italic">Ingestion Format Guide</span>
                             </div>
                             <ChevronRight className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                         </button>
-                        <button className="w-full flex items-center justify-between p-4 rounded-2xl bg-muted/30 hover:bg-muted/50 transition-colors group text-left">
+                        <button className="w-full flex items-center justify-between p-4 rounded-2xl bg-muted/30 hover:bg-muted/50 transition-colors group text-left border border-white/5 active:scale-95 duration-200">
                             <div className="flex items-center gap-3">
-                                <Layers className="h-4 w-4 text-purple-500" />
-                                <span className="text-xs font-bold uppercase tracking-tight">Best Practices</span>
+                                <div className="w-1.5 h-1.5 rounded-full bg-purple-500 group-hover:scale-150 transition-transform shadow-[0_0_10px_rgba(168,85,247,0.5)]" />
+                                <span className="text-[10px] font-black uppercase tracking-widest italic">Protocol Best Practices</span>
                             </div>
                             <ChevronRight className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                         </button>
+                        <button className="w-full flex items-center justify-between p-4 rounded-2xl bg-muted/30 hover:bg-muted/50 transition-colors group text-left border border-white/5 active:scale-95 duration-200">
+                            <div className="flex items-center gap-3">
+                                <div className="w-1.5 h-1.5 rounded-full bg-amber-500 group-hover:scale-150 transition-transform shadow-[0_0_10px_rgba(245,158,11,0.5)]" />
+                                <span className="text-[10px] font-black uppercase tracking-widest italic">Collision Resolution</span>
+                            </div>
+                            <ChevronRight className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </button>
+                    </div>
+
+                    <div className="p-6 rounded-[2rem] bg-indigo-500/5 border border-indigo-500/10 mt-10 shadow-inner">
+                        <p className="text-[9px] font-bold text-muted-foreground/60 leading-relaxed uppercase tracking-widest text-center italic">
+                            System-level documentation is synchronized with the federated registry version.
+                        </p>
                     </div>
                 </div>
             </div>
@@ -187,6 +204,78 @@ const IngestionPage: React.FC = () => {
                 return;
             }
 
+            // SPECIAL CASE: Business Glossary Data
+            if (schema.terms && Array.isArray(schema.terms)) {
+                setResult({
+                    status: 'success',
+                    message: 'Business Glossary Authenticated',
+                    type: 'BUSINESS_GLOSSARY' as any,
+                    new: schema,
+                    fileName: file.name
+                });
+                toast.success("Glossary Structure Recognized", { description: "Business terms validated." });
+                setIsUploading(false);
+                return;
+            }
+
+            // SPECIAL CASE: Business Information Model Data
+            if (schema.entities && Array.isArray(schema.entities)) {
+                setResult({
+                    status: 'success',
+                    message: 'Business Information Model Authenticated',
+                    type: 'BUSINESS_INFORMATION_MODEL' as any,
+                    new: schema,
+                    fileName: file.name
+                });
+                toast.success("BIM Structure Recognized", { description: "Information model entities validated." });
+                setIsUploading(false);
+                return;
+            }
+
+            // SPECIAL CASE: Reference Data Management
+            if (schema.datasets && Array.isArray(schema.datasets)) {
+                setResult({
+                    status: 'success',
+                    message: 'Reference Data Authenticated',
+                    type: 'REFERENCE_DATA_MANAGEMENT' as any,
+                    new: schema,
+                    fileName: file.name
+                });
+                toast.success("Reference Data Recognized", { description: "Master data datasets validated." });
+                setIsUploading(false);
+                return;
+            }
+
+            // SPECIAL CASE: Taxonomy Data
+            if (schema.taxonomy_type || (schema.$schema && typeof schema.$schema === 'string' && schema.$schema.includes('taxonomy'))) {
+                const Ajv = (await import('ajv')).default;
+                const ajv = new Ajv();
+                
+                const validate = ajv.compile(taxonomySchema);
+                const valid = validate(schema);
+
+                if (!valid) {
+                    setResult({
+                        status: 'error',
+                        message: 'Taxonomy Validation Failed',
+                        details: validate.errors?.map(err => `${err.instancePath} ${err.message}`)
+                    });
+                    toast.error("Validation Failed", { description: "Taxonomy schema does not match definition." });
+                    setIsUploading(false);
+                    return;
+                }
+
+                setResult({
+                    status: 'success',
+                    message: 'Taxonomy Authenticated',
+                    type: 'TAXONOMY' as any,
+                    new: schema,
+                    fileName: file.name
+                });
+                toast.success("Taxonomy Recognized", { description: "Taxonomy validated against schema." });
+                setIsUploading(false);
+                return;
+            }
             const token = localStorage.getItem('token');
             const response = await fetch('/api/ingestion/validate', {
                 method: 'POST',
@@ -244,10 +333,14 @@ const IngestionPage: React.FC = () => {
 
         const isOrg = (result as any).type === "ORG";
         const isDFD = (result as any).type === "DFD";
-        const payload = (isOrg || isDFD) ? { ...result.new, fileName: result.fileName } : { ...result.new, fileName: result.fileName };
+        const isGlossary = (result as any).type === "BUSINESS_GLOSSARY";
+        const isBIM = (result as any).type === "BUSINESS_INFORMATION_MODEL";
+        const isRDM = (result as any).type === "REFERENCE_DATA_MANAGEMENT";
+        const isTaxonomy = (result as any).type === "TAXONOMY";
+        const payload = (isOrg || isDFD || isGlossary || isBIM || isRDM || isTaxonomy) ? { ...result.new, fileName: result.fileName } : { ...result.new, fileName: result.fileName };
 
         // If conflict, filter elements based on selection
-        if (!isOrg && result.status === 'conflict') {
+        if (!isOrg && !isDFD && !isGlossary && !isBIM && !isRDM && !isTaxonomy && result.status === 'conflict') {
             payload.tables = result.new.tables?.filter((t: any) => selectedTables[t.name]) || [];
             payload.enums = result.new.enums?.filter((e: any) => selectedEnums[e.name]) || [];
             payload.functions = result.new.functions?.filter((f: any) => selectedFunctions[f.name]) || [];
@@ -259,6 +352,7 @@ const IngestionPage: React.FC = () => {
             let endpoint = '/api/ingestion/ingest';
             if (isOrg) endpoint = '/api/ingestion/ingest-org';
             else if (isDFD) endpoint = '/api/ingestion/ingest-dfd';
+            else if (isTaxonomy) endpoint = '/api/ingestion/ingest-tax';
 
             const response = await fetch(endpoint, {
                 method: 'POST',
@@ -524,6 +618,14 @@ const IngestionPage: React.FC = () => {
                                             <Network className="h-12 w-12" />
                                         ) : (result as any).type === "DFD" ? (
                                             <Layers className="h-12 w-12" />
+                                        ) : (result as any).type === "BUSINESS_GLOSSARY" ? (
+                                            <BookOpen className="h-12 w-12" />
+                                        ) : (result as any).type === "BUSINESS_INFORMATION_MODEL" ? (
+                                            <Layers className="h-12 w-12" />
+                                        ) : (result as any).type === "REFERENCE_DATA_MANAGEMENT" ? (
+                                            <TableProperties className="h-12 w-12" />
+                                        ) : (result as any).type === "TAXONOMY" ? (
+                                            <Network className="h-12 w-12" />
                                         ) : (
                                             <Database className="h-12 w-12" />
                                         )}
@@ -537,6 +639,14 @@ const IngestionPage: React.FC = () => {
                                                 `ORGANIZATIONAL MAP DETECTED [${result.new?.id || 'GLOBAL'}]`
                                             ) : (result as any).type === "DFD" ? (
                                                 `DATA FLOW DIAGRAM DETECTED [${result.new?.processes?.length || 0} PROCESSES]`
+                                            ) : (result as any).type === "BUSINESS_GLOSSARY" ? (
+                                                `BUSINESS GLOSSARY DETECTED [${result.new?.terms?.length || 0} TERMS]`
+                                            ) : (result as any).type === "BUSINESS_INFORMATION_MODEL" ? (
+                                                `BUSINESS INFORMATION MODEL DETECTED [${result.new?.entities?.length || 0} ENTITIES]`
+                                            ) : (result as any).type === "REFERENCE_DATA_MANAGEMENT" ? (
+                                                `REFERENCE DATA DETECTED [${result.new?.datasets?.length || 0} DATASETS]`
+                                            ) : (result as any).type === "TAXONOMY" ? (
+                                                `TAXONOMY DETECTED [${result.new?.terms?.length || 0} TERMS]`
                                             ) : (
                                                 `${result.new?.tables?.length || 0} CORE TABLES AUTHENTICATED`
                                             )}

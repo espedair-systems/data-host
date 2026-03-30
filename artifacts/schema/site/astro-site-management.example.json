@@ -1,0 +1,251 @@
+{
+  "$schema": "./astro-site-management.schema.json",
+  "name": "enterprise_astro_site_portfolio",
+  "version": "1.0.0",
+  "description": "Example portfolio of managed Astro sites with environment, deployment, content, and integration controls.",
+  "source": "Web platform onboarding",
+  "generated_at_utc": "2026-03-29T14:10:00Z",
+  "governance": {
+    "owner": "Digital Experience Platform",
+    "steward": "Web Operations Team",
+    "approval_status": "approved",
+    "approved_at": "2026-03-29"
+  },
+  "sites": [
+    {
+      "site_id": "site.regs-portal",
+      "site_name": "Regulations Portal",
+      "framework": "astro",
+      "status": "active",
+      "description": "Public-facing regulatory publication site for standards, schedules, and updates.",
+      "repo": {
+        "provider": "github",
+        "full_name": "espedair/regs-system",
+        "default_branch": "main",
+        "path": "sites/regs-portal"
+      },
+      "domains": [
+        {
+          "host": "regs.example.com",
+          "domain_type": "primary",
+          "tls_mode": "managed"
+        },
+        {
+          "host": "preview.regs.example.com",
+          "domain_type": "preview",
+          "tls_mode": "managed"
+        }
+      ],
+      "build": {
+        "node_version": "20.x",
+        "package_manager": "pnpm",
+        "install_command": "pnpm install --frozen-lockfile",
+        "build_command": "pnpm run build",
+        "output_mode": "static",
+        "output_dir": "dist"
+      },
+      "deploy": {
+        "target": "cloudflare-pages",
+        "strategy": "branch-based",
+        "preview_enabled": true,
+        "artifact_retention_days": 30
+      },
+      "environments": [
+        {
+          "env_id": "env.regs.dev",
+          "env_type": "dev",
+          "base_url": "https://dev-regs.example.pages.dev",
+          "branch": "develop",
+          "env_var_refs": [
+            "vault://web/dev/cms-token",
+            "vault://web/dev/analytics-key"
+          ],
+          "status": "active"
+        },
+        {
+          "env_id": "env.regs.prod",
+          "env_type": "prod",
+          "base_url": "https://regs.example.com",
+          "branch": "main",
+          "env_var_refs": [
+            "vault://web/prod/cms-token",
+            "vault://web/prod/analytics-key"
+          ],
+          "status": "active"
+        }
+      ],
+      "content": {
+        "collections": [
+          {
+            "collection_id": "regulations",
+            "source": "mdx",
+            "schema_mode": "strict",
+            "content_path": "src/content/regulations"
+          },
+          {
+            "collection_id": "notices",
+            "source": "markdown",
+            "schema_mode": "strict",
+            "content_path": "src/content/notices"
+          }
+        ],
+        "default_locale": "en-AU",
+        "supported_locales": [
+          "en-AU"
+        ]
+      },
+      "integrations": [
+        {
+          "integration_id": "int.astro.sitemap",
+          "name": "@astrojs/sitemap",
+          "integration_type": "astro",
+          "config_ref": "astro.config.mjs#sitemap",
+          "status": "active"
+        },
+        {
+          "integration_id": "int.search.algolia",
+          "name": "Algolia Search",
+          "integration_type": "search",
+          "config_ref": "infra/search/algolia-regs.json",
+          "status": "active"
+        },
+        {
+          "integration_id": "int.analytics.ga4",
+          "name": "Google Analytics 4",
+          "integration_type": "analytics",
+          "config_ref": "vault://web/prod/ga4-measurement-id",
+          "status": "active"
+        }
+      ],
+      "security": {
+        "auth_mode": "none",
+        "waf_enabled": true,
+        "headers_policy_ref": "policy://web/security/headers-v3"
+      },
+      "observability": {
+        "analytics_provider": "GA4",
+        "logging_sink": "Azure Log Analytics",
+        "uptime_monitor_ref": "monitor://web/regs-portal-uptime"
+      },
+      "tags": [
+        "regulatory",
+        "public",
+        "astro"
+      ]
+    },
+    {
+      "site_id": "site.docs-hub",
+      "site_name": "Engineering Docs Hub",
+      "framework": "astro",
+      "status": "active",
+      "description": "Internal documentation and standards site for engineering teams.",
+      "repo": {
+        "provider": "github",
+        "full_name": "espedair/docs-hub",
+        "default_branch": "main"
+      },
+      "domains": [
+        {
+          "host": "docs.internal.example.com",
+          "domain_type": "primary",
+          "tls_mode": "bring-your-own"
+        }
+      ],
+      "build": {
+        "node_version": "20.x",
+        "package_manager": "npm",
+        "install_command": "npm ci",
+        "build_command": "npm run build",
+        "output_mode": "server",
+        "adapter": "@astrojs/node",
+        "output_dir": "dist"
+      },
+      "deploy": {
+        "target": "azure-static-web-apps",
+        "strategy": "promote-artifact",
+        "preview_enabled": true,
+        "artifact_retention_days": 14
+      },
+      "environments": [
+        {
+          "env_id": "env.docs.test",
+          "env_type": "test",
+          "base_url": "https://docs-test.internal.example.com",
+          "branch": "release/test",
+          "env_var_refs": [
+            "vault://docs/test/search-key"
+          ],
+          "status": "active"
+        },
+        {
+          "env_id": "env.docs.prod",
+          "env_type": "prod",
+          "base_url": "https://docs.internal.example.com",
+          "branch": "main",
+          "env_var_refs": [
+            "vault://docs/prod/search-key"
+          ],
+          "status": "active"
+        }
+      ],
+      "content": {
+        "collections": [
+          {
+            "collection_id": "playbooks",
+            "source": "markdown",
+            "schema_mode": "permissive",
+            "content_path": "src/content/playbooks"
+          },
+          {
+            "collection_id": "runbooks",
+            "source": "markdown",
+            "schema_mode": "strict",
+            "content_path": "src/content/runbooks"
+          }
+        ],
+        "default_locale": "en",
+        "supported_locales": [
+          "en"
+        ]
+      },
+      "integrations": [
+        {
+          "integration_id": "int.adapter.node",
+          "name": "@astrojs/node",
+          "integration_type": "adapter",
+          "config_ref": "astro.config.mjs#adapter",
+          "status": "active"
+        },
+        {
+          "integration_id": "int.monitoring.appinsights",
+          "name": "Azure Application Insights",
+          "integration_type": "monitoring",
+          "config_ref": "vault://docs/prod/appinsights-connection-string",
+          "status": "active"
+        }
+      ],
+      "security": {
+        "auth_mode": "oidc",
+        "waf_enabled": true,
+        "headers_policy_ref": "policy://web/security/internal-headers-v2"
+      },
+      "observability": {
+        "analytics_provider": "Internal Insights",
+        "logging_sink": "Azure Monitor",
+        "uptime_monitor_ref": "monitor://web/docs-hub-uptime"
+      },
+      "tags": [
+        "internal",
+        "docs",
+        "astro"
+      ]
+    }
+  ],
+  "stats": {
+    "site_count": 2,
+    "environment_count": 4,
+    "domain_count": 3,
+    "content_collection_count": 4,
+    "integration_count": 5
+  }
+}

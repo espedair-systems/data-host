@@ -1,0 +1,337 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://espedair.io/schema/template/lineage",
+  "title": "Lineage Schema",
+  "description": "Schema for describing end-to-end data lineage across systems, datasets, processes, and products.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "version",
+    "nodes",
+    "edges"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Optional self-reference to this schema file."
+    },
+    "name": {
+      "type": "string",
+      "description": "Logical name of the lineage model."
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(-[A-Za-z0-9._-]+)?$",
+      "description": "Semantic version of the lineage model."
+    },
+    "description": {
+      "type": "string",
+      "description": "Business summary of lineage scope."
+    },
+    "source": {
+      "type": "string",
+      "description": "Source notes, process, or extraction method used to derive lineage."
+    },
+    "generated_at_utc": {
+      "type": "string",
+      "format": "date-time",
+      "description": "UTC timestamp when lineage was generated."
+    },
+    "governance": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "owner": {
+          "type": "string",
+          "description": "Accountable owner for lineage definition and quality."
+        },
+        "steward": {
+          "type": "string",
+          "description": "Operational steward maintaining lineage updates."
+        },
+        "approval_status": {
+          "type": "string",
+          "enum": [
+            "draft",
+            "review",
+            "approved",
+            "deprecated"
+          ],
+          "description": "Governance lifecycle state for this lineage model."
+        },
+        "approved_at": {
+          "type": "string",
+          "format": "date",
+          "description": "Date lineage model was approved."
+        }
+      }
+    },
+    "nodes": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Assets participating in lineage graph.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "name",
+          "node_type"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9._:-]*$",
+            "description": "Stable unique node identifier."
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable node name."
+          },
+          "node_type": {
+            "type": "string",
+            "enum": [
+              "system",
+              "database",
+              "schema",
+              "dataset",
+              "table",
+              "view",
+              "file",
+              "stream",
+              "topic",
+              "api",
+              "process",
+              "pipeline",
+              "report",
+              "dashboard",
+              "data-product",
+              "custom"
+            ],
+            "description": "Type classification of the lineage node."
+          },
+          "platform": {
+            "type": "string",
+            "description": "Technology or platform where this node exists."
+          },
+          "environment": {
+            "type": "string",
+            "enum": [
+              "dev",
+              "test",
+              "uat",
+              "prod",
+              "shared",
+              "unknown"
+            ],
+            "description": "Environment classification for the node."
+          },
+          "namespace": {
+            "type": "string",
+            "description": "Namespace, project, or domain for this node."
+          },
+          "path": {
+            "type": "string",
+            "description": "Physical or logical path of the node (table path, file path, topic path, etc.)."
+          },
+          "owner": {
+            "type": "string",
+            "description": "Owner responsible for this lineage node."
+          },
+          "steward": {
+            "type": "string",
+            "description": "Steward responsible for metadata quality for this node."
+          },
+          "classification": {
+            "type": "string",
+            "enum": [
+              "Public",
+              "Internal",
+              "Confidential",
+              "Highly Confidential",
+              "Restricted"
+            ],
+            "description": "Information classification of node data."
+          },
+          "lifecycle_status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "active",
+              "deprecated",
+              "retired"
+            ],
+            "description": "Lifecycle state of node asset."
+          },
+          "description": {
+            "type": "string",
+            "description": "Business or technical description of the node."
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Optional tag labels for grouping and discovery."
+          }
+        }
+      }
+    },
+    "edges": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Directed lineage relationships between nodes.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "from",
+          "to",
+          "edge_type"
+        ],
+        "properties": {
+          "from": {
+            "type": "string",
+            "description": "Source node id."
+          },
+          "to": {
+            "type": "string",
+            "description": "Target node id."
+          },
+          "edge_type": {
+            "type": "string",
+            "enum": [
+              "reads-from",
+              "writes-to",
+              "transforms",
+              "publishes",
+              "subscribes-to",
+              "delivers-to",
+              "depends-on",
+              "derived-from",
+              "custom"
+            ],
+            "description": "Type of lineage dependency or flow."
+          },
+          "transformation": {
+            "type": "string",
+            "description": "Transformation or processing logic summary applied on this edge."
+          },
+          "schedule": {
+            "type": "string",
+            "description": "Schedule or runtime cadence for this dependency."
+          },
+          "latency": {
+            "type": "string",
+            "description": "Expected latency across this lineage edge."
+          },
+          "criticality": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high",
+              "critical"
+            ],
+            "description": "Criticality level for this dependency."
+          },
+          "sla": {
+            "type": "string",
+            "description": "Service expectation for this dependency."
+          },
+          "refresh_expectation": {
+            "type": "string",
+            "description": "Refresh or update expectation for this dependency."
+          },
+          "evidence_anchors": {
+            "type": "array",
+            "description": "Evidence references supporting this lineage edge.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "source",
+                "location",
+                "detail"
+              ],
+              "properties": {
+                "source": {
+                  "type": "string"
+                },
+                "location": {
+                  "type": "string"
+                },
+                "detail": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "lineage_paths": {
+      "type": "array",
+      "description": "Optional precomputed end-to-end paths across lineage graph.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path_id",
+          "start_node",
+          "end_node",
+          "hops"
+        ],
+        "properties": {
+          "path_id": {
+            "type": "string",
+            "description": "Unique path identifier."
+          },
+          "start_node": {
+            "type": "string",
+            "description": "Path starting node id."
+          },
+          "end_node": {
+            "type": "string",
+            "description": "Path ending node id."
+          },
+          "hops": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            },
+            "description": "Ordered list of node ids from start to end."
+          },
+          "business_purpose": {
+            "type": "string",
+            "description": "Business purpose of this end-to-end path."
+          }
+        }
+      }
+    },
+    "stats": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "node_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "edge_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "path_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "systems_count": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

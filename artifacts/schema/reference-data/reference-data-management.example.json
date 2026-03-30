@@ -1,0 +1,223 @@
+{
+  "$schema": "./reference-data-management.schema.json",
+  "name": "insignia_reference_data_catalog",
+  "version": "1.0.0",
+  "description": "Reference data package for core controlled vocabularies used by reporting and operational systems.",
+  "domain": "Enterprise Data Management",
+  "source": "Reference Data Governance Process",
+  "generated_at_utc": "2026-03-28T12:00:00Z",
+  "governance": {
+    "data_owner": "Enterprise Data Office",
+    "data_steward": "Reference Data Stewardship Team",
+    "approver": "Head of Data Governance",
+    "approval_status": "approved",
+    "approval_date": "2026-03-28"
+  },
+  "datasets": [
+    {
+      "dataset_id": "country_codes",
+      "dataset_name": "Country Codes",
+      "description": "ISO-aligned country reference values used for client onboarding, tax, and reporting.",
+      "status": "active",
+      "classification": "Internal",
+      "source_system": "MDM",
+      "update_frequency": "monthly",
+      "effective_date_field": "effective_from",
+      "expiry_date_field": "effective_to",
+      "keys": {
+        "business_key": [
+          "code"
+        ],
+        "surrogate_key": "country_key"
+      },
+      "attributes": [
+        {
+          "name": "code",
+          "data_type": "string",
+          "nullable": false,
+          "description": "Canonical 2-letter country code"
+        },
+        {
+          "name": "label",
+          "data_type": "string",
+          "nullable": false,
+          "description": "Display name of the country"
+        },
+        {
+          "name": "region",
+          "data_type": "string",
+          "nullable": true,
+          "description": "Optional geographic region",
+          "allowed_values": [
+            "APAC",
+            "EMEA",
+            "AMER"
+          ]
+        },
+        {
+          "name": "effective_from",
+          "data_type": "date",
+          "nullable": false,
+          "description": "Date from which the code is valid"
+        },
+        {
+          "name": "effective_to",
+          "data_type": "date",
+          "nullable": true,
+          "description": "Date until which the code is valid"
+        }
+      ],
+      "code_sets": [
+        {
+          "code": "AU",
+          "label": "Australia",
+          "description": "Australia",
+          "status": "active",
+          "effective_from": "1901-01-01",
+          "sort_order": 1
+        },
+        {
+          "code": "NZ",
+          "label": "New Zealand",
+          "description": "New Zealand",
+          "status": "active",
+          "effective_from": "1907-09-26",
+          "sort_order": 2
+        },
+        {
+          "code": "UK",
+          "label": "United Kingdom",
+          "description": "United Kingdom legacy code retained for compatibility",
+          "status": "deprecated",
+          "effective_from": "1801-01-01",
+          "effective_to": "2025-12-31",
+          "sort_order": 99
+        }
+      ],
+      "quality_rules": [
+        {
+          "rule_id": "country_codes_unique_code",
+          "rule_type": "uniqueness",
+          "severity": "critical",
+          "expression": "code must be unique where status != 'deprecated'",
+          "description": "Prevents duplicate active country codes"
+        },
+        {
+          "rule_id": "country_codes_allowed_status",
+          "rule_type": "allowed-values",
+          "severity": "high",
+          "expression": "status in ('active','inactive','deprecated')",
+          "description": "Ensures lifecycle status integrity"
+        }
+      ],
+      "lineage": {
+        "upstream": [
+          "ISO Country Standard",
+          "MDM Country Master"
+        ],
+        "downstream": [
+          "Regulatory Reporting",
+          "Client Onboarding",
+          "Risk Data Mart"
+        ]
+      },
+      "sla": {
+        "refresh_frequency": "monthly",
+        "latency_target": "T+1 day",
+        "last_refresh_utc": "2026-03-28T08:30:00Z"
+      }
+    },
+    {
+      "dataset_id": "product_risk_ratings",
+      "dataset_name": "Product Risk Ratings",
+      "description": "Controlled risk rating scale used for product disclosures and suitability checks.",
+      "status": "active",
+      "classification": "Confidential",
+      "source_system": "Product Governance Platform",
+      "update_frequency": "quarterly",
+      "keys": {
+        "business_key": [
+          "code"
+        ],
+        "surrogate_key": "risk_rating_key"
+      },
+      "attributes": [
+        {
+          "name": "code",
+          "data_type": "string",
+          "nullable": false,
+          "description": "Rating code used in downstream systems"
+        },
+        {
+          "name": "label",
+          "data_type": "string",
+          "nullable": false,
+          "description": "Display label"
+        },
+        {
+          "name": "risk_score",
+          "data_type": "integer",
+          "nullable": false,
+          "description": "Ordinal risk score from 1 to 7"
+        }
+      ],
+      "code_sets": [
+        {
+          "code": "RR1",
+          "label": "Very Low",
+          "description": "Very low volatility and capital risk",
+          "status": "active",
+          "effective_from": "2020-01-01",
+          "sort_order": 1
+        },
+        {
+          "code": "RR4",
+          "label": "Medium",
+          "description": "Balanced risk profile",
+          "status": "active",
+          "effective_from": "2020-01-01",
+          "sort_order": 4
+        },
+        {
+          "code": "RR7",
+          "label": "Very High",
+          "description": "High volatility and capital risk",
+          "status": "active",
+          "effective_from": "2020-01-01",
+          "sort_order": 7
+        }
+      ],
+      "quality_rules": [
+        {
+          "rule_id": "product_risk_ratings_score_range",
+          "rule_type": "valid-range",
+          "severity": "critical",
+          "expression": "risk_score between 1 and 7",
+          "description": "Risk score must remain within approved scale"
+        },
+        {
+          "rule_id": "product_risk_ratings_referential_integrity",
+          "rule_type": "referential-integrity",
+          "severity": "high",
+          "expression": "all product risk references must exist in active code_sets",
+          "description": "Prevents orphan risk rating references"
+        }
+      ],
+      "lineage": {
+        "upstream": [
+          "Product Risk Committee Decisions"
+        ],
+        "downstream": [
+          "PDS Generation",
+          "Advice Suitability Engine",
+          "APRA Reporting"
+        ]
+      },
+      "sla": {
+        "refresh_frequency": "quarterly",
+        "latency_target": "T+2 days",
+        "last_refresh_utc": "2026-03-27T23:00:00Z"
+      }
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "$schema": "./reference-data-management.schema.json",
+  "name": "reference_data_minimal",
+  "version": "1.0.0",
+  "domain": "Enterprise Data Management",
+  "governance": {
+    "data_owner": "Enterprise Data Office",
+    "data_steward": "Reference Data Stewardship Team",
+    "approval_status": "draft"
+  },
+  "datasets": [
+    {
+      "dataset_id": "currency_codes",
+      "dataset_name": "Currency Codes",
+      "status": "active",
+      "keys": {
+        "business_key": [
+          "code"
+        ]
+      },
+      "code_sets": [
+        {
+          "code": "AUD",
+          "label": "Australian Dollar",
+          "status": "active"
+        },
+        {
+          "code": "NZD",
+          "label": "New Zealand Dollar",
+          "status": "active"
+        }
+      ]
+    }
+  ]
+}

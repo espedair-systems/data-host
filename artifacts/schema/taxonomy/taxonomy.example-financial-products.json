@@ -1,0 +1,614 @@
+{
+  "$schema": "./taxonomy.schema.json",
+  "name": "financial_products_taxonomy",
+  "version": "1.0.0",
+  "title": "Financial Products Taxonomy",
+  "description": "Governed taxonomy of financial products for classification, reporting, and product governance use cases.",
+  "taxonomy_type": "product",
+  "source": "Financial product governance notes",
+  "generated_at_utc": "2026-03-28T16:30:00Z",
+  "default_language": "en",
+  "governance": {
+    "owner": "Product Governance Office",
+    "steward": "Financial Product Taxonomy Steward",
+    "approver": "Head of Product",
+    "approval_status": "approved",
+    "approved_at": "2026-03-28"
+  },
+  "term_attributes": [
+    {
+      "attribute_id": "attr.risk_level",
+      "name": "risk_level",
+      "data_type": "string",
+      "required": false,
+      "description": "Indicative product risk category"
+    },
+    {
+      "attribute_id": "attr.liquidity_profile",
+      "name": "liquidity_profile",
+      "data_type": "string",
+      "required": false,
+      "description": "Indicative liquidity profile"
+    },
+    {
+      "attribute_id": "attr.regulatory_scope",
+      "name": "regulatory_scope",
+      "data_type": "string",
+      "required": false,
+      "description": "Regulatory context for product classification"
+    }
+  ],
+  "rule_definitions": [
+    {
+      "rule_id": "rule.unique_term_id",
+      "rule_type": "validation",
+      "severity": "critical",
+      "expression": "term_id must be unique within taxonomy",
+      "description": "Prevents duplicate term identifiers"
+    },
+    {
+      "rule_id": "rule.active_requires_definition",
+      "rule_type": "quality",
+      "severity": "high",
+      "expression": "active terms must have non-empty definition",
+      "description": "Ensures active terms are understandable and governed"
+    },
+    {
+      "rule_id": "rule.parent_exists",
+      "rule_type": "constraint",
+      "severity": "high",
+      "expression": "parent_term_id must reference an existing term_id",
+      "description": "Maintains hierarchy integrity"
+    }
+  ],
+  "terms": [
+    {
+      "term_id": "fp.root",
+      "label": "Financial Products",
+      "definition": "Top-level taxonomy category covering all financial product classes used by the organization.",
+      "status": "active",
+      "term_type": "category",
+      "language": "en",
+      "synonyms": [
+        "Product Universe"
+      ],
+      "child_term_ids": [
+        "fp.investment",
+        "fp.banking",
+        "fp.insurance",
+        "fp.credit",
+        "fp.derivatives"
+      ],
+      "classification": "Internal",
+      "owner": "Product Governance Office",
+      "steward": "Financial Product Taxonomy Steward",
+      "effective_from": "2026-01-01",
+      "attributes": {
+        "regulatory_scope": "Cross-domain"
+      },
+      "rule_refs": [
+        "rule.unique_term_id",
+        "rule.active_requires_definition"
+      ],
+      "evidence_anchors": [
+        {
+          "source": "Product governance framework",
+          "location": "internal policy library",
+          "detail": "Defines top-level product taxonomy governance"
+        }
+      ]
+    },
+    {
+      "term_id": "fp.investment",
+      "label": "Investment Products",
+      "definition": "Products designed for capital growth or income generation through investment markets.",
+      "status": "active",
+      "term_type": "category",
+      "parent_term_id": "fp.root",
+      "child_term_ids": [
+        "fp.investment.equities",
+        "fp.investment.fixed_income",
+        "fp.investment.funds",
+        "fp.investment.alternatives"
+      ],
+      "related_term_ids": [
+        "fp.derivatives"
+      ],
+      "classification": "Internal",
+      "owner": "Investment Product Team",
+      "steward": "Investment Product Steward",
+      "effective_from": "2026-01-01",
+      "attributes": {
+        "risk_level": "varies",
+        "liquidity_profile": "varies",
+        "regulatory_scope": "Investment"
+      },
+      "rule_refs": [
+        "rule.parent_exists"
+      ],
+      "evidence_anchors": [
+        {
+          "source": "Investment product catalogue",
+          "location": "product inventory",
+          "detail": "Defines investment product families"
+        }
+      ]
+    },
+    {
+      "term_id": "fp.investment.equities",
+      "label": "Equities",
+      "definition": "Ownership-based financial instruments such as listed shares and equity-linked products.",
+      "status": "active",
+      "term_type": "class",
+      "parent_term_id": "fp.investment",
+      "broader_term_ids": [
+        "fp.investment"
+      ],
+      "related_term_ids": [
+        "fp.derivatives.options"
+      ],
+      "classification": "Internal",
+      "owner": "Investment Product Team",
+      "steward": "Investment Product Steward",
+      "effective_from": "2026-01-01",
+      "attributes": {
+        "risk_level": "high",
+        "liquidity_profile": "medium-high"
+      },
+      "rule_refs": [
+        "rule.parent_exists"
+      ]
+    },
+    {
+      "term_id": "fp.investment.fixed_income",
+      "label": "Fixed Income",
+      "definition": "Debt instruments providing periodic income and principal repayment characteristics.",
+      "status": "active",
+      "term_type": "class",
+      "parent_term_id": "fp.investment",
+      "broader_term_ids": [
+        "fp.investment"
+      ],
+      "classification": "Internal",
+      "owner": "Investment Product Team",
+      "steward": "Investment Product Steward",
+      "effective_from": "2026-01-01",
+      "attributes": {
+        "risk_level": "medium",
+        "liquidity_profile": "medium"
+      },
+      "rule_refs": [
+        "rule.parent_exists"
+      ]
+    },
+    {
+      "term_id": "fp.investment.funds",
+      "label": "Managed Funds",
+      "definition": "Pooled investment products managed according to a mandate, including mutual funds and ETFs.",
+      "status": "active",
+      "term_type": "class",
+      "parent_term_id": "fp.investment",
+      "child_term_ids": [
+        "fp.investment.funds.mutual",
+        "fp.investment.funds.etf"
+      ],
+      "classification": "Internal",
+      "owner": "Investment Product Team",
+      "steward": "Investment Product Steward",
+      "effective_from": "2026-01-01",
+      "attributes": {
+        "risk_level": "varies",
+        "liquidity_profile": "medium-high"
+      },
+      "rule_refs": [
+        "rule.parent_exists"
+      ]
+    },
+    {
+      "term_id": "fp.investment.funds.mutual",
+      "label": "Mutual Funds",
+      "definition": "Collective investment schemes where units are issued and redeemed by the fund manager.",
+      "status": "active",
+      "term_type": "concept",
+      "parent_term_id": "fp.investment.funds",
+      "broader_term_ids": [
+        "fp.investment.funds"
+      ],
+      "classification": "Internal",
+      "owner": "Investment Product Team",
+      "steward": "Investment Product Steward",
+      "effective_from": "2026-01-01",
+      "attributes": {
+        "risk_level": "varies",
+        "liquidity_profile": "medium"
+      },
+      "rule_refs": [
+        "rule.parent_exists"
+      ]
+    },
+    {
+      "term_id": "fp.investment.funds.etf",
+      "label": "Exchange-Traded Funds",
+      "definition": "Funds traded on exchanges with intraday pricing and market liquidity.",
+      "status": "active",
+      "term_type": "concept",
+      "parent_term_id": "fp.investment.funds",
+      "broader_term_ids": [
+        "fp.investment.funds"
+      ],
+      "acronyms": [
+        "ETF"
+      ],
+      "classification": "Internal",
+      "owner": "Investment Product Team",
+      "steward": "Investment Product Steward",
+      "effective_from": "2026-01-01",
+      "attributes": {
+        "risk_level": "varies",
+        "liquidity_profile": "high"
+      },
+      "rule_refs": [
+        "rule.parent_exists"
+      ]
+    },
+    {
+      "term_id": "fp.investment.alternatives",
+      "label": "Alternative Investments",
+      "definition": "Investments outside traditional asset classes, including private equity, infrastructure, and hedge strategies.",
+      "status": "active",
+      "term_type": "class",
+      "parent_term_id": "fp.investment",
+      "classification": "Internal",
+      "owner": "Investment Product Team",
+      "steward": "Investment Product Steward",
+      "effective_from": "2026-01-01",
+      "attributes": {
+        "risk_level": "high",
+        "liquidity_profile": "low"
+      },
+      "rule_refs": [
+        "rule.parent_exists"
+      ]
+    },
+    {
+      "term_id": "fp.banking",
+      "label": "Banking Products",
+      "definition": "Products offered by banking institutions for deposits, transactions, and savings.",
+      "status": "active",
+      "term_type": "category",
+      "parent_term_id": "fp.root",
+      "child_term_ids": [
+        "fp.banking.deposit",
+        "fp.banking.transaction",
+        "fp.banking.savings"
+      ],
+      "classification": "Internal",
+      "owner": "Banking Product Team",
+      "steward": "Banking Product Steward",
+      "effective_from": "2026-01-01",
+      "attributes": {
+        "risk_level": "low-medium",
+        "liquidity_profile": "high",
+        "regulatory_scope": "Banking"
+      },
+      "rule_refs": [
+        "rule.parent_exists"
+      ]
+    },
+    {
+      "term_id": "fp.banking.deposit",
+      "label": "Deposit Accounts",
+      "definition": "Accounts that hold customer funds, including term deposits and call accounts.",
+      "status": "active",
+      "term_type": "class",
+      "parent_term_id": "fp.banking",
+      "classification": "Internal",
+      "owner": "Banking Product Team",
+      "steward": "Banking Product Steward",
+      "effective_from": "2026-01-01",
+      "attributes": {
+        "risk_level": "low",
+        "liquidity_profile": "medium-high"
+      },
+      "rule_refs": [
+        "rule.parent_exists"
+      ]
+    },
+    {
+      "term_id": "fp.banking.transaction",
+      "label": "Transaction Accounts",
+      "definition": "Accounts designed for regular payments, receipts, and day-to-day money movement.",
+      "status": "active",
+      "term_type": "class",
+      "parent_term_id": "fp.banking",
+      "classification": "Internal",
+      "owner": "Banking Product Team",
+      "steward": "Banking Product Steward",
+      "effective_from": "2026-01-01",
+      "attributes": {
+        "risk_level": "low",
+        "liquidity_profile": "high"
+      },
+      "rule_refs": [
+        "rule.parent_exists"
+      ]
+    },
+    {
+      "term_id": "fp.banking.savings",
+      "label": "Savings Accounts",
+      "definition": "Interest-bearing accounts oriented toward accumulating balances over time.",
+      "status": "active",
+      "term_type": "class",
+      "parent_term_id": "fp.banking",
+      "classification": "Internal",
+      "owner": "Banking Product Team",
+      "steward": "Banking Product Steward",
+      "effective_from": "2026-01-01",
+      "attributes": {
+        "risk_level": "low",
+        "liquidity_profile": "high"
+      },
+      "rule_refs": [
+        "rule.parent_exists"
+      ]
+    },
+    {
+      "term_id": "fp.insurance",
+      "label": "Insurance Products",
+      "definition": "Products providing risk transfer and financial protection against insured events.",
+      "status": "active",
+      "term_type": "category",
+      "parent_term_id": "fp.root",
+      "child_term_ids": [
+        "fp.insurance.life",
+        "fp.insurance.general",
+        "fp.insurance.income_protection"
+      ],
+      "classification": "Internal",
+      "owner": "Insurance Product Team",
+      "steward": "Insurance Product Steward",
+      "effective_from": "2026-01-01",
+      "attributes": {
+        "risk_level": "medium",
+        "liquidity_profile": "n/a",
+        "regulatory_scope": "Insurance"
+      },
+      "rule_refs": [
+        "rule.parent_exists"
+      ]
+    },
+    {
+      "term_id": "fp.insurance.life",
+      "label": "Life Insurance",
+      "definition": "Insurance products paying benefits on death or terminal illness events.",
+      "status": "active",
+      "term_type": "class",
+      "parent_term_id": "fp.insurance",
+      "classification": "Internal",
+      "owner": "Insurance Product Team",
+      "steward": "Insurance Product Steward",
+      "effective_from": "2026-01-01",
+      "attributes": {
+        "risk_level": "medium",
+        "liquidity_profile": "n/a"
+      },
+      "rule_refs": [
+        "rule.parent_exists"
+      ]
+    },
+    {
+      "term_id": "fp.insurance.general",
+      "label": "General Insurance",
+      "definition": "Non-life insurance products, including property, motor, and liability cover.",
+      "status": "active",
+      "term_type": "class",
+      "parent_term_id": "fp.insurance",
+      "synonyms": [
+        "Non-life Insurance"
+      ],
+      "classification": "Internal",
+      "owner": "Insurance Product Team",
+      "steward": "Insurance Product Steward",
+      "effective_from": "2026-01-01",
+      "attributes": {
+        "risk_level": "medium",
+        "liquidity_profile": "n/a"
+      },
+      "rule_refs": [
+        "rule.parent_exists"
+      ]
+    },
+    {
+      "term_id": "fp.insurance.income_protection",
+      "label": "Income Protection Insurance",
+      "definition": "Insurance products replacing part of income when policyholders cannot work due to illness or injury.",
+      "status": "active",
+      "term_type": "class",
+      "parent_term_id": "fp.insurance",
+      "classification": "Internal",
+      "owner": "Insurance Product Team",
+      "steward": "Insurance Product Steward",
+      "effective_from": "2026-01-01",
+      "attributes": {
+        "risk_level": "medium",
+        "liquidity_profile": "n/a"
+      },
+      "rule_refs": [
+        "rule.parent_exists"
+      ]
+    },
+    {
+      "term_id": "fp.credit",
+      "label": "Credit Products",
+      "definition": "Products extending credit to customers, including loans and revolving credit facilities.",
+      "status": "active",
+      "term_type": "category",
+      "parent_term_id": "fp.root",
+      "child_term_ids": [
+        "fp.credit.mortgage",
+        "fp.credit.personal_loan",
+        "fp.credit.credit_card"
+      ],
+      "classification": "Internal",
+      "owner": "Credit Product Team",
+      "steward": "Credit Product Steward",
+      "effective_from": "2026-01-01",
+      "attributes": {
+        "risk_level": "medium-high",
+        "liquidity_profile": "n/a",
+        "regulatory_scope": "Credit"
+      },
+      "rule_refs": [
+        "rule.parent_exists"
+      ]
+    },
+    {
+      "term_id": "fp.credit.mortgage",
+      "label": "Mortgage Loans",
+      "definition": "Secured loans for property purchase or refinance.",
+      "status": "active",
+      "term_type": "class",
+      "parent_term_id": "fp.credit",
+      "classification": "Internal",
+      "owner": "Credit Product Team",
+      "steward": "Credit Product Steward",
+      "effective_from": "2026-01-01",
+      "attributes": {
+        "risk_level": "medium",
+        "liquidity_profile": "n/a"
+      },
+      "rule_refs": [
+        "rule.parent_exists"
+      ]
+    },
+    {
+      "term_id": "fp.credit.personal_loan",
+      "label": "Personal Loans",
+      "definition": "Installment-based consumer lending products for personal use purposes.",
+      "status": "active",
+      "term_type": "class",
+      "parent_term_id": "fp.credit",
+      "classification": "Internal",
+      "owner": "Credit Product Team",
+      "steward": "Credit Product Steward",
+      "effective_from": "2026-01-01",
+      "attributes": {
+        "risk_level": "medium-high",
+        "liquidity_profile": "n/a"
+      },
+      "rule_refs": [
+        "rule.parent_exists"
+      ]
+    },
+    {
+      "term_id": "fp.credit.credit_card",
+      "label": "Credit Cards",
+      "definition": "Revolving credit facilities with card-based payment and settlement capabilities.",
+      "status": "active",
+      "term_type": "class",
+      "parent_term_id": "fp.credit",
+      "classification": "Internal",
+      "owner": "Credit Product Team",
+      "steward": "Credit Product Steward",
+      "effective_from": "2026-01-01",
+      "attributes": {
+        "risk_level": "high",
+        "liquidity_profile": "n/a"
+      },
+      "rule_refs": [
+        "rule.parent_exists"
+      ]
+    },
+    {
+      "term_id": "fp.derivatives",
+      "label": "Derivative Products",
+      "definition": "Products deriving value from underlying assets, rates, or indices.",
+      "status": "active",
+      "term_type": "category",
+      "parent_term_id": "fp.root",
+      "child_term_ids": [
+        "fp.derivatives.options",
+        "fp.derivatives.futures",
+        "fp.derivatives.swaps"
+      ],
+      "classification": "Internal",
+      "owner": "Markets Product Team",
+      "steward": "Derivatives Product Steward",
+      "effective_from": "2026-01-01",
+      "attributes": {
+        "risk_level": "high",
+        "liquidity_profile": "varies",
+        "regulatory_scope": "Markets"
+      },
+      "rule_refs": [
+        "rule.parent_exists"
+      ]
+    },
+    {
+      "term_id": "fp.derivatives.options",
+      "label": "Options",
+      "definition": "Derivative contracts granting rights to buy or sell an underlying asset at a specified price and date.",
+      "status": "active",
+      "term_type": "class",
+      "parent_term_id": "fp.derivatives",
+      "related_term_ids": [
+        "fp.investment.equities"
+      ],
+      "classification": "Internal",
+      "owner": "Markets Product Team",
+      "steward": "Derivatives Product Steward",
+      "effective_from": "2026-01-01",
+      "attributes": {
+        "risk_level": "high",
+        "liquidity_profile": "medium"
+      },
+      "rule_refs": [
+        "rule.parent_exists"
+      ]
+    },
+    {
+      "term_id": "fp.derivatives.futures",
+      "label": "Futures",
+      "definition": "Standardized derivative contracts obligating counterparties to transact at a future date.",
+      "status": "active",
+      "term_type": "class",
+      "parent_term_id": "fp.derivatives",
+      "classification": "Internal",
+      "owner": "Markets Product Team",
+      "steward": "Derivatives Product Steward",
+      "effective_from": "2026-01-01",
+      "attributes": {
+        "risk_level": "high",
+        "liquidity_profile": "high"
+      },
+      "rule_refs": [
+        "rule.parent_exists"
+      ]
+    },
+    {
+      "term_id": "fp.derivatives.swaps",
+      "label": "Swaps",
+      "definition": "Over-the-counter derivative agreements for exchanging cash flows under defined terms.",
+      "status": "active",
+      "term_type": "class",
+      "parent_term_id": "fp.derivatives",
+      "classification": "Internal",
+      "owner": "Markets Product Team",
+      "steward": "Derivatives Product Steward",
+      "effective_from": "2026-01-01",
+      "attributes": {
+        "risk_level": "high",
+        "liquidity_profile": "low-medium"
+      },
+      "rule_refs": [
+        "rule.parent_exists"
+      ]
+    }
+  ],
+  "stats": {
+    "term_count": 25,
+    "active_term_count": 25,
+    "deprecated_term_count": 0,
+    "max_depth": 3
+  }
+}

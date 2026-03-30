@@ -1,0 +1,321 @@
+{
+  "$schema": "./lineage.schema.json",
+  "name": "udp_customer_reporting_lineage",
+  "version": "1.0.0",
+  "description": "End-to-end lineage from source CRM data through UDP Bronze/Silver/Gold to dashboard and external delivery outputs.",
+  "source": "UDP lineage working notes",
+  "generated_at_utc": "2026-03-28T15:00:00Z",
+  "governance": {
+    "owner": "UDP Platform Team",
+    "steward": "Data Lineage Stewardship",
+    "approval_status": "approved",
+    "approved_at": "2026-03-28"
+  },
+  "nodes": [
+    {
+      "id": "sys.crm",
+      "name": "CRM Source System",
+      "node_type": "system",
+      "platform": "Salesforce",
+      "environment": "prod",
+      "namespace": "customer",
+      "owner": "Customer Platforms",
+      "steward": "Source Data Steward",
+      "classification": "Confidential",
+      "lifecycle_status": "active",
+      "description": "Authoritative source for core customer profile attributes.",
+      "tags": [
+        "source",
+        "customer"
+      ]
+    },
+    {
+      "id": "tbl.udp.bronze.customer_profile",
+      "name": "udp_bronze.customer_profile",
+      "node_type": "table",
+      "platform": "BigQuery",
+      "environment": "prod",
+      "namespace": "udp_bronze",
+      "path": "udp_bronze.customer_profile",
+      "owner": "UDP Platform Team",
+      "steward": "UDP Ingestion Operations",
+      "classification": "Confidential",
+      "lifecycle_status": "active",
+      "description": "Raw landing table for CRM customer profile feed.",
+      "tags": [
+        "bronze",
+        "raw"
+      ]
+    },
+    {
+      "id": "pipe.udp.silver.customer_model",
+      "name": "UDP Silver Customer Model Pipeline",
+      "node_type": "pipeline",
+      "platform": "dbt",
+      "environment": "prod",
+      "namespace": "udp_transforms",
+      "owner": "UDP Platform Team",
+      "steward": "Transformation Operations",
+      "classification": "Internal",
+      "lifecycle_status": "active",
+      "description": "Transforms Bronze customer profile into reusable Silver model.",
+      "tags": [
+        "silver",
+        "transform"
+      ]
+    },
+    {
+      "id": "tbl.udp.silver.customer_model",
+      "name": "udp_silver.customer_model",
+      "node_type": "table",
+      "platform": "BigQuery",
+      "environment": "prod",
+      "namespace": "udp_silver",
+      "path": "udp_silver.customer_model",
+      "owner": "UDP Platform Team",
+      "steward": "Dataset Subscription Operations",
+      "classification": "Confidential",
+      "lifecycle_status": "active",
+      "description": "Reusable customer model for multiple analytical use cases.",
+      "tags": [
+        "silver",
+        "modelled"
+      ]
+    },
+    {
+      "id": "pipe.udp.gold.customer_reporting",
+      "name": "UDP Gold Customer Reporting Pipeline",
+      "node_type": "pipeline",
+      "platform": "dbt",
+      "environment": "prod",
+      "namespace": "udp_transforms",
+      "owner": "UDP Analytics Enablement",
+      "steward": "Reporting Data Steward",
+      "classification": "Internal",
+      "lifecycle_status": "active",
+      "description": "Applies business definitions for customer reporting outputs.",
+      "tags": [
+        "gold",
+        "reporting"
+      ]
+    },
+    {
+      "id": "tbl.udp.gold.customer_reporting",
+      "name": "udp_gold.customer_reporting",
+      "node_type": "table",
+      "platform": "BigQuery",
+      "environment": "prod",
+      "namespace": "udp_gold",
+      "path": "udp_gold.customer_reporting",
+      "owner": "UDP Analytics Enablement",
+      "steward": "Dataset Subscription Operations",
+      "classification": "Internal",
+      "lifecycle_status": "active",
+      "description": "Focused customer reporting dataset aligned to agreed business KPIs.",
+      "tags": [
+        "gold",
+        "focused"
+      ]
+    },
+    {
+      "id": "dash.looker.customer_health",
+      "name": "Customer Health Dashboard",
+      "node_type": "dashboard",
+      "platform": "Looker",
+      "environment": "prod",
+      "namespace": "customer_reporting",
+      "owner": "UDP Analytics Enablement",
+      "steward": "Dashboard Operations",
+      "classification": "Internal",
+      "lifecycle_status": "active",
+      "description": "Dashboard used by operational teams for customer health monitoring.",
+      "tags": [
+        "access",
+        "dashboard"
+      ]
+    },
+    {
+      "id": "dp.egress.customer_regulatory_delivery",
+      "name": "Customer Regulatory Delivery",
+      "node_type": "data-product",
+      "platform": "UDP Outbound Delivery Service",
+      "environment": "prod",
+      "namespace": "udp_egress",
+      "owner": "UDP Data Delivery Team",
+      "steward": "Outbound Delivery Operations",
+      "classification": "Confidential",
+      "lifecycle_status": "active",
+      "description": "Outbound delivery product for approved customer regulatory extracts.",
+      "tags": [
+        "egress",
+        "delivery"
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "from": "sys.crm",
+      "to": "tbl.udp.bronze.customer_profile",
+      "edge_type": "writes-to",
+      "transformation": "Source extract landed with technical ingestion controls only",
+      "schedule": "hourly",
+      "latency": "<= 4h from source extract completion",
+      "criticality": "high",
+      "sla": "Bronze table available within 4 hours",
+      "refresh_expectation": "Hourly ingestion cycle",
+      "evidence_anchors": [
+        {
+          "source": "UDP platform notes",
+          "location": "stakeholder notes",
+          "detail": "Defines source-to-raw ingestion expectations"
+        }
+      ]
+    },
+    {
+      "from": "tbl.udp.bronze.customer_profile",
+      "to": "pipe.udp.silver.customer_model",
+      "edge_type": "reads-from",
+      "transformation": "Bronze feed consumed by Silver transform pipeline",
+      "schedule": "hourly",
+      "latency": "<= 1h",
+      "criticality": "high",
+      "sla": "Silver transform starts within 1 hour of Bronze refresh",
+      "refresh_expectation": "Triggered by Bronze completion",
+      "evidence_anchors": [
+        {
+          "source": "Transformation operating model",
+          "location": "silver pipeline runbook",
+          "detail": "Defines Bronze-triggered Silver processing"
+        }
+      ]
+    },
+    {
+      "from": "pipe.udp.silver.customer_model",
+      "to": "tbl.udp.silver.customer_model",
+      "edge_type": "writes-to",
+      "transformation": "Standardized reusable model output",
+      "schedule": "hourly",
+      "latency": "<= 1h",
+      "criticality": "high",
+      "sla": "Silver model published within 1 hour of pipeline start",
+      "refresh_expectation": "Hourly",
+      "evidence_anchors": [
+        {
+          "source": "dbt model config",
+          "location": "udp silver models",
+          "detail": "Defines Silver publication behavior"
+        }
+      ]
+    },
+    {
+      "from": "tbl.udp.silver.customer_model",
+      "to": "pipe.udp.gold.customer_reporting",
+      "edge_type": "reads-from",
+      "transformation": "Silver model consumed by Gold reporting transform",
+      "schedule": "daily",
+      "latency": "<= 2h",
+      "criticality": "high",
+      "sla": "Gold reporting pipeline starts within 2 hours of Silver readiness",
+      "refresh_expectation": "Daily reporting cycle",
+      "evidence_anchors": [
+        {
+          "source": "Business reporting model",
+          "location": "gold pipeline notes",
+          "detail": "Defines Silver to Gold dependency"
+        }
+      ]
+    },
+    {
+      "from": "pipe.udp.gold.customer_reporting",
+      "to": "tbl.udp.gold.customer_reporting",
+      "edge_type": "writes-to",
+      "transformation": "Business KPI and reporting definitions applied",
+      "schedule": "daily",
+      "latency": "<= 1h",
+      "criticality": "critical",
+      "sla": "Gold reporting dataset available before business reporting window",
+      "refresh_expectation": "Daily",
+      "evidence_anchors": [
+        {
+          "source": "Gold definition notes",
+          "location": "reporting specification",
+          "detail": "Defines focused reporting rules"
+        }
+      ]
+    },
+    {
+      "from": "tbl.udp.gold.customer_reporting",
+      "to": "dash.looker.customer_health",
+      "edge_type": "publishes",
+      "transformation": "Dashboard semantic layer refresh",
+      "schedule": "daily",
+      "latency": "<= 30m",
+      "criticality": "medium",
+      "sla": "Dashboard refreshed before start-of-day reporting",
+      "refresh_expectation": "Daily",
+      "evidence_anchors": [
+        {
+          "source": "BI publication model",
+          "location": "Looker dashboard refresh config",
+          "detail": "Defines dashboard refresh timing"
+        }
+      ]
+    },
+    {
+      "from": "tbl.udp.gold.customer_reporting",
+      "to": "dp.egress.customer_regulatory_delivery",
+      "edge_type": "delivers-to",
+      "transformation": "Approved outbound package generation",
+      "schedule": "monthly",
+      "latency": "<= 1 business day",
+      "criticality": "critical",
+      "sla": "Outbound delivery completed within agreed reporting window",
+      "refresh_expectation": "Monthly regulatory cycle",
+      "evidence_anchors": [
+        {
+          "source": "Regulatory delivery contract",
+          "location": "outbound obligations register",
+          "detail": "Defines monthly delivery commitments"
+        }
+      ]
+    }
+  ],
+  "lineage_paths": [
+    {
+      "path_id": "path.crm.to.dashboard",
+      "start_node": "sys.crm",
+      "end_node": "dash.looker.customer_health",
+      "hops": [
+        "sys.crm",
+        "tbl.udp.bronze.customer_profile",
+        "pipe.udp.silver.customer_model",
+        "tbl.udp.silver.customer_model",
+        "pipe.udp.gold.customer_reporting",
+        "tbl.udp.gold.customer_reporting",
+        "dash.looker.customer_health"
+      ],
+      "business_purpose": "Operational customer health monitoring"
+    },
+    {
+      "path_id": "path.crm.to.egress",
+      "start_node": "sys.crm",
+      "end_node": "dp.egress.customer_regulatory_delivery",
+      "hops": [
+        "sys.crm",
+        "tbl.udp.bronze.customer_profile",
+        "pipe.udp.silver.customer_model",
+        "tbl.udp.silver.customer_model",
+        "pipe.udp.gold.customer_reporting",
+        "tbl.udp.gold.customer_reporting",
+        "dp.egress.customer_regulatory_delivery"
+      ],
+      "business_purpose": "Regulatory customer data delivery"
+    }
+  ],
+  "stats": {
+    "node_count": 8,
+    "edge_count": 7,
+    "path_count": 2,
+    "systems_count": 3
+  }
+}

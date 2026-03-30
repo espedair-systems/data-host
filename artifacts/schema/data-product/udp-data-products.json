@@ -1,0 +1,299 @@
+{
+  "$schema": "./data-product-catalog.schema.json",
+  "name": "udp_data_product_access_modes",
+  "description": "Normalized catalog of UDP data product access patterns and transformation tiers.",
+  "source": "UDP platform notes",
+  "generated_at_utc": "2026-03-28T14:00:00Z",
+  "platform": "UDP",
+  "products": [
+    {
+      "product_id": "ingestion_source_to_raw",
+      "product_group": "ingress",
+      "lifecycle_status": "active",
+      "owner": "UDP Platform Team",
+      "steward": "UDP Ingestion Operations",
+      "producer_system": "UDP Ingestion Pipeline",
+      "primary_consumers": [
+        "UDP Transformation Pipelines",
+        "Technical Data Consumers"
+      ],
+      "sla": "Data landed and available within 4 hours of scheduled source extract completion",
+      "refresh_expectation": "Per source ingestion schedule or on approved backfill request",
+      "evidence_anchors": [
+        {
+          "source": "UDP platform notes",
+          "location": "stakeholder notes",
+          "detail": "Defines source-to-raw ingestion as a UDP ingress product"
+        },
+        {
+          "source": "Platform operating model",
+          "location": "UDP delivery patterns",
+          "detail": "Describes managed ingestion and raw landing expectations"
+        }
+      ],
+      "product_name": "Ingestion - Source to Raw (Bronze)",
+      "surface": "Ingestion pipeline",
+      "delivery_type": "ingestion-pipeline",
+      "transformation_tier": "bronze",
+      "description": "Pipeline data product that ingests records from source systems and lands them in Raw (Bronze) tables with source-aligned structure.",
+      "consumer_requirement": "Approved source connector and platform ingestion configuration"
+    },
+    {
+      "product_id": "external_file_feed_to_raw",
+      "product_group": "ingress",
+      "lifecycle_status": "active",
+      "owner": "UDP Platform Team",
+      "steward": "UDP Ingestion Operations",
+      "producer_system": "External Feed Landing Service",
+      "primary_consumers": [
+        "UDP Ingestion Pipeline",
+        "UDP Transformation Pipelines"
+      ],
+      "sla": "External feed files processed and landed within 2 hours of successful receipt",
+      "refresh_expectation": "On file arrival according to external feed delivery schedule",
+      "evidence_anchors": [
+        {
+          "source": "UDP platform notes",
+          "location": "stakeholder notes",
+          "detail": "Defines external file feed as a Bronze ingress product"
+        },
+        {
+          "source": "External feed operating model",
+          "location": "landing zone delivery patterns",
+          "detail": "Describes file receipt and landing controls"
+        }
+      ],
+      "product_name": "Feed - External File to Raw (Bronze)",
+      "surface": "External file feed",
+      "delivery_type": "file-delivery",
+      "transformation_tier": "bronze",
+      "description": "File-based data product that receives an external source feed and lands it in Raw (Bronze) tables with source-aligned structure and landing controls.",
+      "consumer_requirement": "Approved external feed contract, landing zone, and ingestion configuration"
+    },
+    {
+      "product_id": "event_ingestion_to_raw",
+      "product_group": "ingress",
+      "lifecycle_status": "active",
+      "owner": "UDP Platform Team",
+      "steward": "UDP Streaming Operations",
+      "producer_system": "UDP Event Ingestion Service",
+      "primary_consumers": [
+        "UDP Streaming Consumers",
+        "UDP Transformation Pipelines"
+      ],
+      "sla": "Events available in Raw tables within 15 minutes of successful event receipt",
+      "refresh_expectation": "Near real-time continuous ingestion",
+      "evidence_anchors": [
+        {
+          "source": "UDP platform notes",
+          "location": "stakeholder notes",
+          "detail": "Defines event ingestion as a Bronze ingress product"
+        },
+        {
+          "source": "Streaming operating model",
+          "location": "event endpoint and consumer patterns",
+          "detail": "Describes near real-time event landing expectations"
+        }
+      ],
+      "product_name": "Event Ingestion to Raw (Bronze)",
+      "surface": "Event ingestion pipeline",
+      "delivery_type": "ingestion-pipeline",
+      "transformation_tier": "bronze",
+      "description": "Event-driven data product that ingests source events or messages and lands them in Raw (Bronze) tables with source-aligned structure and streaming controls.",
+      "consumer_requirement": "Approved event contract, ingestion endpoint, and platform streaming configuration"
+    },
+    {
+      "product_id": "self_service_model",
+      "product_group": "access",
+      "lifecycle_status": "active",
+      "owner": "UDP Analytics Enablement",
+      "steward": "Semantic Model Stewardship",
+      "producer_system": "UDP Semantic Model Layer",
+      "primary_consumers": [
+        "Analysts",
+        "Business Users"
+      ],
+      "sla": "Explore surface available during business hours with platform-standard query performance",
+      "refresh_expectation": "Aligned to underlying semantic model refresh cadence",
+      "evidence_anchors": [
+        {
+          "source": "UDP platform notes",
+          "location": "stakeholder notes",
+          "detail": "Defines self-service exploration as a UDP access product"
+        },
+        {
+          "source": "Analytics operating model",
+          "location": "semantic model publication patterns",
+          "detail": "Describes Looker Explore delivery surface"
+        }
+      ],
+      "product_name": "Self-service model",
+      "surface": "Looker Explore",
+      "delivery_type": "interactive",
+      "description": "Users drag and drop fields to build their own answer to a data question.",
+      "consumer_requirement": "User access to approved semantic model"
+    },
+    {
+      "product_id": "dashboards",
+      "product_group": "access",
+      "lifecycle_status": "active",
+      "owner": "UDP Analytics Enablement",
+      "steward": "Dashboard Operations",
+      "producer_system": "UDP BI Publishing Layer",
+      "primary_consumers": [
+        "Decision Makers",
+        "Operational Teams"
+      ],
+      "sla": "Published dashboards refreshed and available by agreed reporting window",
+      "refresh_expectation": "Scheduled dashboard refresh based on underlying dataset cadence",
+      "evidence_anchors": [
+        {
+          "source": "UDP platform notes",
+          "location": "stakeholder notes",
+          "detail": "Defines dashboards as curated UDP access products"
+        },
+        {
+          "source": "BI publication model",
+          "location": "PowerBI and Looker dashboard patterns",
+          "detail": "Describes dashboard delivery surfaces and refresh expectations"
+        }
+      ],
+      "product_name": "Dashboards",
+      "surface": "PowerBI or Looker dashboard",
+      "delivery_type": "curated-visual",
+      "description": "Visual representation of data created to answer specific questions.",
+      "consumer_requirement": "Viewer access to published dashboards"
+    },
+    {
+      "product_id": "published_external_delivery",
+      "product_group": "egress",
+      "lifecycle_status": "active",
+      "owner": "UDP Data Delivery Team",
+      "steward": "Outbound Delivery Operations",
+      "producer_system": "UDP Outbound Delivery Service",
+      "primary_consumers": [
+        "External Recipients",
+        "Regulators",
+        "Partner Platforms"
+      ],
+      "sla": "Outbound data delivered within the agreed regulatory or partner reporting window",
+      "refresh_expectation": "Per agreed outbound schedule, event trigger, or reporting cycle",
+      "evidence_anchors": [
+        {
+          "source": "UDP delivery model",
+          "location": "outbound publication patterns",
+          "detail": "Defines managed outbound delivery as an egress product"
+        },
+        {
+          "source": "Partner or regulatory contract",
+          "location": "delivery agreement or reporting obligation",
+          "detail": "Defines timing and packaging commitments for external delivery"
+        }
+      ],
+      "product_name": "Published External Delivery",
+      "surface": "Managed outbound file or API delivery",
+      "delivery_type": "file-delivery",
+      "transformation_tier": "gold",
+      "description": "Outbound data product that packages approved UDP data for delivery to external consumers, regulators, or partner platforms.",
+      "consumer_requirement": "Approved outbound contract, recipient registration, and delivery control configuration"
+    },
+    {
+      "product_id": "subscribable_raw_bronze",
+      "product_group": "subscription",
+      "lifecycle_status": "active",
+      "owner": "UDP Platform Team",
+      "steward": "Dataset Subscription Operations",
+      "producer_system": "UDP Dataset Publication Layer",
+      "primary_consumers": [
+        "Consumer Projects",
+        "Technical Data Teams"
+      ],
+      "sla": "Raw subscription datasets available after successful ingestion completion",
+      "refresh_expectation": "Refreshed on each successful source ingestion cycle",
+      "evidence_anchors": [
+        {
+          "source": "UDP platform notes",
+          "location": "stakeholder notes",
+          "detail": "Defines Raw Bronze subscriptions and consumer project requirement"
+        },
+        {
+          "source": "Subscription operating model",
+          "location": "dataset subscription controls",
+          "detail": "Describes access requirements for raw datasets"
+        }
+      ],
+      "product_name": "Subscribable dataset - Raw (Bronze)",
+      "surface": "Subscribable tables",
+      "delivery_type": "dataset-subscription",
+      "transformation_tier": "bronze",
+      "description": "Data remains in source-system format with no business transformation.",
+      "consumer_requirement": "Consumer project required to subscribe"
+    },
+    {
+      "product_id": "subscribable_modelled_silver",
+      "product_group": "subscription",
+      "lifecycle_status": "active",
+      "owner": "UDP Platform Team",
+      "steward": "Dataset Subscription Operations",
+      "producer_system": "UDP Dataset Publication Layer",
+      "primary_consumers": [
+        "Consumer Projects",
+        "Analytics Engineers",
+        "Data Teams"
+      ],
+      "sla": "Modelled datasets refreshed within 4 hours of dependent Bronze data availability",
+      "refresh_expectation": "Scheduled transformation cycle after upstream Raw refresh",
+      "evidence_anchors": [
+        {
+          "source": "UDP platform notes",
+          "location": "stakeholder notes",
+          "detail": "Defines Modelled Silver subscriptions as reusable transformed datasets"
+        },
+        {
+          "source": "Transformation operating model",
+          "location": "modelled dataset publication patterns",
+          "detail": "Describes dependency on Bronze refresh and reusable model semantics"
+        }
+      ],
+      "product_name": "Subscribable dataset - Modelled (Silver)",
+      "surface": "Subscribable tables",
+      "delivery_type": "dataset-subscription",
+      "transformation_tier": "silver",
+      "description": "Data transformed into reusable general-purpose models or intermediate forms.",
+      "consumer_requirement": "Consumer project required to subscribe"
+    },
+    {
+      "product_id": "subscribable_focused_gold",
+      "product_group": "subscription",
+      "lifecycle_status": "active",
+      "owner": "UDP Platform Team",
+      "steward": "Dataset Subscription Operations",
+      "producer_system": "UDP Dataset Publication Layer",
+      "primary_consumers": [
+        "Consumer Projects",
+        "Business Domain Teams",
+        "Reporting Consumers"
+      ],
+      "sla": "Focused datasets refreshed in time for agreed business or reporting commitments",
+      "refresh_expectation": "Scheduled or event-based refresh aligned to business use case requirements",
+      "evidence_anchors": [
+        {
+          "source": "UDP platform notes",
+          "location": "stakeholder notes",
+          "detail": "Defines Focused Gold subscriptions as business-problem-specific datasets"
+        },
+        {
+          "source": "Business delivery model",
+          "location": "focused dataset publication patterns",
+          "detail": "Describes explicit business definitions and refresh alignment to use case needs"
+        }
+      ],
+      "product_name": "Subscribable dataset - Focused (Gold)",
+      "surface": "Subscribable tables",
+      "delivery_type": "dataset-subscription",
+      "transformation_tier": "gold",
+      "description": "Data transformed to solve specific business problems with well-understood definitions.",
+      "consumer_requirement": "Consumer project required to subscribe"
+    }
+  ]
+}

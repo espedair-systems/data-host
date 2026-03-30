@@ -141,6 +141,70 @@ func (r *FilesystemRepository) GetUserRepo() ports.UserRepository {
 	return nil
 }
 
+func (r *FilesystemRepository) GetGlossaries() ([]domain.BusinessGlossary, error) {
+	return []domain.BusinessGlossary{}, nil
+}
+
+func (r *FilesystemRepository) GetGlossaryByID(id int64) (*domain.BusinessGlossary, error) {
+	return nil, nil
+}
+
+func (r *FilesystemRepository) GetGlossaryTerms(glossaryID int64) ([]domain.GlossaryTerm, error) {
+	return []domain.GlossaryTerm{}, nil
+}
+
+func (r *FilesystemRepository) GetGlossaryTermByID(assetID string) (*domain.GlossaryTerm, error) {
+	return nil, nil
+}
+
+func (r *FilesystemRepository) SaveBusinessGlossary(glossary *domain.BusinessGlossary, terms []domain.GlossaryTerm) error {
+	return fmt.Errorf("SaveBusinessGlossary not implemented in filesystem mode")
+}
+
+func (r *FilesystemRepository) DeleteGlossary(id int64) error {
+	return fmt.Errorf("DeleteGlossary not implemented in filesystem mode")
+}
+
+func (r *FilesystemRepository) GetBIMModels() ([]domain.BusinessInformationModel, error) {
+	return []domain.BusinessInformationModel{}, nil
+}
+
+func (r *FilesystemRepository) GetBIMModelByID(id int64) (*domain.BusinessInformationModel, error) {
+	return nil, nil
+}
+
+func (r *FilesystemRepository) GetBIMEntities(modelID int64) ([]domain.BIMEntity, error) {
+	return []domain.BIMEntity{}, nil
+}
+
+func (r *FilesystemRepository) SaveBIM(model *domain.BusinessInformationModel) error {
+	return fmt.Errorf("SaveBIM not implemented in filesystem mode")
+}
+
+func (r *FilesystemRepository) DeleteBIM(id int64) error {
+	return fmt.Errorf("DeleteBIM not implemented in filesystem mode")
+}
+
+func (r *FilesystemRepository) GetReferenceDataPackages() ([]domain.ReferenceDataPackage, error) {
+	return nil, nil
+}
+
+func (r *FilesystemRepository) GetReferenceDataPackage(id int64) (*domain.ReferenceDataPackage, error) {
+	return nil, nil
+}
+
+func (r *FilesystemRepository) GetReferenceDatasets() ([]domain.ReferenceDataset, error) {
+	return nil, nil
+}
+
+func (r *FilesystemRepository) SaveReferenceData(pkg *domain.ReferenceDataPackage) error {
+	return nil
+}
+
+func (r *FilesystemRepository) DeleteReferenceData(id int64) error {
+	return nil
+}
+
 func (r *FilesystemRepository) GetDatabaseStats() (domain.DatabaseStats, error) {
 	return domain.DatabaseStats{}, nil
 }
@@ -1045,6 +1109,10 @@ func readTablesFromSchema(filePath string) ([]string, error) {
 		tables = append(tables, t.Name)
 	}
 	return tables, nil
+}
+
+func (r *FilesystemRepository) SaveTaxonomy(payload interface{}) error {
+	return nil
 }
 
 func (r *FilesystemRepository) SaveOrgStructure(payload interface{}) error {

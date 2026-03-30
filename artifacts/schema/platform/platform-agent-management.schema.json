@@ -1,0 +1,614 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://espedair.io/schema/template/platform-agent-management",
+  "title": "Platform Agent Management Schema",
+  "description": "Schema for managing automation agents across platform providers such as GCP, AWS, Snowflake, ServiceNow, and GitHub.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "version",
+    "platform_connections",
+    "agents"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Optional self-reference to this schema file."
+    },
+    "name": {
+      "type": "string",
+      "description": "Logical name of this platform agent management package."
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(-[A-Za-z0-9._-]+)?$",
+      "description": "Semantic version for this package."
+    },
+    "description": {
+      "type": "string",
+      "description": "Business and technical scope for agent management."
+    },
+    "source": {
+      "type": "string",
+      "description": "Source process or owner that generated this artifact."
+    },
+    "generated_at_utc": {
+      "type": "string",
+      "format": "date-time",
+      "description": "UTC timestamp when this artifact was generated."
+    },
+    "governance": {
+      "$ref": "#/$defs/Governance"
+    },
+    "platform_connections": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Platform connection profiles used by agents.",
+      "items": {
+        "$ref": "#/$defs/PlatformConnection"
+      }
+    },
+    "agents": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Automation agents and their runtime, capability, and permission controls.",
+      "items": {
+        "$ref": "#/$defs/Agent"
+      }
+    },
+    "stats": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Optional summary metrics for this package.",
+      "properties": {
+        "platform_connection_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "agent_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "active_agent_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "permission_rule_count": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  },
+  "$defs": {
+    "Governance": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "owner": {
+          "type": "string",
+          "description": "Accountable owner for agent governance."
+        },
+        "steward": {
+          "type": "string",
+          "description": "Operational steward maintaining platform connections and policies."
+        },
+        "approval_status": {
+          "type": "string",
+          "enum": [
+            "draft",
+            "review",
+            "approved",
+            "deprecated"
+          ],
+          "description": "Governance lifecycle status."
+        },
+        "approved_at": {
+          "type": "string",
+          "format": "date",
+          "description": "Date this package version was approved."
+        }
+      }
+    },
+    "PlatformConnection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "connection_id",
+        "platform_type",
+        "name",
+        "auth",
+        "status"
+      ],
+      "properties": {
+        "connection_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._:-]*$",
+          "description": "Stable connection identifier referenced by agents."
+        },
+        "platform_type": {
+          "type": "string",
+          "enum": [
+            "gcp",
+            "aws",
+            "snowflake",
+            "service-now",
+            "github"
+          ],
+          "description": "Platform provider type."
+        },
+        "name": {
+          "type": "string",
+          "description": "Human-readable connection profile name."
+        },
+        "description": {
+          "type": "string",
+          "description": "Business and technical context for this connection."
+        },
+        "auth": {
+          "$ref": "#/$defs/Auth"
+        },
+        "network_policy_ref": {
+          "type": "string",
+          "description": "Reference to network policy controlling platform connectivity."
+        },
+        "gcp": {
+          "$ref": "#/$defs/GcpConfig"
+        },
+        "aws": {
+          "$ref": "#/$defs/AwsConfig"
+        },
+        "snowflake": {
+          "$ref": "#/$defs/SnowflakeConfig"
+        },
+        "service_now": {
+          "$ref": "#/$defs/ServiceNowConfig"
+        },
+        "github": {
+          "$ref": "#/$defs/GitHubConfig"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "active",
+            "inactive",
+            "retired"
+          ],
+          "description": "Operational status of this connection profile."
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "platform_type": {
+                "const": "gcp"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "gcp"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "platform_type": {
+                "const": "aws"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "aws"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "platform_type": {
+                "const": "snowflake"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "snowflake"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "platform_type": {
+                "const": "service-now"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "service_now"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "platform_type": {
+                "const": "github"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "github"
+            ]
+          }
+        }
+      ]
+    },
+    "Auth": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "credential_ref"
+      ],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": [
+            "service-account",
+            "iam-role",
+            "oauth",
+            "token",
+            "key-pair",
+            "user-password",
+            "custom"
+          ],
+          "description": "Authentication mode used by the platform connection."
+        },
+        "credential_ref": {
+          "type": "string",
+          "description": "Secret manager reference for credentials."
+        },
+        "token_rotation_days": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Credential rotation frequency in days."
+        },
+        "scopes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Optional scope list for token-based auth."
+        }
+      }
+    },
+    "GcpConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "project_id"
+      ],
+      "properties": {
+        "project_id": {
+          "type": "string",
+          "description": "GCP project identifier."
+        },
+        "region": {
+          "type": "string",
+          "description": "Default region for workloads."
+        },
+        "service_account_email": {
+          "type": "string",
+          "description": "Service account principal used by the connection."
+        }
+      }
+    },
+    "AwsConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "account_id",
+        "region"
+      ],
+      "properties": {
+        "account_id": {
+          "type": "string",
+          "pattern": "^[0-9]{12}$",
+          "description": "AWS account identifier."
+        },
+        "region": {
+          "type": "string",
+          "description": "Default AWS region for operations."
+        },
+        "role_arn": {
+          "type": "string",
+          "description": "IAM role ARN assumed by the agent."
+        }
+      }
+    },
+    "SnowflakeConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "account",
+        "warehouse",
+        "database",
+        "role"
+      ],
+      "properties": {
+        "account": {
+          "type": "string",
+          "description": "Snowflake account locator or account identifier."
+        },
+        "warehouse": {
+          "type": "string",
+          "description": "Default compute warehouse."
+        },
+        "database": {
+          "type": "string",
+          "description": "Default database for agent tasks."
+        },
+        "role": {
+          "type": "string",
+          "description": "Default Snowflake role used by the agent."
+        },
+        "schema": {
+          "type": "string",
+          "description": "Default schema for operations."
+        }
+      }
+    },
+    "ServiceNowConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "instance_url"
+      ],
+      "properties": {
+        "instance_url": {
+          "type": "string",
+          "description": "ServiceNow instance URL."
+        },
+        "api_version": {
+          "type": "string",
+          "description": "Target API version for integrations."
+        },
+        "assignment_group": {
+          "type": "string",
+          "description": "Default assignment group for tickets or workflows."
+        }
+      }
+    },
+    "GitHubConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "base_url"
+      ],
+      "properties": {
+        "base_url": {
+          "type": "string",
+          "description": "GitHub API base URL."
+        },
+        "organization": {
+          "type": "string",
+          "description": "Default GitHub organization in scope."
+        },
+        "repository_allow_list": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Optional repository allow-list in owner/repo format."
+        }
+      }
+    },
+    "Agent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "agent_id",
+        "agent_name",
+        "agent_type",
+        "runtime",
+        "connection_ids",
+        "permissions",
+        "status"
+      ],
+      "properties": {
+        "agent_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._:-]*$",
+          "description": "Stable unique agent identifier."
+        },
+        "agent_name": {
+          "type": "string",
+          "description": "Display name of the agent."
+        },
+        "agent_type": {
+          "type": "string",
+          "enum": [
+            "orchestration",
+            "ingestion",
+            "deployment",
+            "monitoring",
+            "ticketing",
+            "governance",
+            "custom"
+          ],
+          "description": "Primary functional role of the agent."
+        },
+        "description": {
+          "type": "string",
+          "description": "Business and technical function of the agent."
+        },
+        "runtime": {
+          "$ref": "#/$defs/Runtime"
+        },
+        "connection_ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          },
+          "description": "Platform connection references used by this agent."
+        },
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Declared capabilities exposed by this agent."
+        },
+        "permissions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/PermissionRule"
+          },
+          "description": "Permission boundaries for agent operations."
+        },
+        "schedule": {
+          "$ref": "#/$defs/Schedule"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "active",
+            "inactive",
+            "retired"
+          ],
+          "description": "Operational status of the agent."
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Optional labels for grouping and policy application."
+        }
+      }
+    },
+    "Runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "host_type",
+        "execution_mode"
+      ],
+      "properties": {
+        "host_type": {
+          "type": "string",
+          "enum": [
+            "kubernetes",
+            "vm",
+            "serverless",
+            "saas",
+            "desktop",
+            "other"
+          ],
+          "description": "Execution host type for the agent."
+        },
+        "execution_mode": {
+          "type": "string",
+          "enum": [
+            "event-driven",
+            "scheduled",
+            "manual",
+            "continuous"
+          ],
+          "description": "Execution pattern for the agent."
+        },
+        "runtime_ref": {
+          "type": "string",
+          "description": "Reference to deployment manifest, job definition, or hosted runtime."
+        }
+      }
+    },
+    "PermissionRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rule_id",
+        "platform_type",
+        "resource",
+        "action",
+        "effect"
+      ],
+      "properties": {
+        "rule_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._:-]*$",
+          "description": "Stable permission rule identifier."
+        },
+        "platform_type": {
+          "type": "string",
+          "enum": [
+            "gcp",
+            "aws",
+            "snowflake",
+            "service-now",
+            "github"
+          ],
+          "description": "Platform this rule applies to."
+        },
+        "resource": {
+          "type": "string",
+          "description": "Resource path, ARN, identifier, or API object scope."
+        },
+        "action": {
+          "type": "string",
+          "description": "Action such as read, write, deploy, execute, or admin operations."
+        },
+        "effect": {
+          "type": "string",
+          "enum": [
+            "allow",
+            "deny"
+          ],
+          "description": "Permission effect."
+        },
+        "condition": {
+          "type": "string",
+          "description": "Optional condition expression for constrained access."
+        }
+      }
+    },
+    "Schedule": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "cron": {
+          "type": "string",
+          "description": "Cron expression for scheduled execution."
+        },
+        "timezone": {
+          "type": "string",
+          "description": "Timezone for schedule evaluation."
+        },
+        "max_runtime_minutes": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Maximum execution duration before timeout."
+        },
+        "retry_policy": {
+          "type": "string",
+          "enum": [
+            "none",
+            "fixed",
+            "exponential"
+          ],
+          "description": "Retry policy for failed runs."
+        }
+      }
+    }
+  }
+}

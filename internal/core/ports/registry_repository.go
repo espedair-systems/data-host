@@ -55,11 +55,33 @@ type RegistryRepository interface {
 
 	// Org Structure operations
 	SaveOrgStructure(payload interface{}) error
+	SaveTaxonomy(payload interface{}) error
 	GetOrgStructure() (interface{}, error)
 
 	// DFD Structure operations
 	SaveDFDStructure(payload interface{}) error
 	GetDFDStructure() (interface{}, error)
 
+	// Business Glossary operations
+	GetGlossaries() ([]domain.BusinessGlossary, error)
+	GetGlossaryByID(id int64) (*domain.BusinessGlossary, error)
+	GetGlossaryTerms(glossaryID int64) ([]domain.GlossaryTerm, error)
+	GetGlossaryTermByID(assetID string) (*domain.GlossaryTerm, error)
+	SaveBusinessGlossary(glossary *domain.BusinessGlossary, terms []domain.GlossaryTerm) error
+	DeleteGlossary(id int64) error
+
+	// BIM operations
+	GetBIMModels() ([]domain.BusinessInformationModel, error)
+	GetBIMModelByID(id int64) (*domain.BusinessInformationModel, error)
+	GetBIMEntities(modelID int64) ([]domain.BIMEntity, error)
+	SaveBIM(model *domain.BusinessInformationModel) error
+	DeleteBIM(id int64) error
+
 	GetUserRepo() UserRepository
+	// Reference Data
+	GetReferenceDataPackages() ([]domain.ReferenceDataPackage, error)
+	GetReferenceDataPackage(id int64) (*domain.ReferenceDataPackage, error)
+	GetReferenceDatasets() ([]domain.ReferenceDataset, error)
+	SaveReferenceData(pkg *domain.ReferenceDataPackage) error
+	DeleteReferenceData(id int64) error
 }

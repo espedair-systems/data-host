@@ -1,0 +1,144 @@
+{
+  "$schema": "./platform-agent-management.schema.json",
+  "name": "enterprise_snowflake_agent_management",
+  "version": "1.0.0",
+  "description": "Example platform agent management package for Snowflake-based orchestration, ingestion, and governance workflows.",
+  "source": "Platform Engineering onboarding",
+  "generated_at_utc": "2026-03-29T14:35:00Z",
+  "governance": {
+    "owner": "Data Platform Engineering",
+    "steward": "Snowflake Operations",
+    "approval_status": "approved",
+    "approved_at": "2026-03-29"
+  },
+  "platform_connections": [
+    {
+      "connection_id": "snowflake.prod.data-platform",
+      "platform_type": "snowflake",
+      "name": "Snowflake Production Data Platform",
+      "description": "Primary Snowflake connection profile for regulated reporting and data governance automation.",
+      "auth": {
+        "mode": "token",
+        "credential_ref": "vault://platform/snowflake/prod-agent-token",
+        "token_rotation_days": 30,
+        "scopes": [
+          "SESSION:ROLE-ANY",
+          "SESSION:WAREHOUSE-USE"
+        ]
+      },
+      "network_policy_ref": "netpol.snowflake.private-link.prod",
+      "snowflake": {
+        "account": "espedair-prod.ap-southeast-2",
+        "warehouse": "WH_REGULATORY_ETL",
+        "database": "REGULATORY_DW",
+        "role": "ROLE_PLATFORM_AGENT",
+        "schema": "CURATED"
+      },
+      "status": "active"
+    }
+  ],
+  "agents": [
+    {
+      "agent_id": "agent.snowflake.orchestrator",
+      "agent_name": "Snowflake Task Orchestrator",
+      "agent_type": "orchestration",
+      "description": "Coordinates Snowflake task graphs and stored procedures for scheduled regulatory processing.",
+      "runtime": {
+        "host_type": "saas",
+        "execution_mode": "scheduled",
+        "runtime_ref": "snowflake://REGULATORY_DW.CURATED/task_graphs/regulatory_orchestrator"
+      },
+      "connection_ids": [
+        "snowflake.prod.data-platform"
+      ],
+      "capabilities": [
+        "execute-task-graphs",
+        "run-stored-procedures",
+        "publish-run-audit-events"
+      ],
+      "permissions": [
+        {
+          "rule_id": "perm.snowflake.task.execute",
+          "platform_type": "snowflake",
+          "resource": "TASK REGULATORY_DW.CURATED.REGULATORY_ORCHESTRATOR",
+          "action": "execute",
+          "effect": "allow"
+        },
+        {
+          "rule_id": "perm.snowflake.proc.execute",
+          "platform_type": "snowflake",
+          "resource": "PROCEDURE REGULATORY_DW.CURATED.SP_RUN_DAILY_REG_REPORTING",
+          "action": "execute",
+          "effect": "allow"
+        }
+      ],
+      "schedule": {
+        "cron": "0 2 * * *",
+        "timezone": "Australia/Sydney",
+        "max_runtime_minutes": 120,
+        "retry_policy": "exponential"
+      },
+      "status": "active",
+      "tags": [
+        "snowflake",
+        "regulated",
+        "orchestration"
+      ]
+    },
+    {
+      "agent_id": "agent.snowflake.ingestion",
+      "agent_name": "Snowflake Ingestion Agent",
+      "agent_type": "ingestion",
+      "description": "Loads staged files into Snowflake curated schemas and enforces ingestion quality controls.",
+      "runtime": {
+        "host_type": "vm",
+        "execution_mode": "event-driven",
+        "runtime_ref": "airflow://prod-data-platform/dags/snowflake_ingestion_pipeline"
+      },
+      "connection_ids": [
+        "snowflake.prod.data-platform"
+      ],
+      "capabilities": [
+        "copy-into-tables",
+        "validate-load-manifests",
+        "quarantine-invalid-records"
+      ],
+      "permissions": [
+        {
+          "rule_id": "perm.snowflake.stage.read",
+          "platform_type": "snowflake",
+          "resource": "STAGE REGULATORY_DW.RAW.EXT_S3_REG_STAGING",
+          "action": "read",
+          "effect": "allow"
+        },
+        {
+          "rule_id": "perm.snowflake.table.write",
+          "platform_type": "snowflake",
+          "resource": "TABLE REGULATORY_DW.CURATED.*",
+          "action": "write",
+          "effect": "allow"
+        },
+        {
+          "rule_id": "perm.snowflake.table.delete.deny",
+          "platform_type": "snowflake",
+          "resource": "TABLE REGULATORY_DW.CURATED.FACT_REGULATORY_SUBMISSION",
+          "action": "delete",
+          "effect": "deny",
+          "condition": "except during approved maintenance window"
+        }
+      ],
+      "status": "active",
+      "tags": [
+        "snowflake",
+        "ingestion",
+        "data-quality"
+      ]
+    }
+  ],
+  "stats": {
+    "platform_connection_count": 1,
+    "agent_count": 2,
+    "active_agent_count": 2,
+    "permission_rule_count": 5
+  }
+}

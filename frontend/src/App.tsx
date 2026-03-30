@@ -44,10 +44,13 @@ import TablesPages from './pages/TablesPages';
 import Tables from './pages/Tables';
 import TableData from './pages/TableData';
 import Steward from './pages/Steward';
+import BusinessGlossary from './pages/BusinessGlossary';
+import BusinessInformationModel from './pages/BusinessInformationModel';
+import ReferenceData from './pages/ReferenceData';
 import Model from './pages/Model';
 import Secure from './pages/Secure';
 import MockPage from './pages/MockPage';
-import { BookMarked, Zap, UserCircle, Lock, BarChart3, GitBranch, Key, Users as UsersIcon, Bot, Cpu, Sparkles } from 'lucide-react';
+import { Zap, UserCircle, Lock, BarChart3, GitBranch, Key, Users as UsersIcon, Bot, Cpu, Sparkles } from 'lucide-react';
 import Curate from './pages/Curate';
 import KnowledgeDashboard from './pages/KnowledgeDashboard';
 import Librarian from './pages/Librarian';
@@ -113,11 +116,11 @@ function App() {
                   <Route path="schema/edit" element={<TableEditor />} />
                   <Route path="schema/map" element={<MapPage />} />
                 </Route>
-
                 <Route path="steward">
                   <Route index element={<Steward />} />
                   <Route path="dashboard" element={<Steward />} />
-                  <Route path="glossary" element={<MockPage title="Business Glossary" parent="Steward" icon={<BookMarked className="h-10 w-10" />} />} />
+                  <Route path="glossary" element={<BusinessGlossary />} />
+                  <Route path="bim" element={<BusinessInformationModel />} />
                   <Route path="critical" element={<MockPage title="Critical Data Elements" parent="Steward" icon={<Zap className="h-10 w-10" />} />} />
                   <Route path="owners" element={<MockPage title="Data Owners" parent="Steward" icon={<UserCircle className="h-10 w-10" />} />} />
                   <Route path="privacy" element={<MockPage title="Privacy" parent="Steward" icon={<Lock className="h-10 w-10" />} />} />
@@ -142,6 +145,14 @@ function App() {
                   <Route path="dashboard" element={<Secure />} />
                   <Route path="access" element={<MockPage title="Access" parent="Secure" icon={<Key className="h-10 w-10" />} />} />
                   <Route path="roles" element={<MockPage title="Roles" parent="Secure" icon={<UsersIcon className="h-10 w-10" />} />} />
+                </Route>
+                <Route path="analysis">
+                  <Route index element={<MockPage title="Data Analysis Dashboard" parent="Data Analysis" icon={<BarChart3 className="h-10 w-10" />} />} />
+                  <Route path="rdm">
+                    <Route index element={<ReferenceData />} />
+                    <Route path="list" element={<ReferenceData />} />
+                    <Route path="edit/:type/:id" element={<ReferenceData />} />
+                  </Route>
                 </Route>
                 <Route path="knowledge">
                   <Route index element={<KnowledgeDashboard />} />

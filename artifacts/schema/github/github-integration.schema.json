@@ -1,0 +1,445 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://espedair.io/schema/template/github-integration",
+  "title": "GitHub Integration Schema",
+  "description": "Schema for configuring GitHub integration and repository access policies.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "version",
+    "integration"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Optional self-reference to this schema file."
+    },
+    "name": {
+      "type": "string",
+      "description": "Logical name of this GitHub integration configuration."
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(-[A-Za-z0-9._-]+)?$",
+      "description": "Semantic version of this configuration."
+    },
+    "description": {
+      "type": "string",
+      "description": "Business and technical context for this GitHub integration."
+    },
+    "source": {
+      "type": "string",
+      "description": "Source process or system that generated this artifact."
+    },
+    "generated_at_utc": {
+      "type": "string",
+      "format": "date-time",
+      "description": "UTC timestamp for configuration generation."
+    },
+    "integration": {
+      "$ref": "#/$defs/Integration"
+    },
+    "stats": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Optional summary metrics for this integration snapshot.",
+      "properties": {
+        "organization_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "repository_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "private_repository_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "archived_repository_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "access_rule_count": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  },
+  "$defs": {
+    "Integration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "provider",
+        "auth",
+        "organizations",
+        "repositories",
+        "access_rules",
+        "status"
+      ],
+      "properties": {
+        "provider": {
+          "type": "string",
+          "const": "github",
+          "description": "Integration provider."
+        },
+        "base_url": {
+          "type": "string",
+          "description": "GitHub API base URL. Use api.github.com for GitHub Cloud or your GHES API URL."
+        },
+        "api_version": {
+          "type": "string",
+          "description": "GitHub API version or compatibility tag when pinned."
+        },
+        "auth": {
+          "$ref": "#/$defs/Auth"
+        },
+        "organizations": {
+          "type": "array",
+          "minItems": 1,
+          "description": "Organizations or user accounts in scope for repository discovery.",
+          "items": {
+            "$ref": "#/$defs/Organization"
+          }
+        },
+        "repositories": {
+          "type": "array",
+          "minItems": 1,
+          "description": "Repositories in scope for integration workloads.",
+          "items": {
+            "$ref": "#/$defs/Repository"
+          }
+        },
+        "access_rules": {
+          "type": "array",
+          "minItems": 1,
+          "description": "Role or principal based access rules to repositories.",
+          "items": {
+            "$ref": "#/$defs/AccessRule"
+          }
+        },
+        "webhooks": {
+          "type": "array",
+          "description": "Optional webhook subscriptions for event-driven integration.",
+          "items": {
+            "$ref": "#/$defs/Webhook"
+          }
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "active",
+            "inactive",
+            "retired"
+          ],
+          "description": "Current integration status."
+        }
+      }
+    },
+    "Auth": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "credential_ref"
+      ],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": [
+            "github-app",
+            "oauth-app",
+            "personal-access-token",
+            "fine-grained-pat"
+          ],
+          "description": "Authentication mode used for GitHub access."
+        },
+        "credential_ref": {
+          "type": "string",
+          "description": "Reference to secret manager key or credential identifier."
+        },
+        "app_id": {
+          "type": "string",
+          "description": "GitHub App ID when mode is github-app."
+        },
+        "installation_id": {
+          "type": "string",
+          "description": "GitHub App installation ID when mode is github-app."
+        },
+        "token_rotation_days": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Token rotation policy in days."
+        },
+        "scopes": {
+          "type": "array",
+          "minItems": 1,
+          "description": "Requested API scopes.",
+          "items": {
+            "type": "string",
+            "enum": [
+              "repo",
+              "public_repo",
+              "read:org",
+              "write:org",
+              "read:user",
+              "user:email",
+              "workflow",
+              "admin:repo_hook",
+              "read:packages",
+              "write:packages",
+              "delete:packages",
+              "security_events",
+              "codespace",
+              "custom"
+            ]
+          }
+        }
+      }
+    },
+    "Organization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "org_id",
+        "org_name",
+        "org_type",
+        "status"
+      ],
+      "properties": {
+        "org_id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]*$",
+          "description": "Stable organization or account identifier."
+        },
+        "org_name": {
+          "type": "string",
+          "description": "Display name of organization or user account."
+        },
+        "org_type": {
+          "type": "string",
+          "enum": [
+            "organization",
+            "user"
+          ],
+          "description": "GitHub account type."
+        },
+        "visibility_policy": {
+          "type": "string",
+          "enum": [
+            "private-only",
+            "public-only",
+            "mixed"
+          ],
+          "description": "Allowed repository visibility profile for this integration."
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "active",
+            "inactive"
+          ],
+          "description": "Current status of this organization scope."
+        }
+      }
+    },
+    "Repository": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repo_id",
+        "org_id",
+        "repo_name",
+        "full_name",
+        "visibility",
+        "default_branch",
+        "status"
+      ],
+      "properties": {
+        "repo_id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$",
+          "description": "Stable repository identifier used by access rules."
+        },
+        "org_id": {
+          "type": "string",
+          "description": "Owner organization/account reference. Must match organizations.org_id."
+        },
+        "repo_name": {
+          "type": "string",
+          "description": "Short repository name."
+        },
+        "full_name": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$",
+          "description": "Fully qualified repository path in owner/repo format."
+        },
+        "visibility": {
+          "type": "string",
+          "enum": [
+            "public",
+            "private",
+            "internal"
+          ],
+          "description": "Repository visibility."
+        },
+        "default_branch": {
+          "type": "string",
+          "description": "Default branch name for repository operations."
+        },
+        "is_archived": {
+          "type": "boolean",
+          "description": "Indicates whether this repository is archived."
+        },
+        "compliance_tier": {
+          "type": "string",
+          "enum": [
+            "standard",
+            "regulated",
+            "restricted"
+          ],
+          "description": "Compliance profile used for policy enforcement."
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "active",
+            "inactive",
+            "retired"
+          ],
+          "description": "Operational status of repository access."
+        },
+        "topics": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Optional repository topics for filtering and discovery."
+        }
+      }
+    },
+    "AccessRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rule_id",
+        "principal_type",
+        "principal_id",
+        "repo_id",
+        "permission",
+        "status"
+      ],
+      "properties": {
+        "rule_id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$",
+          "description": "Stable access rule identifier."
+        },
+        "principal_type": {
+          "type": "string",
+          "enum": [
+            "user",
+            "team",
+            "app",
+            "bot",
+            "service-account"
+          ],
+          "description": "Type of principal receiving repository permissions."
+        },
+        "principal_id": {
+          "type": "string",
+          "description": "Principal identifier such as username, team slug, or app name."
+        },
+        "repo_id": {
+          "type": "string",
+          "description": "Target repository identifier. Must match repositories.repo_id."
+        },
+        "permission": {
+          "type": "string",
+          "enum": [
+            "read",
+            "triage",
+            "write",
+            "maintain",
+            "admin"
+          ],
+          "description": "Repository permission level granted."
+        },
+        "branch_scope": {
+          "type": "string",
+          "enum": [
+            "default",
+            "protected",
+            "all",
+            "pattern"
+          ],
+          "description": "Branch scope for this rule."
+        },
+        "branch_pattern": {
+          "type": "string",
+          "description": "Branch pattern when branch_scope is pattern."
+        },
+        "expires_at_utc": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Optional expiry timestamp for temporary access."
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "active",
+            "inactive",
+            "expired"
+          ],
+          "description": "Current access rule status."
+        }
+      }
+    },
+    "Webhook": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "webhook_id",
+        "event",
+        "endpoint_ref",
+        "status"
+      ],
+      "properties": {
+        "webhook_id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$",
+          "description": "Stable webhook identifier."
+        },
+        "event": {
+          "type": "string",
+          "enum": [
+            "push",
+            "pull_request",
+            "release",
+            "workflow_run",
+            "repository",
+            "security_advisory",
+            "installation",
+            "custom"
+          ],
+          "description": "Subscribed GitHub event."
+        },
+        "endpoint_ref": {
+          "type": "string",
+          "description": "Reference to outbound endpoint and secret configuration."
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "active",
+            "inactive"
+          ],
+          "description": "Webhook state."
+        }
+      }
+    }
+  }
+}

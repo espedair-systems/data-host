@@ -1,0 +1,144 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://espedair.io/schema/apra-glossary",
+  "title": "APRA Regulatory Glossary",
+  "description": "Schema for APRA superannuation reporting standards glossary with regulatory term definitions extracted from SRS standards.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "terms"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "source_file": {
+      "type": "string",
+      "description": "Optional source file location or identifier"
+    },
+    "generated_at_utc": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "stats": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "total_terms": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "regulatory_standards": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "domains": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "terms": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "full_name",
+          "name",
+          "asset_id",
+          "definition",
+          "related_data_domains"
+        ],
+        "properties": {
+          "full_name": {
+            "type": "string",
+            "description": "Full formal name of the regulatory term"
+          },
+          "name": {
+            "type": "string",
+            "description": "Short or common name for the term (may be abbreviation)"
+          },
+          "asset_id": {
+            "type": "string",
+            "description": "Unique identifier for the regulatory term"
+          },
+          "definition": {
+            "type": "string",
+            "description": "Formal definition of the term as per APRA standards"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["Approved", "Proposed", "Draft", "Archived"],
+            "description": "Status of the term within APRA standards"
+          },
+          "domain": {
+            "type": "string",
+            "description": "Domain classification (e.g., APRA Regulatory Glossary)"
+          },
+          "community": {
+            "type": "string",
+            "description": "Community or organizational unit responsible"
+          },
+          "domain_type": {
+            "type": "string",
+            "description": "Type of domain (e.g., Glossary)"
+          },
+          "domain_id": {
+            "type": "string",
+            "description": "Identifier for the domain"
+          },
+          "asset_type": {
+            "type": "string",
+            "description": "Type of asset (e.g., Regulatory Term)"
+          },
+          "source_sheet": {
+            "type": "string",
+            "description": "APRA SRS standard or document where term is defined (e.g., SRS 550.0)"
+          },
+          "related_data_domains": {
+            "type": "array",
+            "description": "Array of related data domains or regulatory areas",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "relates_to_name": {
+                  "type": "string"
+                },
+                "relates_to_full_name": {
+                  "type": "string"
+                },
+                "relates_to_asset_type": {
+                  "type": "string"
+                },
+                "relates_to_community": {
+                  "type": "string"
+                },
+                "relates_to_domain_type": {
+                  "type": "string"
+                },
+                "relates_to_domain": {
+                  "type": "string"
+                },
+                "relates_to_domain_id": {
+                  "type": "string"
+                },
+                "relates_to_asset_id": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

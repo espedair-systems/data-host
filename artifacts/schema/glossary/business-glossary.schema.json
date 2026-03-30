@@ -1,0 +1,135 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://espedair.io/schema/business-glossary",
+  "title": "Business Glossary",
+  "description": "Schema for deduplicated business glossary terms with standardized metadata and relationships.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "terms"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "source_file": {
+      "type": "string",
+      "description": "Optional source file location or identifier"
+    },
+    "generated_at_utc": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "stats": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "original_rows",
+        "unique_terms",
+        "duplicates_removed"
+      ],
+      "properties": {
+        "original_rows": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "unique_terms": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "duplicates_removed": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "terms": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "full_name",
+          "name",
+          "asset_id",
+          "related_data_domains"
+        ],
+        "properties": {
+          "full_name": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "asset_id": {
+            "type": "string"
+          },
+          "definition": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "domain": {
+            "type": "string"
+          },
+          "community": {
+            "type": "string"
+          },
+          "domain_type": {
+            "type": "string"
+          },
+          "domain_id": {
+            "type": "string"
+          },
+          "asset_type": {
+            "type": "string"
+          },
+          "source_sheet": {
+            "type": "string"
+          },
+          "related_data_domains": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "relates_to_name": {
+                  "type": "string"
+                },
+                "relates_to_full_name": {
+                  "type": "string"
+                },
+                "relates_to_asset_type": {
+                  "type": "string"
+                },
+                "relates_to_community": {
+                  "type": "string"
+                },
+                "relates_to_domain_type": {
+                  "type": "string"
+                },
+                "relates_to_domain": {
+                  "type": "string"
+                },
+                "relates_to_domain_id": {
+                  "type": "string"
+                },
+                "relates_to_asset_id": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

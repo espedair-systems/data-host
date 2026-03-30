@@ -1,0 +1,282 @@
+{
+  "$schema": "./cmdb.schema.json",
+  "name": "enterprise_cmdb_snapshot",
+  "version": "1.0.0",
+  "description": "Example CMDB snapshot for core enterprise platforms with owner, system, and database relationships.",
+  "source": "CMDB onboarding workshop",
+  "generated_at_utc": "2026-03-29T11:00:00Z",
+  "owners": [
+    {
+      "owner_id": "owner.team.data-platform",
+      "name": "Data Platform Team",
+      "owner_type": "team",
+      "email": "data-platform@example.com",
+      "group": "Technology",
+      "status": "active",
+      "description": "Owns shared data platform services and operational controls."
+    },
+    {
+      "owner_id": "owner.team.crm-platform",
+      "name": "CRM Platform Team",
+      "owner_type": "team",
+      "email": "crm-platform@example.com",
+      "group": "Customer Technology",
+      "status": "active",
+      "description": "Owns CRM application and customer profile services."
+    },
+    {
+      "owner_id": "owner.person.alex-lee",
+      "name": "Alex Lee",
+      "owner_type": "service-owner",
+      "email": "alex.lee@example.com",
+      "group": "Data Governance",
+      "status": "active",
+      "description": "Service owner for regulatory reporting capabilities."
+    }
+  ],
+  "systems": [
+    {
+      "system_id": "sys.crm-core",
+      "system_name": "CRM Core",
+      "owner_id": "owner.team.crm-platform",
+      "system_layer": "application",
+      "criticality": "high",
+      "environment": "prod",
+      "lifecycle_stage": "operate",
+      "status": "active",
+      "hosting_platform": "SaaS",
+      "interface_type": "api",
+      "description": "Primary customer relationship management platform.",
+      "tags": [
+        "customer",
+        "source",
+        "production"
+      ]
+    },
+    {
+      "system_id": "sys.data-orchestrator",
+      "system_name": "Data Orchestrator",
+      "owner_id": "owner.team.data-platform",
+      "system_layer": "platform",
+      "criticality": "critical",
+      "environment": "prod",
+      "lifecycle_stage": "operate",
+      "status": "active",
+      "hosting_platform": "Azure",
+      "interface_type": "mixed",
+      "description": "Coordinates ingestion, transformation, and publication workloads.",
+      "tags": [
+        "integration",
+        "batch",
+        "event"
+      ]
+    },
+    {
+      "system_id": "sys.unit-pricing",
+      "system_name": "Unit Pricing Service",
+      "owner_id": "owner.person.alex-lee",
+      "system_layer": "application",
+      "criticality": "critical",
+      "environment": "prod",
+      "lifecycle_stage": "operate",
+      "status": "active",
+      "hosting_platform": "On-Prem",
+      "interface_type": "batch",
+      "description": "Parent application service for end-to-end unit pricing operations.",
+      "tags": [
+        "unit-pricing",
+        "service"
+      ]
+    },
+    {
+      "system_id": "sys.unit-pricing-ui",
+      "parent_system_id": "sys.unit-pricing",
+      "system_name": "Unit Pricing UI",
+      "owner_id": "owner.person.alex-lee",
+      "system_layer": "ui",
+      "criticality": "high",
+      "environment": "prod",
+      "lifecycle_stage": "operate",
+      "status": "active",
+      "hosting_platform": "On-Prem",
+      "interface_type": "interactive",
+      "description": "UI component for operational monitoring and exception handling.",
+      "tags": [
+        "unit-pricing",
+        "ui"
+      ]
+    },
+    {
+      "system_id": "sys.unit-pricing-middleware",
+      "parent_system_id": "sys.unit-pricing",
+      "system_name": "Unit Pricing Middleware",
+      "owner_id": "owner.team.data-platform",
+      "system_layer": "middleware",
+      "criticality": "critical",
+      "environment": "prod",
+      "lifecycle_stage": "operate",
+      "status": "active",
+      "hosting_platform": "Azure",
+      "interface_type": "api",
+      "description": "Core orchestration and business rules layer for unit pricing.",
+      "tags": [
+        "unit-pricing",
+        "middleware"
+      ]
+    },
+    {
+      "system_id": "sys.unit-pricing-db-access",
+      "parent_system_id": "sys.unit-pricing",
+      "system_name": "Unit Pricing Data Access",
+      "owner_id": "owner.team.data-platform",
+      "system_layer": "database",
+      "criticality": "high",
+      "environment": "prod",
+      "lifecycle_stage": "operate",
+      "status": "active",
+      "hosting_platform": "On-Prem",
+      "interface_type": "batch",
+      "description": "Database-facing component responsible for valuation persistence and reads.",
+      "tags": [
+        "unit-pricing",
+        "database"
+      ]
+    }
+  ],
+  "databases": [
+    {
+      "database_id": "db.crm-main",
+      "database_name": "crm_main",
+      "system_id": "sys.crm-core",
+      "owner_id": "owner.team.crm-platform",
+      "engine": "sqlserver",
+      "engine_version": "2019",
+      "environment": "prod",
+      "classification": "Confidential",
+      "lifecycle_stage": "operate",
+      "status": "active",
+      "backup_policy": "Daily full, 15-minute log backup",
+      "rpo": "15m",
+      "rto": "2h",
+      "description": "Transactional CRM database storing customer and interaction data.",
+      "tags": [
+        "oltp",
+        "customer"
+      ]
+    },
+    {
+      "database_id": "db.udp-lakehouse",
+      "database_name": "udp_lakehouse",
+      "system_id": "sys.data-orchestrator",
+      "owner_id": "owner.team.data-platform",
+      "engine": "bigquery",
+      "engine_version": "standard",
+      "environment": "prod",
+      "classification": "Confidential",
+      "lifecycle_stage": "operate",
+      "status": "active",
+      "backup_policy": "Platform-managed snapshot and retention policy",
+      "rpo": "1h",
+      "rto": "4h",
+      "description": "Analytical platform storing bronze, silver, and gold datasets.",
+      "tags": [
+        "analytics",
+        "lakehouse"
+      ]
+    },
+    {
+      "database_id": "db.reg-reporting",
+      "database_name": "reg_reporting_store",
+      "system_id": "sys.unit-pricing-db-access",
+      "owner_id": "owner.person.alex-lee",
+      "engine": "sqlite",
+      "engine_version": "3.45",
+      "environment": "prod",
+      "classification": "Restricted",
+      "lifecycle_stage": "operate",
+      "status": "active",
+      "backup_policy": "Nightly secure export and encrypted archive",
+      "rpo": "24h",
+      "rto": "8h",
+      "description": "Operational reporting store for curated submission datasets.",
+      "tags": [
+        "reporting",
+        "submission"
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "relationship_id": "rel.unit-pricing-ui-calls-middleware",
+      "source_type": "system",
+      "source_id": "sys.unit-pricing-ui",
+      "relationship_type": "calls",
+      "target_type": "system",
+      "target_id": "sys.unit-pricing-middleware",
+      "direction": "unidirectional",
+      "criticality": "high",
+      "status": "active",
+      "description": "UI invokes middleware APIs for valuation operations.",
+      "tags": [
+        "unit-pricing",
+        "runtime"
+      ]
+    },
+    {
+      "relationship_id": "rel.unit-pricing-middleware-writes-db",
+      "source_type": "system",
+      "source_id": "sys.unit-pricing-middleware",
+      "relationship_type": "writes-to",
+      "target_type": "database",
+      "target_id": "db.reg-reporting",
+      "direction": "unidirectional",
+      "criticality": "critical",
+      "status": "active",
+      "description": "Middleware persists valuation outputs into the reporting store.",
+      "tags": [
+        "unit-pricing",
+        "persistence"
+      ]
+    },
+    {
+      "relationship_id": "rel.reg-owner-owns-service",
+      "source_type": "owner",
+      "source_id": "owner.person.alex-lee",
+      "relationship_type": "owns",
+      "target_type": "system",
+      "target_id": "sys.unit-pricing",
+      "direction": "unidirectional",
+      "criticality": "critical",
+      "status": "active",
+      "description": "Named service owner accountable for the parent unit pricing service.",
+      "tags": [
+        "ownership",
+        "governance"
+      ]
+    },
+    {
+      "relationship_id": "rel.data-orchestrator-supports-unit-pricing",
+      "source_type": "system",
+      "source_id": "sys.data-orchestrator",
+      "relationship_type": "supports",
+      "target_type": "system",
+      "target_id": "sys.unit-pricing",
+      "direction": "unidirectional",
+      "criticality": "high",
+      "status": "active",
+      "description": "Platform orchestration services support nightly valuation runs.",
+      "tags": [
+        "integration",
+        "batch"
+      ]
+    }
+  ],
+  "stats": {
+    "owner_count": 3,
+    "system_count": 6,
+    "database_count": 3,
+    "active_system_count": 6,
+    "active_database_count": 3,
+    "relationship_count": 4
+  }
+}

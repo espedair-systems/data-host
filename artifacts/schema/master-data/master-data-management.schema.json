@@ -1,0 +1,522 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://espedair.io/schema/template/master-data-management",
+  "title": "Master Data Management Schema",
+  "description": "Schema for defining and governing master data entities, records, relationships, matching policies, and stewardship workflows.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "version",
+    "domain",
+    "governance",
+    "entities"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Optional self-reference to this schema file."
+    },
+    "name": {
+      "type": "string",
+      "description": "Logical name of the master data package."
+    },
+    "version": {
+      "type": "string",
+      "description": "Semantic version or release identifier.",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(-[A-Za-z0-9._-]+)?$"
+    },
+    "description": {
+      "type": "string",
+      "description": "Business purpose and scope for the package."
+    },
+    "domain": {
+      "type": "string",
+      "description": "Business domain owning this master data model."
+    },
+    "source": {
+      "type": "string",
+      "description": "System, publication, or process that produced this artifact."
+    },
+    "generated_at_utc": {
+      "type": "string",
+      "format": "date-time",
+      "description": "UTC timestamp for artifact generation."
+    },
+    "governance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "data_owner",
+        "data_steward",
+        "approval_status"
+      ],
+      "properties": {
+        "data_owner": {
+          "type": "string",
+          "description": "Role or team accountable for master data outcomes."
+        },
+        "data_steward": {
+          "type": "string",
+          "description": "Role or team responsible for curation and quality."
+        },
+        "data_custodian": {
+          "type": "string",
+          "description": "Role or team responsible for platform custody and controls."
+        },
+        "approver": {
+          "type": "string",
+          "description": "Role or person that approved this version."
+        },
+        "approval_status": {
+          "type": "string",
+          "enum": [
+            "draft",
+            "review",
+            "approved",
+            "deprecated"
+          ],
+          "description": "Current governance lifecycle state."
+        },
+        "approval_date": {
+          "type": "string",
+          "format": "date",
+          "description": "Date of approval in ISO format."
+        },
+        "stewardship_queue": {
+          "type": "string",
+          "description": "Optional stewardship queue or workflow identifier."
+        }
+      }
+    },
+    "match_merge_policy": {
+      "type": "object",
+      "description": "Global matching and merge policy defaults for all entities.",
+      "additionalProperties": false,
+      "properties": {
+        "match_strategy": {
+          "type": "string",
+          "enum": [
+            "deterministic",
+            "probabilistic",
+            "hybrid"
+          ],
+          "description": "Primary matching strategy for duplicate detection."
+        },
+        "auto_merge_threshold": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Minimum match score for automatic merge."
+        },
+        "review_threshold": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Minimum match score that requires steward review."
+        },
+        "survivorship_rule": {
+          "type": "string",
+          "enum": [
+            "most-recent",
+            "source-priority",
+            "highest-completeness",
+            "custom"
+          ],
+          "description": "Default survivorship strategy for conflicting values."
+        }
+      }
+    },
+    "entities": {
+      "type": "array",
+      "description": "Collection of master entities such as Party, Customer, Product, or Account.",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "entity_id",
+          "entity_name",
+          "record_type",
+          "status",
+          "keys",
+          "attributes"
+        ],
+        "properties": {
+          "entity_id": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9_-]*$",
+            "description": "Stable machine-readable identifier for the master entity."
+          },
+          "entity_name": {
+            "type": "string",
+            "description": "Human-readable entity name."
+          },
+          "record_type": {
+            "type": "string",
+            "enum": [
+              "party",
+              "organization",
+              "person",
+              "product",
+              "account",
+              "instrument",
+              "location",
+              "custom"
+            ],
+            "description": "Primary business type of the entity."
+          },
+          "description": {
+            "type": "string",
+            "description": "Business meaning and intended use of the entity."
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "inactive",
+              "retired"
+            ],
+            "description": "Operational status of this entity definition."
+          },
+          "classification": {
+            "type": "string",
+            "enum": [
+              "Public",
+              "Internal",
+              "Confidential",
+              "Highly Confidential",
+              "Restricted"
+            ],
+            "description": "Information confidentiality classification."
+          },
+          "system_of_entry": {
+            "type": "string",
+            "description": "Primary source system where records originate."
+          },
+          "system_of_record": {
+            "type": "string",
+            "description": "Authoritative system that stores golden records."
+          },
+          "keys": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "business_key"
+            ],
+            "properties": {
+              "business_key": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "minItems": 1,
+                "description": "One or more natural key fields used for identity."
+              },
+              "surrogate_key": {
+                "type": "string",
+                "description": "Technical key used for storage and joins."
+              },
+              "alternate_keys": {
+                "type": "array",
+                "description": "Additional key combinations used for matching.",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "minItems": 1
+                }
+              }
+            }
+          },
+          "identifiers": {
+            "type": "array",
+            "description": "External and internal identifiers associated with this entity.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "identifier_type",
+                "value",
+                "status"
+              ],
+              "properties": {
+                "identifier_type": {
+                  "type": "string",
+                  "description": "Identifier category such as ABN, LEI, CRN, or internal ID."
+                },
+                "value": {
+                  "type": "string",
+                  "description": "Identifier value."
+                },
+                "issuing_authority": {
+                  "type": "string",
+                  "description": "Authority that issued the identifier."
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "active",
+                    "inactive",
+                    "deprecated"
+                  ],
+                  "description": "Lifecycle status of this identifier value."
+                },
+                "effective_from": {
+                  "type": "string",
+                  "format": "date"
+                },
+                "effective_to": {
+                  "type": "string",
+                  "format": "date"
+                }
+              }
+            }
+          },
+          "attributes": {
+            "type": "array",
+            "description": "Master attribute definitions for this entity.",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "name",
+                "data_type",
+                "nullable",
+                "golden_record_candidate"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "data_type": {
+                  "type": "string",
+                  "enum": [
+                    "string",
+                    "integer",
+                    "number",
+                    "boolean",
+                    "date",
+                    "datetime"
+                  ]
+                },
+                "nullable": {
+                  "type": "boolean"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "reference_dataset": {
+                  "type": "string",
+                  "description": "Optional reference dataset used to constrain this attribute."
+                },
+                "golden_record_candidate": {
+                  "type": "boolean",
+                  "description": "Whether this attribute participates in golden record survivorship."
+                },
+                "source_priority": {
+                  "type": "array",
+                  "description": "Optional priority order of sources for survivorship.",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "match_rules": {
+            "type": "array",
+            "description": "Entity-level matching rules for duplicate detection.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "rule_id",
+                "rule_type",
+                "weight"
+              ],
+              "properties": {
+                "rule_id": {
+                  "type": "string"
+                },
+                "rule_type": {
+                  "type": "string",
+                  "enum": [
+                    "exact",
+                    "fuzzy",
+                    "phonetic",
+                    "tokenized",
+                    "custom"
+                  ]
+                },
+                "attribute": {
+                  "type": "string"
+                },
+                "weight": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "threshold": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "description": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "survivorship_rules": {
+            "type": "array",
+            "description": "Attribute-level survivorship rules used during merge.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "attribute",
+                "strategy"
+              ],
+              "properties": {
+                "attribute": {
+                  "type": "string"
+                },
+                "strategy": {
+                  "type": "string",
+                  "enum": [
+                    "most-recent",
+                    "source-priority",
+                    "highest-completeness",
+                    "longest",
+                    "custom"
+                  ]
+                },
+                "source_priority": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "description": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "relationships": {
+            "type": "array",
+            "description": "Semantic relationships between this entity and other master entities.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "related_entity_id",
+                "relationship_type",
+                "cardinality"
+              ],
+              "properties": {
+                "related_entity_id": {
+                  "type": "string"
+                },
+                "relationship_type": {
+                  "type": "string",
+                  "description": "Relationship name, such as owns, belongs-to, manages, or linked-to."
+                },
+                "cardinality": {
+                  "type": "string",
+                  "enum": [
+                    "1:1",
+                    "1:N",
+                    "N:1",
+                    "N:N"
+                  ]
+                },
+                "required": {
+                  "type": "boolean",
+                  "description": "Whether the relationship is mandatory for valid records."
+                }
+              }
+            }
+          },
+          "quality_rules": {
+            "type": "array",
+            "description": "Quality and integrity checks for publishing mastered records.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "rule_id",
+                "rule_type",
+                "severity"
+              ],
+              "properties": {
+                "rule_id": {
+                  "type": "string"
+                },
+                "rule_type": {
+                  "type": "string",
+                  "enum": [
+                    "uniqueness",
+                    "completeness",
+                    "referential-integrity",
+                    "valid-range",
+                    "allowed-values",
+                    "match-quality",
+                    "custom"
+                  ]
+                },
+                "severity": {
+                  "type": "string",
+                  "enum": [
+                    "low",
+                    "medium",
+                    "high",
+                    "critical"
+                  ]
+                },
+                "expression": {
+                  "type": "string",
+                  "description": "Rule expression or implementation reference."
+                },
+                "description": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "stewardship": {
+            "type": "object",
+            "description": "Workflow settings for steward-led review and exception handling.",
+            "additionalProperties": false,
+            "properties": {
+              "manual_review_required": {
+                "type": "boolean"
+              },
+              "review_sla": {
+                "type": "string",
+                "description": "Expected turnaround for steward decisions."
+              },
+              "escalation_path": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "records": {
+            "type": "array",
+            "description": "Optional embedded sample records for lightweight use cases.",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        }
+      }
+    }
+  }
+}

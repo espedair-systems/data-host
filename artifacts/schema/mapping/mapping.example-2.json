@@ -1,0 +1,265 @@
+{
+  "$schema": "./mapping.schema.json",
+  "name": "transaction_split_one_to_many_mapping",
+  "version": "1.0.0",
+  "description": "One-to-many mapping that splits a single input transaction table into multiple target tables for header and line detail outputs.",
+  "source": "Transaction split mapping notes",
+  "generated_at_utc": "2026-03-28T16:10:00Z",
+  "governance": {
+    "owner": "Finance Data Domain",
+    "steward": "Finance Data Steward",
+    "approval_status": "approved",
+    "approved_at": "2026-03-28"
+  },
+  "table_registry": [
+    {
+      "table_id": "src.transaction_input",
+      "table_name": "staging.transaction_input",
+      "database": "udp_staging",
+      "schema": "staging",
+      "platform": "BigQuery",
+      "role": "source",
+      "description": "Raw staged transaction input table"
+    },
+    {
+      "table_id": "tgt.transaction_header",
+      "table_name": "udp_silver.transaction_header",
+      "database": "udp_silver",
+      "schema": "udp_silver",
+      "platform": "BigQuery",
+      "role": "target",
+      "description": "Transaction header target table"
+    },
+    {
+      "table_id": "tgt.transaction_line",
+      "table_name": "udp_silver.transaction_line",
+      "database": "udp_silver",
+      "schema": "udp_silver",
+      "platform": "BigQuery",
+      "role": "target",
+      "description": "Transaction line target table"
+    }
+  ],
+  "transformation_definitions": [
+    {
+      "transformation_id": "tr.parse_txn_date",
+      "type": "cast",
+      "expression": "CAST(transaction_timestamp AS DATE)",
+      "language": "sql",
+      "description": "Extract date portion from transaction timestamp"
+    },
+    {
+      "transformation_id": "tr.extended_amount",
+      "type": "expression",
+      "expression": "quantity * unit_price",
+      "language": "sql",
+      "description": "Compute line extended amount"
+    },
+    {
+      "transformation_id": "tr.tax_amount",
+      "type": "expression",
+      "expression": "ROUND((quantity * unit_price) * tax_rate, 2)",
+      "language": "sql",
+      "description": "Calculate tax amount for each line"
+    }
+  ],
+  "rule_definitions": [
+    {
+      "rule_id": "rule.transaction_id_not_null",
+      "rule_type": "quality",
+      "severity": "critical",
+      "expression": "transaction_id IS NOT NULL",
+      "description": "Transaction id is mandatory for both targets"
+    },
+    {
+      "rule_id": "rule.positive_quantity",
+      "rule_type": "validation",
+      "severity": "high",
+      "expression": "quantity > 0",
+      "description": "Quantity must be positive"
+    },
+    {
+      "rule_id": "rule.valid_record_filter",
+      "rule_type": "filter",
+      "severity": "medium",
+      "expression": "record_status = 'VALID'",
+      "description": "Only valid records are processed"
+    }
+  ],
+  "mapping_sets": [
+    {
+      "mapping_id": "map.transaction_split_header_line",
+      "mapping_name": "Split Transaction Input to Header and Line",
+      "mapping_type": "one-to-many",
+      "description": "Splits one input table into two targets: transaction header and transaction line.",
+      "sources": [
+        {
+          "table_id": "src.transaction_input",
+          "table_name": "staging.transaction_input",
+          "alias": "t",
+          "filter": "t.record_status = 'VALID'"
+        }
+      ],
+      "targets": [
+        {
+          "table_id": "tgt.transaction_header",
+          "table_name": "udp_silver.transaction_header",
+          "write_mode": "upsert"
+        },
+        {
+          "table_id": "tgt.transaction_line",
+          "table_name": "udp_silver.transaction_line",
+          "write_mode": "insert"
+        }
+      ],
+      "column_mappings": [
+        {
+          "target_table_id": "tgt.transaction_header",
+          "target_column": "transaction_id",
+          "target_data_type": "STRING",
+          "mapping_mode": "direct",
+          "source_columns": [
+            {
+              "table_id": "src.transaction_input",
+              "column": "transaction_id"
+            }
+          ],
+          "rule_refs": [
+            "rule.transaction_id_not_null"
+          ],
+          "nullable": false,
+          "description": "Header key"
+        },
+        {
+          "target_table_id": "tgt.transaction_header",
+          "target_column": "transaction_date",
+          "target_data_type": "DATE",
+          "mapping_mode": "expression",
+          "source_columns": [
+            {
+              "table_id": "src.transaction_input",
+              "column": "transaction_timestamp"
+            }
+          ],
+          "transformation_ref": "tr.parse_txn_date",
+          "nullable": false,
+          "description": "Header transaction date"
+        },
+        {
+          "target_table_id": "tgt.transaction_header",
+          "target_column": "source_system",
+          "target_data_type": "STRING",
+          "mapping_mode": "constant",
+          "constant_value": "EXT_FEED",
+          "nullable": false,
+          "description": "Header source marker"
+        },
+        {
+          "target_table_id": "tgt.transaction_line",
+          "target_column": "transaction_id",
+          "target_data_type": "STRING",
+          "mapping_mode": "direct",
+          "source_columns": [
+            {
+              "table_id": "src.transaction_input",
+              "column": "transaction_id"
+            }
+          ],
+          "rule_refs": [
+            "rule.transaction_id_not_null"
+          ],
+          "nullable": false,
+          "description": "Line to header linkage"
+        },
+        {
+          "target_table_id": "tgt.transaction_line",
+          "target_column": "line_number",
+          "target_data_type": "INTEGER",
+          "mapping_mode": "direct",
+          "source_columns": [
+            {
+              "table_id": "src.transaction_input",
+              "column": "line_number"
+            }
+          ],
+          "nullable": false,
+          "description": "Line sequence"
+        },
+        {
+          "target_table_id": "tgt.transaction_line",
+          "target_column": "extended_amount",
+          "target_data_type": "NUMERIC",
+          "mapping_mode": "expression",
+          "source_columns": [
+            {
+              "table_id": "src.transaction_input",
+              "column": "quantity"
+            },
+            {
+              "table_id": "src.transaction_input",
+              "column": "unit_price"
+            }
+          ],
+          "transformation_ref": "tr.extended_amount",
+          "rule_refs": [
+            "rule.positive_quantity"
+          ],
+          "nullable": false,
+          "default_value": 0,
+          "description": "Line amount before tax"
+        },
+        {
+          "target_table_id": "tgt.transaction_line",
+          "target_column": "tax_amount",
+          "target_data_type": "NUMERIC",
+          "mapping_mode": "expression",
+          "source_columns": [
+            {
+              "table_id": "src.transaction_input",
+              "column": "quantity"
+            },
+            {
+              "table_id": "src.transaction_input",
+              "column": "unit_price"
+            },
+            {
+              "table_id": "src.transaction_input",
+              "column": "tax_rate"
+            }
+          ],
+          "transformation_ref": "tr.tax_amount",
+          "nullable": false,
+          "default_value": 0,
+          "description": "Line tax amount"
+        }
+      ],
+      "rule_refs": [
+        "rule.valid_record_filter"
+      ],
+      "execution": {
+        "load_type": "incremental",
+        "schedule": "hourly",
+        "sla": "Header and line tables refreshed within 30 minutes of source availability",
+        "refresh_expectation": "Hourly split processing"
+      },
+      "evidence_anchors": [
+        {
+          "source": "Finance mapping workshop",
+          "location": "transaction split design notes",
+          "detail": "Defines one-to-many split logic"
+        },
+        {
+          "source": "Implementation spec",
+          "location": "transaction_split ETL design",
+          "detail": "Defines field-level mappings and transformation formulas"
+        }
+      ]
+    }
+  ],
+  "stats": {
+    "mapping_set_count": 1,
+    "source_table_count": 1,
+    "target_table_count": 2,
+    "column_mapping_count": 7
+  }
+}

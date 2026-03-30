@@ -1,0 +1,142 @@
+{
+  "$schema": "./platform-agent-management.schema.json",
+  "name": "enterprise_gcp_agent_management",
+  "version": "1.0.0",
+  "description": "Example platform agent management package for GCP-based orchestration, ingestion, and monitoring workflows.",
+  "source": "Platform Engineering onboarding",
+  "generated_at_utc": "2026-03-29T14:00:00Z",
+  "governance": {
+    "owner": "Cloud Platform Engineering",
+    "steward": "Data Platform Operations",
+    "approval_status": "approved",
+    "approved_at": "2026-03-29"
+  },
+  "platform_connections": [
+    {
+      "connection_id": "gcp.prod.data-platform",
+      "platform_type": "gcp",
+      "name": "GCP Production Data Platform",
+      "description": "Primary GCP connection profile for regulated data platform automation.",
+      "auth": {
+        "mode": "service-account",
+        "credential_ref": "secretmanager://platform/gcp/prod-agent-sa-key",
+        "token_rotation_days": 30,
+        "scopes": [
+          "https://www.googleapis.com/auth/cloud-platform",
+          "https://www.googleapis.com/auth/bigquery"
+        ]
+      },
+      "network_policy_ref": "netpol.gcp.private-service-connect.prod",
+      "gcp": {
+        "project_id": "espedair-prod-data",
+        "region": "australia-southeast1",
+        "service_account_email": "svc-agent-platform@espedair-prod-data.iam.gserviceaccount.com"
+      },
+      "status": "active"
+    }
+  ],
+  "agents": [
+    {
+      "agent_id": "agent.gcp.orchestrator",
+      "agent_name": "GCP Pipeline Orchestrator",
+      "agent_type": "orchestration",
+      "description": "Coordinates Cloud Workflows and Cloud Run jobs for daily regulatory processing.",
+      "runtime": {
+        "host_type": "serverless",
+        "execution_mode": "scheduled",
+        "runtime_ref": "cloud-workflows://projects/espedair-prod-data/locations/australia-southeast1/workflows/regulatory-orchestrator"
+      },
+      "connection_ids": [
+        "gcp.prod.data-platform"
+      ],
+      "capabilities": [
+        "run-cloud-workflows",
+        "trigger-cloud-run",
+        "publish-pubsub-events"
+      ],
+      "permissions": [
+        {
+          "rule_id": "perm.gcp.workflow.execute",
+          "platform_type": "gcp",
+          "resource": "projects/espedair-prod-data/locations/australia-southeast1/workflows/regulatory-orchestrator",
+          "action": "execute",
+          "effect": "allow"
+        },
+        {
+          "rule_id": "perm.gcp.cloudrun.invoke",
+          "platform_type": "gcp",
+          "resource": "projects/espedair-prod-data/locations/australia-southeast1/services/regulatory-transform",
+          "action": "invoke",
+          "effect": "allow"
+        }
+      ],
+      "schedule": {
+        "cron": "0 2 * * *",
+        "timezone": "Australia/Sydney",
+        "max_runtime_minutes": 90,
+        "retry_policy": "exponential"
+      },
+      "status": "active",
+      "tags": [
+        "gcp",
+        "regulated",
+        "orchestration"
+      ]
+    },
+    {
+      "agent_id": "agent.gcp.bigquery.ingestion",
+      "agent_name": "GCP BigQuery Ingestion Agent",
+      "agent_type": "ingestion",
+      "description": "Loads staged files into curated BigQuery datasets and applies ingestion quality checks.",
+      "runtime": {
+        "host_type": "kubernetes",
+        "execution_mode": "event-driven",
+        "runtime_ref": "gke://projects/espedair-prod-data/locations/australia-southeast1/clusters/data-platform-prod/namespaces/ingestion/jobs/bq-loader"
+      },
+      "connection_ids": [
+        "gcp.prod.data-platform"
+      ],
+      "capabilities": [
+        "load-bigquery-tables",
+        "validate-ingestion-manifests",
+        "emit-data-quality-events"
+      ],
+      "permissions": [
+        {
+          "rule_id": "perm.gcp.bigquery.tables.write",
+          "platform_type": "gcp",
+          "resource": "projects/espedair-prod-data/datasets/regulatory_curated",
+          "action": "write",
+          "effect": "allow"
+        },
+        {
+          "rule_id": "perm.gcp.gcs.staging.read",
+          "platform_type": "gcp",
+          "resource": "projects/_/buckets/espedair-prod-staging",
+          "action": "read",
+          "effect": "allow"
+        },
+        {
+          "rule_id": "perm.gcp.kms.keys.use",
+          "platform_type": "gcp",
+          "resource": "projects/espedair-sec-prd/locations/australia-southeast1/keyRings/platform/cryptoKeys/data-ingest",
+          "action": "encrypt-decrypt",
+          "effect": "allow",
+          "condition": "request.time < timestamp('2027-01-01T00:00:00Z')"
+        }
+      ],
+      "status": "active",
+      "tags": [
+        "gcp",
+        "ingestion",
+        "bigquery"
+      ]
+    }
+  ],
+  "stats": {
+    "platform_connection_count": 1,
+    "agent_count": 2,
+    "active_agent_count": 2,
+    "permission_rule_count": 5
+  }
+}

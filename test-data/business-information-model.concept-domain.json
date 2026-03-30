@@ -1,0 +1,804 @@
+{
+  "$schema": "./business-information-model.concept-domain.schema.json",
+  "name": "insignia_business_information_model_concept_domain",
+  "description": "Flattened Data Concept to Data Domain mapping for ERD/viewpoint generation.",
+  "source_model": "c:\\workspace\\datahost\\examples\\insignia\\bim\\business-information-model.json",
+  "generated_at_utc": "2026-03-25T20:34:04+00:00",
+  "stats": {
+    "concept_domain_links": 79,
+    "domain_count": 13
+  },
+  "links": [
+    {
+      "concept_name": "Advice Audit Information",
+      "domain_name": "Advice",
+      "concept_description": "Audit conducted by Insignia as AFSL holder",
+      "information_confidentiality_classification": "Confidential",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": ""
+    },
+    {
+      "concept_name": "Advice Investment Committee",
+      "domain_name": "Advice",
+      "concept_description": "Review and approve product listing",
+      "information_confidentiality_classification": "Internal",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": ""
+    },
+    {
+      "concept_name": "Adviser",
+      "domain_name": "Advice",
+      "concept_description": "Individual qualified and authorised to dispense financial advice under Australian Financial Services License rules and regulations",
+      "information_confidentiality_classification": "Highly Confidential",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": "Financial Advisers Register"
+    },
+    {
+      "concept_name": "Fact Finding",
+      "domain_name": "Advice",
+      "concept_description": "Collection of financial information of client to guide and support advice to be provided.",
+      "information_confidentiality_classification": "Confidential",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": "Personal Financial Position"
+    },
+    {
+      "concept_name": "Fee Structure",
+      "domain_name": "Advice",
+      "concept_description": "Disclosure of fee structure for financial advice and actioning plan",
+      "information_confidentiality_classification": "Confidential",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": ""
+    },
+    {
+      "concept_name": "File Notes",
+      "domain_name": "Advice",
+      "concept_description": "Captures the key information discussed during an interaction with customer",
+      "information_confidentiality_classification": "Highly Confidential",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": ""
+    },
+    {
+      "concept_name": "Letter of Engagement",
+      "domain_name": "Advice",
+      "concept_description": "Acknowledgement from client to proceed with advice, includes fees for advice",
+      "information_confidentiality_classification": "Confidential",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": ""
+    },
+    {
+      "concept_name": "Nature of Advice",
+      "domain_name": "Advice",
+      "concept_description": "General in nature, Scaled (simple advisor guided or calculator, for single fund), Comprehensive (full financial circumstance considered)",
+      "information_confidentiality_classification": "Confidential",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": ""
+    },
+    {
+      "concept_name": "Product Research",
+      "domain_name": "Advice",
+      "concept_description": "Product details of performance, construct and fees across various financial providers for the advice being put forward",
+      "information_confidentiality_classification": "Internal",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": "Product Comparison"
+    },
+    {
+      "concept_name": "Prospective Customer",
+      "domain_name": "Advice",
+      "concept_description": "Relationship between Advisor and Prospective Client where no statement of advice has been signed",
+      "information_confidentiality_classification": "Internal",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": ""
+    },
+    {
+      "concept_name": "Statement of Advice",
+      "domain_name": "Advice",
+      "concept_description": "Statement of Advice is information of financial plan put forward by advisor to client based on products and fact finding details. Including risks, strategies and financial circumstance.",
+      "information_confidentiality_classification": "Highly Confidential",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": "Record of Advice Amendment"
+    },
+    {
+      "concept_name": "Company Board",
+      "domain_name": "Corporate Governance",
+      "concept_description": "Company board information to support and guide governance of organisation",
+      "information_confidentiality_classification": "Confidential",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": "Board Meeting Minutes"
+    },
+    {
+      "concept_name": "Company Group",
+      "domain_name": "Corporate Governance",
+      "concept_description": "Insignia stock exchange listing information",
+      "information_confidentiality_classification": "Confidential",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": "Share Listing"
+    },
+    {
+      "concept_name": "Corporate Policies and Standards",
+      "domain_name": "Corporate Governance",
+      "concept_description": "The guiding principles and rules to adhere to across key responsibility areas at Insignia. Policy documents for areas such as risk, data, diversity and inclusion, responsible investment",
+      "information_confidentiality_classification": "Internal",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": ""
+    },
+    {
+      "concept_name": "Member / Investor Representation",
+      "domain_name": "Corporate Governance",
+      "concept_description": "Details to provide board with oversight of member/investors focused outcomes. Member Office and Office of Responsible Entity ensure interests of members/investors are adhered to with regards to trusts.",
+      "information_confidentiality_classification": "Highly Confidential",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": "Business Performance Review"
+    },
+    {
+      "concept_name": "Responsible Entity",
+      "domain_name": "Corporate Governance",
+      "concept_description": "Information concept that covers all the governance and finance concepts in the BIM for IFL, which are replicated at the trust level, which may have different information ownership",
+      "information_confidentiality_classification": "Highly Confidential",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": ""
+    },
+    {
+      "concept_name": "Trust",
+      "domain_name": "Corporate Governance",
+      "concept_description": "Information concept that covers all the governance and finance concepts in the BIM for IFL, which are replicated at the trust level, which may have different information ownership",
+      "information_confidentiality_classification": "Highly Confidential",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": ""
+    },
+    {
+      "concept_name": "Advice Complaint",
+      "domain_name": "Enquiries and Complaints",
+      "concept_description": "Insignia investigation into advice provided to client by advisor, evidence and findings",
+      "information_confidentiality_classification": "Highly Confidential",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": "Advice Complaint Investigation"
+    },
+    {
+      "concept_name": "Demand",
+      "domain_name": "Enquiries and Complaints",
+      "concept_description": "Customer or Advisor initiated interaction with Insignia Financial re financial account",
+      "information_confidentiality_classification": "Highly Confidential",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": "Demand Resolution"
+    },
+    {
+      "concept_name": "Demand Analytics",
+      "domain_name": "Enquiries and Complaints",
+      "concept_description": "Metrics to track and measure the processing effectiveness and efficiency of demands",
+      "information_confidentiality_classification": "Confidential",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": ""
+    },
+    {
+      "concept_name": "Identified Systemic Issue",
+      "domain_name": "Enquiries and Complaints",
+      "concept_description": "From analysis of complaints to identify the scale and volume of complaint or issue identified. Prepare plan for remediation.",
+      "information_confidentiality_classification": "Confidential",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": "Systemic Issue Committee Submission"
+    },
+    {
+      "concept_name": "Internally-identified customer issue",
+      "domain_name": "Enquiries and Complaints",
+      "concept_description": "Issues affecting customer that likely require action by IFL to remediate, but which have not been raised directly by customer themselves. These issues may affect a cohort of customer, and information includes the list of customers affected, the nature of the issue, and possibly details of actions to remediate.",
+      "information_confidentiality_classification": "Confidential",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": ""
+    },
+    {
+      "concept_name": "Service Survey",
+      "domain_name": "Enquiries and Complaints",
+      "concept_description": "Party assessment of demand service based on survey questions, Net Promoter Score, Etc",
+      "information_confidentiality_classification": "Confidential",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": ""
+    },
+    {
+      "concept_name": "Budget",
+      "domain_name": "Finance",
+      "concept_description": "Financial budget plan for coming 3 year period, reviewed annually, at various levels, IFL Group, Division, Business Unit and Entity (Trustee and responsible entity)",
+      "information_confidentiality_classification": "Confidential",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": "Budgetary Assumptions"
+    },
+    {
+      "concept_name": "Finance Audit",
+      "domain_name": "Finance",
+      "concept_description": "Information of conducted finance audit by external audit provider",
+      "information_confidentiality_classification": "Internal",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": "Audit Management Letter"
+    },
+    {
+      "concept_name": "Four-Monthly Forecast",
+      "domain_name": "Finance",
+      "concept_description": "Projection of remainder of current financial year based on YTD actual financials and account for material change to budget plan",
+      "information_confidentiality_classification": "Confidential",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": ""
+    },
+    {
+      "concept_name": "General Ledger",
+      "domain_name": "Finance",
+      "concept_description": "Record of financial transactions of Insignia and funds",
+      "information_confidentiality_classification": "Confidential",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": "Chart of Accounts"
+    },
+    {
+      "concept_name": "Taxation",
+      "domain_name": "Finance",
+      "concept_description": "Taxation records arising from income producing activities for IFL, investment assets managed by Insignia and clients",
+      "information_confidentiality_classification": "Highly Confidential",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": "Customer Tax Information"
+    },
+    {
+      "concept_name": "Investment Details",
+      "domain_name": "Investment",
+      "concept_description": "Charactering information for an investment",
+      "information_confidentiality_classification": "Public",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": "Investment Type"
+    },
+    {
+      "concept_name": "Investment Performance",
+      "domain_name": "Investment",
+      "concept_description": "The historical information of the invested funds value, transactions, movement and activity",
+      "information_confidentiality_classification": "Public",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": "Net Flow"
+    },
+    {
+      "concept_name": "Investment Research",
+      "domain_name": "Investment",
+      "concept_description": "Third party dataset, general economic data, peer competitors",
+      "information_confidentiality_classification": "Internal",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": ""
+    },
+    {
+      "concept_name": "Investment Structure",
+      "domain_name": "Investment",
+      "concept_description": "Describes the investment boundaries and costs to operate within",
+      "information_confidentiality_classification": "Public",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": "Investment Assets"
+    },
+    {
+      "concept_name": "Unit Holders",
+      "domain_name": "Investment",
+      "concept_description": "List of clients with holdings in fund, also for external members (non IFL clients)",
+      "information_confidentiality_classification": "Internal",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": ""
+    },
+    {
+      "concept_name": "Unit Price",
+      "domain_name": "Investment",
+      "concept_description": "Describes the lowest share of the investment based on the underlying value of the invested assets for a day",
+      "information_confidentiality_classification": "Public",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": ""
+    },
+    {
+      "concept_name": "Contracts and Agreements",
+      "domain_name": "Legal",
+      "concept_description": "Documents for contracts and agreements, including trust deeds",
+      "information_confidentiality_classification": "Highly Confidential",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": ""
+    },
+    {
+      "concept_name": "Legal Advice",
+      "domain_name": "Legal",
+      "concept_description": "Advice provided to boards and committees",
+      "information_confidentiality_classification": "Highly Confidential",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": ""
+    },
+    {
+      "concept_name": "Legal Matter",
+      "domain_name": "Legal",
+      "concept_description": "Engagement and advice provided on legal matter by external law firm",
+      "information_confidentiality_classification": "Highly Confidential",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": ""
+    },
+    {
+      "concept_name": "Matter",
+      "domain_name": "Legal",
+      "concept_description": "Legal advice provided on an internal IFL matter.",
+      "information_confidentiality_classification": "Highly Confidential",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": "Matter Notes"
+    },
+    {
+      "concept_name": "Campaign",
+      "domain_name": "Marketing",
+      "concept_description": "Implementation of engaging with client through a variety of channels to communicate information message like product eduction, financial advice (general), product changes, opportunity",
+      "information_confidentiality_classification": "Confidential",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": "Target Audience"
+    },
+    {
+      "concept_name": "Market Research",
+      "domain_name": "Marketing",
+      "concept_description": "Information related to understanding the customer market for IFL.",
+      "information_confidentiality_classification": "Highly Confidential",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": "Internal Data Brief"
+    },
+    {
+      "concept_name": "Marketing Analytics",
+      "domain_name": "Marketing",
+      "concept_description": "Client information analysis, through predictive analysis and activity metrics",
+      "information_confidentiality_classification": "Confidential",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": "Customer Behaviour Forecasting"
+    },
+    {
+      "concept_name": "Marketing Strategy",
+      "domain_name": "Marketing",
+      "concept_description": "A plan based on an identified opportunity to provide business value through client engagement. Supported by marketing data and delivered through campaigns.",
+      "information_confidentiality_classification": "Confidential",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": "Marketing Strategy Objective"
+    },
+    {
+      "concept_name": "Job Requisition",
+      "domain_name": "People",
+      "concept_description": "Information of new position request",
+      "information_confidentiality_classification": "Confidential",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": "Compensation Band Approved"
+    },
+    {
+      "concept_name": "Organisation Hierarchy",
+      "domain_name": "People",
+      "concept_description": "IFL organisational structure",
+      "information_confidentiality_classification": "Internal",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": ""
+    },
+    {
+      "concept_name": "Person",
+      "domain_name": "People",
+      "concept_description": "A person is engaged to work with Insignia as employee, contractor, advisor or out-sourced capacity. Also include Bots (System Accounts)",
+      "information_confidentiality_classification": "Internal",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": "Employment Conditions"
+    },
+    {
+      "concept_name": "Position",
+      "domain_name": "People",
+      "concept_description": "Role within Insignia that conducts necessary task/duties",
+      "information_confidentiality_classification": "Confidential",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": "Areas of accountability"
+    },
+    {
+      "concept_name": "Training and Skills",
+      "domain_name": "People",
+      "concept_description": "Education performed or required for a position. Also the plan to for a person to develop necessary skills or knowledge to meet objectives",
+      "information_confidentiality_classification": "Internal",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": "Continuing Professional Development"
+    },
+    {
+      "concept_name": "Goods and Services Contracts",
+      "domain_name": "Procurement",
+      "concept_description": "Information of agreed goods and services provisioning by supplier",
+      "information_confidentiality_classification": "Confidential",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": "Diagrams"
+    },
+    {
+      "concept_name": "Purchase",
+      "domain_name": "Procurement",
+      "concept_description": "Information of acquiring goods and services",
+      "information_confidentiality_classification": "Confidential",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": "Purchase Order"
+    },
+    {
+      "concept_name": "Service Provider",
+      "domain_name": "Procurement",
+      "concept_description": "<p class=\"editor-paragraph\" dir=\"ltr\"><span style=\"white-space: pre-wrap;\">Buildings occupied by Insignia and assets utilised</span></p><p class=\"editor-paragraph\" dir=\"ltr\"><span style=\"white-space: pre-wrap;\">for example: software, technology, hardware, building, furniture, etc.</span></p>",
+      "information_confidentiality_classification": "Confidential",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": "Service Provider Reporting"
+    },
+    {
+      "concept_name": "Service Provider Sourcing",
+      "domain_name": "Procurement",
+      "concept_description": "Identifying and selecting external service providers.",
+      "information_confidentiality_classification": "Confidential",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": "Sourcing Event (RFP)"
+    },
+    {
+      "concept_name": "Non-financial Offering",
+      "domain_name": "Product",
+      "concept_description": "Offerings made available to clients with accounts for certain products, through rewards programs or other non-financial offering. Information of participants, usage and points balance. Note, sensitivity classification is Public for general product information, Confidential for usage and points. [Consider splitting into two, product info and usage data]",
+      "information_confidentiality_classification": "Public",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": ""
+    },
+    {
+      "concept_name": "Product Component",
+      "domain_name": "Product",
+      "concept_description": "Describes the construct of a product as a superannuation or investment vehicle",
+      "information_confidentiality_classification": "Public",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": "Investment Offering"
+    },
+    {
+      "concept_name": "Product Details",
+      "domain_name": "Product",
+      "concept_description": "Information of the product objectives, strategy, description of handling of funds and product purpose",
+      "information_confidentiality_classification": "Public",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": "Product Obligations"
+    },
+    {
+      "concept_name": "Product Investments",
+      "domain_name": "Product",
+      "concept_description": "The investment asset available for funds in the product to be invested into",
+      "information_confidentiality_classification": "Public",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": ""
+    },
+    {
+      "concept_name": "Product Performance",
+      "domain_name": "Product",
+      "concept_description": "Information of metrics used to monitor a product actual and targeted performance",
+      "information_confidentiality_classification": "Confidential",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": "Customer Inflow Targets"
+    },
+    {
+      "concept_name": "Business Continuity Plan",
+      "domain_name": "Risk",
+      "concept_description": "Recovery timeframes and priorities for critical business activities",
+      "information_confidentiality_classification": "Internal",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": ""
+    },
+    {
+      "concept_name": "Business Risk",
+      "domain_name": "Risk",
+      "concept_description": "An identified potential future event that can have a material negative effect on the IFL business.",
+      "information_confidentiality_classification": "Internal",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": "Material Risk Category"
+    },
+    {
+      "concept_name": "Control",
+      "domain_name": "Risk",
+      "concept_description": "Measures established to remove or mitigate a business risk.",
+      "information_confidentiality_classification": "Internal",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": "Control Effectiveness Rating"
+    },
+    {
+      "concept_name": "Crisis Management Plan",
+      "domain_name": "Risk",
+      "concept_description": "Describes the immediate actions to be taken during a crisis (such as the Covid-19 pandemic) and includes a management structure, with defined roles, to enable a business disruption to be managed effectively",
+      "information_confidentiality_classification": "Internal",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": ""
+    },
+    {
+      "concept_name": "Customer Due-diligence",
+      "domain_name": "Risk",
+      "concept_description": "Actions taken to ensure that taking on and providing services to a client can be done in accordance with regulations, legislation and IFL policies, .",
+      "information_confidentiality_classification": "Highly Confidential",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": "Transaction Monitoring Framework/ Fraudulent Activity"
+    },
+    {
+      "concept_name": "Incidents and Breaches",
+      "domain_name": "Risk",
+      "concept_description": "A reported event that may be an event where a risk has eventuated or a control has been breached.  This includes all business risks including workplace health and safety incidents.  Note that the sensitivity rating is for most sensitive incidents.  Many would be rated as Internal.",
+      "information_confidentiality_classification": "Highly Confidential",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": "Action Plan"
+    },
+    {
+      "concept_name": "Obligations",
+      "domain_name": "Risk",
+      "concept_description": "Legislative requirements recorded",
+      "information_confidentiality_classification": "Internal",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": "Authority"
+    },
+    {
+      "concept_name": "Risk Appetite",
+      "domain_name": "Risk",
+      "concept_description": "Tolerance, for business unit and across business levels, material risk categories, appetite metrics",
+      "information_confidentiality_classification": "Confidential",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": "Risk Appetite Tolerance Measure"
+    },
+    {
+      "concept_name": "Annual IFL Business Plan",
+      "domain_name": "Strategy",
+      "concept_description": "Information of strategic plan and objectives from each business area and the group as a whole",
+      "information_confidentiality_classification": "Internal",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": "IFL Plan Initiatives"
+    },
+    {
+      "concept_name": "Change Management",
+      "domain_name": "Strategy",
+      "concept_description": "Change management describes the information of how to move from current state to desired state and the steps to required to implement change",
+      "information_confidentiality_classification": "Internal",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": "Change Plan"
+    },
+    {
+      "concept_name": "Enterprise Scorecard",
+      "domain_name": "Strategy",
+      "concept_description": "Enterprise level scorecard of IFL initiatives to view the level of actual to target metrics values",
+      "information_confidentiality_classification": "Internal",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": "Enterprise Metrics"
+    },
+    {
+      "concept_name": "Enterprise Strategy",
+      "domain_name": "Strategy",
+      "concept_description": "Details of the forward looking strategic objectives from contributing business units with supporting metrics and targets",
+      "information_confidentiality_classification": "Internal",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": "Business Segment Objectives"
+    },
+    {
+      "concept_name": "Initiatives",
+      "domain_name": "Strategy",
+      "concept_description": "Information of initiatives to put forward to create business improvement including benefits, implementation and origination details",
+      "information_confidentiality_classification": "Internal",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": "Major Project"
+    },
+    {
+      "concept_name": "Registrable Superannuation Entity Business Plan",
+      "domain_name": "Strategy",
+      "concept_description": "Business Plan is the information outlining the strategic aims for member outcomes, Regstritable Superannuation Entity",
+      "information_confidentiality_classification": "Internal",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": "Forecasts"
+    },
+    {
+      "concept_name": "Value Stream Governance",
+      "domain_name": "Strategy",
+      "concept_description": "IFL Value Streams, are groupings of like initiatives supporting our Strategic Objectives, enabling holistic governance, and providing clear structures to escalate issues and get quick decisions made",
+      "information_confidentiality_classification": "Internal",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": "Value Stream Agendas"
+    },
+    {
+      "concept_name": "Architecture",
+      "domain_name": "Technology",
+      "concept_description": "Guidelines, frameworks and principles for business, technology and solution architecture",
+      "information_confidentiality_classification": "Confidential",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": "Technology Option Assessment"
+    },
+    {
+      "concept_name": "Data Reports and Dashboards",
+      "domain_name": "Technology",
+      "concept_description": "List of reports and dashboards, user access, source data, owner",
+      "information_confidentiality_classification": "Internal",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": ""
+    },
+    {
+      "concept_name": "Information Management",
+      "domain_name": "Technology",
+      "concept_description": "Information mangement policies, standards, guidance and advice describes how information and data at Insignia is to be handled, processed and retained",
+      "information_confidentiality_classification": "Internal",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": "Information Classification Schedule"
+    },
+    {
+      "concept_name": "Maintenance and Support",
+      "domain_name": "Technology",
+      "concept_description": "Describes the events to support systems, data and system users and their importance and impact on business functionality",
+      "information_confidentiality_classification": "Internal",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": "Disaster Management and Recovery"
+    },
+    {
+      "concept_name": "Record Management",
+      "domain_name": "Technology",
+      "concept_description": "Details of physical and digital records usage, purpose, contents and storage",
+      "information_confidentiality_classification": "Highly Confidential",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": "Physical Record Archive"
+    },
+    {
+      "concept_name": "Security",
+      "domain_name": "Technology",
+      "concept_description": "Capturing and assessing technology based security events and platforms across the organisation.",
+      "information_confidentiality_classification": "Highly Confidential",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": "Security Assessment"
+    },
+    {
+      "concept_name": "Server and Network Infrastructure",
+      "domain_name": "Technology",
+      "concept_description": "Information about IFL servers and networking equipment.",
+      "information_confidentiality_classification": "Internal",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": "Authentication Certificates"
+    },
+    {
+      "concept_name": "Systems",
+      "domain_name": "Technology",
+      "concept_description": "System and applications utilised in the business",
+      "information_confidentiality_classification": "Internal",
+      "grouped_by_concept_name": "",
+      "groups_concept_name": "Codebase Framework"
+    }
+  ],
+  "domains": [
+    {
+      "domain_name": "Advice",
+      "concept_count": 11,
+      "concepts": [
+        "Advice Audit Information",
+        "Advice Investment Committee",
+        "Adviser",
+        "Fact Finding",
+        "Fee Structure",
+        "File Notes",
+        "Letter of Engagement",
+        "Nature of Advice",
+        "Product Research",
+        "Prospective Customer",
+        "Statement of Advice"
+      ]
+    },
+    {
+      "domain_name": "Corporate Governance",
+      "concept_count": 6,
+      "concepts": [
+        "Company Board",
+        "Company Group",
+        "Corporate Policies and Standards",
+        "Member / Investor Representation",
+        "Responsible Entity",
+        "Trust"
+      ]
+    },
+    {
+      "domain_name": "Enquiries and Complaints",
+      "concept_count": 6,
+      "concepts": [
+        "Advice Complaint",
+        "Demand",
+        "Demand Analytics",
+        "Identified Systemic Issue",
+        "Internally-identified customer issue",
+        "Service Survey"
+      ]
+    },
+    {
+      "domain_name": "Finance",
+      "concept_count": 5,
+      "concepts": [
+        "Budget",
+        "Finance Audit",
+        "Four-Monthly Forecast",
+        "General Ledger",
+        "Taxation"
+      ]
+    },
+    {
+      "domain_name": "Investment",
+      "concept_count": 6,
+      "concepts": [
+        "Investment Details",
+        "Investment Performance",
+        "Investment Research",
+        "Investment Structure",
+        "Unit Holders",
+        "Unit Price"
+      ]
+    },
+    {
+      "domain_name": "Legal",
+      "concept_count": 4,
+      "concepts": [
+        "Contracts and Agreements",
+        "Legal Advice",
+        "Legal Matter",
+        "Matter"
+      ]
+    },
+    {
+      "domain_name": "Marketing",
+      "concept_count": 4,
+      "concepts": [
+        "Campaign",
+        "Market Research",
+        "Marketing Analytics",
+        "Marketing Strategy"
+      ]
+    },
+    {
+      "domain_name": "People",
+      "concept_count": 5,
+      "concepts": [
+        "Job Requisition",
+        "Organisation Hierarchy",
+        "Person",
+        "Position",
+        "Training and Skills"
+      ]
+    },
+    {
+      "domain_name": "Procurement",
+      "concept_count": 4,
+      "concepts": [
+        "Goods and Services Contracts",
+        "Purchase",
+        "Service Provider",
+        "Service Provider Sourcing"
+      ]
+    },
+    {
+      "domain_name": "Product",
+      "concept_count": 5,
+      "concepts": [
+        "Non-financial Offering",
+        "Product Component",
+        "Product Details",
+        "Product Investments",
+        "Product Performance"
+      ]
+    },
+    {
+      "domain_name": "Risk",
+      "concept_count": 8,
+      "concepts": [
+        "Business Continuity Plan",
+        "Business Risk",
+        "Control",
+        "Crisis Management Plan",
+        "Customer Due-diligence",
+        "Incidents and Breaches",
+        "Obligations",
+        "Risk Appetite"
+      ]
+    },
+    {
+      "domain_name": "Strategy",
+      "concept_count": 7,
+      "concepts": [
+        "Annual IFL Business Plan",
+        "Change Management",
+        "Enterprise Scorecard",
+        "Enterprise Strategy",
+        "Initiatives",
+        "Registrable Superannuation Entity Business Plan",
+        "Value Stream Governance"
+      ]
+    },
+    {
+      "domain_name": "Technology",
+      "concept_count": 8,
+      "concepts": [
+        "Architecture",
+        "Data Reports and Dashboards",
+        "Information Management",
+        "Maintenance and Support",
+        "Record Management",
+        "Security",
+        "Server and Network Infrastructure",
+        "Systems"
+      ]
+    }
+  ]
+}

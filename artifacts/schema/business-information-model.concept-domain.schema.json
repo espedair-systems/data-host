@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://espedair.io/schema/business-information-model-concept-domain",
+  "title": "Business Information Model Concept-Domain Mapping",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "links",
+    "domains"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "source_model": {
+      "type": "string"
+    },
+    "generated_at_utc": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "stats": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "concept_domain_links",
+        "domain_count"
+      ],
+      "properties": {
+        "concept_domain_links": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "domain_count": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "links": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "concept_name",
+          "domain_name"
+        ],
+        "properties": {
+          "concept_name": {
+            "type": "string"
+          },
+          "domain_name": {
+            "type": "string"
+          },
+          "concept_description": {
+            "type": "string"
+          },
+          "information_confidentiality_classification": {
+            "type": "string"
+          },
+          "grouped_by_concept_name": {
+            "type": "string"
+          },
+          "groups_concept_name": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "domains": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "domain_name",
+          "concept_count",
+          "concepts"
+        ],
+        "properties": {
+          "domain_name": {
+            "type": "string"
+          },
+          "concept_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "concepts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}

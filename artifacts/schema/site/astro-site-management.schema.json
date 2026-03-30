@@ -1,0 +1,562 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://espedair.io/schema/template/astro-site-management",
+  "title": "Astro Site Management Schema",
+  "description": "Schema for managing Astro sites, environments, build and deploy configuration, content collections, integrations, and governance controls.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "version",
+    "sites"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Optional self-reference to this schema file."
+    },
+    "name": {
+      "type": "string",
+      "description": "Logical name of this Astro site management package."
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(-[A-Za-z0-9._-]+)?$",
+      "description": "Semantic version of this package."
+    },
+    "description": {
+      "type": "string",
+      "description": "Business and technical scope for these Astro sites."
+    },
+    "source": {
+      "type": "string",
+      "description": "Source process, system, or owner that generated this artifact."
+    },
+    "generated_at_utc": {
+      "type": "string",
+      "format": "date-time",
+      "description": "UTC timestamp when the package was generated."
+    },
+    "governance": {
+      "$ref": "#/$defs/Governance"
+    },
+    "sites": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Managed Astro site definitions.",
+      "items": {
+        "$ref": "#/$defs/Site"
+      }
+    },
+    "stats": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Optional summary metrics for this package.",
+      "properties": {
+        "site_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "environment_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "domain_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "content_collection_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "integration_count": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  },
+  "$defs": {
+    "Governance": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "owner": {
+          "type": "string",
+          "description": "Accountable owner of site standards and approvals."
+        },
+        "steward": {
+          "type": "string",
+          "description": "Operational steward for platform maintenance."
+        },
+        "approval_status": {
+          "type": "string",
+          "enum": [
+            "draft",
+            "review",
+            "approved",
+            "deprecated"
+          ],
+          "description": "Governance lifecycle status."
+        },
+        "approved_at": {
+          "type": "string",
+          "format": "date",
+          "description": "Approval date for this package version."
+        }
+      }
+    },
+    "Site": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "site_id",
+        "site_name",
+        "framework",
+        "repo",
+        "build",
+        "deploy",
+        "environments",
+        "status"
+      ],
+      "properties": {
+        "site_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._:-]*$",
+          "description": "Stable unique site identifier."
+        },
+        "site_name": {
+          "type": "string",
+          "description": "Display name for the Astro site."
+        },
+        "framework": {
+          "type": "string",
+          "const": "astro",
+          "description": "Site framework. Fixed to astro."
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "active",
+            "inactive",
+            "retired"
+          ],
+          "description": "Operational status of the site."
+        },
+        "description": {
+          "type": "string",
+          "description": "Business and technical purpose of the site."
+        },
+        "repo": {
+          "$ref": "#/$defs/Repository"
+        },
+        "domains": {
+          "type": "array",
+          "description": "Primary and alias domains for this site.",
+          "items": {
+            "$ref": "#/$defs/Domain"
+          }
+        },
+        "build": {
+          "$ref": "#/$defs/BuildConfig"
+        },
+        "deploy": {
+          "$ref": "#/$defs/DeployConfig"
+        },
+        "environments": {
+          "type": "array",
+          "minItems": 1,
+          "description": "Environment-specific runtime and deployment settings.",
+          "items": {
+            "$ref": "#/$defs/Environment"
+          }
+        },
+        "content": {
+          "$ref": "#/$defs/ContentConfig"
+        },
+        "integrations": {
+          "type": "array",
+          "description": "Astro and platform integrations enabled for this site.",
+          "items": {
+            "$ref": "#/$defs/Integration"
+          }
+        },
+        "security": {
+          "$ref": "#/$defs/SecurityConfig"
+        },
+        "observability": {
+          "$ref": "#/$defs/ObservabilityConfig"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Optional labels for grouping and discovery."
+        }
+      }
+    },
+    "Repository": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "provider",
+        "full_name",
+        "default_branch"
+      ],
+      "properties": {
+        "provider": {
+          "type": "string",
+          "enum": [
+            "github",
+            "gitlab",
+            "azure-devops",
+            "other"
+          ],
+          "description": "Source control provider."
+        },
+        "full_name": {
+          "type": "string",
+          "description": "Repository path such as owner/repo."
+        },
+        "default_branch": {
+          "type": "string",
+          "description": "Default branch used for production release."
+        },
+        "path": {
+          "type": "string",
+          "description": "Optional relative path when Astro app is in a monorepo."
+        }
+      }
+    },
+    "Domain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "host",
+        "domain_type"
+      ],
+      "properties": {
+        "host": {
+          "type": "string",
+          "description": "Domain host name for site traffic."
+        },
+        "domain_type": {
+          "type": "string",
+          "enum": [
+            "primary",
+            "alias",
+            "preview"
+          ],
+          "description": "Domain role for this site."
+        },
+        "tls_mode": {
+          "type": "string",
+          "enum": [
+            "managed",
+            "bring-your-own",
+            "none"
+          ],
+          "description": "TLS certificate management mode."
+        }
+      }
+    },
+    "BuildConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "node_version",
+        "package_manager",
+        "install_command",
+        "build_command",
+        "output_mode"
+      ],
+      "properties": {
+        "node_version": {
+          "type": "string",
+          "description": "Node.js version used in CI/CD."
+        },
+        "package_manager": {
+          "type": "string",
+          "enum": [
+            "npm",
+            "pnpm",
+            "yarn",
+            "bun"
+          ],
+          "description": "Package manager used by the site build."
+        },
+        "install_command": {
+          "type": "string",
+          "description": "Install command used in CI/CD."
+        },
+        "build_command": {
+          "type": "string",
+          "description": "Build command used to produce deployable assets."
+        },
+        "output_mode": {
+          "type": "string",
+          "enum": [
+            "static",
+            "server",
+            "hybrid"
+          ],
+          "description": "Astro output mode."
+        },
+        "adapter": {
+          "type": "string",
+          "description": "Astro adapter package when output mode requires runtime adapter."
+        },
+        "output_dir": {
+          "type": "string",
+          "description": "Build output directory."
+        }
+      }
+    },
+    "DeployConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "target",
+        "strategy"
+      ],
+      "properties": {
+        "target": {
+          "type": "string",
+          "enum": [
+            "netlify",
+            "vercel",
+            "cloudflare-pages",
+            "azure-static-web-apps",
+            "aws-amplify",
+            "custom"
+          ],
+          "description": "Primary deployment target."
+        },
+        "strategy": {
+          "type": "string",
+          "enum": [
+            "branch-based",
+            "promote-artifact",
+            "manual",
+            "scheduled"
+          ],
+          "description": "Deployment promotion strategy."
+        },
+        "preview_enabled": {
+          "type": "boolean",
+          "description": "Whether preview deployments are enabled."
+        },
+        "artifact_retention_days": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Retention policy for build artifacts."
+        }
+      }
+    },
+    "Environment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "env_id",
+        "env_type",
+        "status"
+      ],
+      "properties": {
+        "env_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._:-]*$",
+          "description": "Stable environment identifier."
+        },
+        "env_type": {
+          "type": "string",
+          "enum": [
+            "dev",
+            "test",
+            "uat",
+            "stage",
+            "prod",
+            "preview"
+          ],
+          "description": "Environment classification."
+        },
+        "base_url": {
+          "type": "string",
+          "description": "Base URL for this environment."
+        },
+        "branch": {
+          "type": "string",
+          "description": "Branch mapped to this environment for branch-based deployments."
+        },
+        "env_var_refs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Environment variable references in secret stores or platform settings."
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "active",
+            "inactive"
+          ],
+          "description": "Operational status of this environment."
+        }
+      }
+    },
+    "ContentConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "collections": {
+          "type": "array",
+          "description": "Astro content collections used by the site.",
+          "items": {
+            "$ref": "#/$defs/ContentCollection"
+          }
+        },
+        "default_locale": {
+          "type": "string",
+          "description": "Default locale for site content."
+        },
+        "supported_locales": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Supported content locales."
+        }
+      }
+    },
+    "ContentCollection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "collection_id",
+        "source",
+        "schema_mode"
+      ],
+      "properties": {
+        "collection_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._:-]*$",
+          "description": "Collection identifier used in Astro content config."
+        },
+        "source": {
+          "type": "string",
+          "enum": [
+            "markdown",
+            "mdx",
+            "json",
+            "cms",
+            "api",
+            "custom"
+          ],
+          "description": "Primary source type for collection content."
+        },
+        "schema_mode": {
+          "type": "string",
+          "enum": [
+            "strict",
+            "permissive"
+          ],
+          "description": "Validation strictness applied to collection data."
+        },
+        "content_path": {
+          "type": "string",
+          "description": "Path to the collection source within the repo."
+        }
+      }
+    },
+    "Integration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "integration_id",
+        "name",
+        "integration_type",
+        "status"
+      ],
+      "properties": {
+        "integration_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._:-]*$",
+          "description": "Stable integration identifier."
+        },
+        "name": {
+          "type": "string",
+          "description": "Integration package or service name."
+        },
+        "integration_type": {
+          "type": "string",
+          "enum": [
+            "astro",
+            "adapter",
+            "analytics",
+            "monitoring",
+            "cms",
+            "search",
+            "auth",
+            "custom"
+          ],
+          "description": "Integration classification."
+        },
+        "config_ref": {
+          "type": "string",
+          "description": "Reference to config source for this integration."
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "active",
+            "inactive"
+          ],
+          "description": "Integration status."
+        }
+      }
+    },
+    "SecurityConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "auth_mode": {
+          "type": "string",
+          "enum": [
+            "none",
+            "basic",
+            "oidc",
+            "custom"
+          ],
+          "description": "Authentication mode used by the site where applicable."
+        },
+        "waf_enabled": {
+          "type": "boolean",
+          "description": "Whether a web application firewall is enabled."
+        },
+        "headers_policy_ref": {
+          "type": "string",
+          "description": "Reference to HTTP headers security policy."
+        }
+      }
+    },
+    "ObservabilityConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "analytics_provider": {
+          "type": "string",
+          "description": "Primary analytics provider."
+        },
+        "logging_sink": {
+          "type": "string",
+          "description": "Primary logging sink destination."
+        },
+        "uptime_monitor_ref": {
+          "type": "string",
+          "description": "Reference to uptime monitor configuration."
+        }
+      }
+    }
+  }
+}

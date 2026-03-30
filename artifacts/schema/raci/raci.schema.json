@@ -1,0 +1,184 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://espedair.io/schema/raci",
+  "title": "RACI Matrix Schema",
+  "description": "Schema for defining Responsible, Accountable, Consulted and Informed assignments across regulatory reporting activities, data standards, or any project task domain.",
+  "$ref": "#/$defs/RaciMatrix",
+  "$defs": {
+
+    "RaciRole": {
+      "type": "string",
+      "enum": ["R", "A", "C", "I"],
+      "description": "R = Responsible (does the work), A = Accountable (owns the outcome, single per activity), C = Consulted (provides input before/during), I = Informed (notified after)"
+    },
+
+    "RaciAssignment": {
+      "type": "object",
+      "description": "The role(s) assigned to a single party for a single activity.",
+      "properties": {
+        "party_id": {
+          "type": "string",
+          "description": "Reference to a Party.id defined in this matrix."
+        },
+        "roles": {
+          "type": "array",
+          "description": "One or more RACI roles assigned to this party for the activity. Accountable (A) must appear exactly once per activity across all assignments.",
+          "items": { "$ref": "#/$defs/RaciRole" },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "notes": {
+          "type": "string",
+          "description": "Optional clarification of the assignment (e.g. conditions, escalation path)."
+        }
+      },
+      "required": ["party_id", "roles"],
+      "additionalProperties": false
+    },
+
+    "Activity": {
+      "type": "object",
+      "description": "A discrete task, process step, reporting obligation or governance action.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the activity within this matrix (e.g. 'ACT-001')."
+        },
+        "name": {
+          "type": "string",
+          "description": "Short descriptive name of the activity."
+        },
+        "description": {
+          "type": "string",
+          "description": "Full description of what the activity involves and its expected outcome."
+        },
+        "category": {
+          "type": "string",
+          "description": "Logical grouping (e.g. 'Data Extraction', 'Validation', 'Submission', 'Governance')."
+        },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Freeform keywords for filtering and search."
+        },
+        "trigger": {
+          "type": "string",
+          "description": "What initiates this activity (e.g. 'Quarter end', 'Regulatory change', 'Ad-hoc APRA direction')."
+        },
+        "frequency": {
+          "type": "string",
+          "enum": ["Continuous", "Daily", "Weekly", "Monthly", "Quarterly", "Annual", "Ad-hoc", "Event-driven"],
+          "description": "How often the activity recurs."
+        },
+        "deadline_days": {
+          "type": "integer",
+          "description": "Number of days after the trigger by which the activity must be complete.",
+          "minimum": 0
+        },
+        "standard_refs": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "References to regulatory standards or policies this activity satisfies (e.g. 'SRS_550.0')."
+        },
+        "assignments": {
+          "type": "array",
+          "description": "The set of party-role assignments for this activity. Exactly one party must hold role A.",
+          "items": { "$ref": "#/$defs/RaciAssignment" },
+          "minItems": 1
+        }
+      },
+      "required": ["id", "name", "assignments"],
+      "additionalProperties": false
+    },
+
+    "Party": {
+      "type": "object",
+      "description": "A person, role, team, system or external entity that can be assigned RACI responsibilities.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier used in assignment references (e.g. 'PARTY-001')."
+        },
+        "name": {
+          "type": "string",
+          "description": "Display name of the party (e.g. 'Investment Operations', 'CFO', 'APRA Connect System')."
+        },
+        "type": {
+          "type": "string",
+          "enum": ["Person", "Role", "Team", "System", "External", "Committee"],
+          "description": "Classification of the party."
+        },
+        "contact": {
+          "type": "string",
+          "description": "Email address or contact reference for the party."
+        },
+        "description": {
+          "type": "string",
+          "description": "Additional context about the party's function or scope."
+        }
+      },
+      "required": ["id", "name", "type"],
+      "additionalProperties": false
+    },
+
+    "RaciMatrix": {
+      "type": "object",
+      "description": "Root object representing a complete RACI matrix for a defined scope (project, regulation, domain).",
+      "properties": {
+        "$schema": {
+          "type": "string",
+          "description": "Reference to the JSON Schema governing this document."
+        },
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for this RACI matrix instance."
+        },
+        "name": {
+          "type": "string",
+          "description": "Human-readable name of the RACI matrix."
+        },
+        "description": {
+          "type": "string",
+          "description": "Purpose and scope of this matrix."
+        },
+        "domain": {
+          "type": "string",
+          "description": "Subject domain (e.g. 'APRA Superannuation Reporting', 'Data Governance')."
+        },
+        "owner": {
+          "type": "string",
+          "description": "Party responsible for maintaining this matrix document."
+        },
+        "version": {
+          "type": "string",
+          "description": "Semantic version of this matrix (e.g. '1.0.0')."
+        },
+        "effective_date": {
+          "type": "string",
+          "format": "date",
+          "description": "ISO 8601 date from which this matrix applies."
+        },
+        "review_date": {
+          "type": "string",
+          "format": "date",
+          "description": "ISO 8601 date when this matrix is next scheduled for review."
+        },
+        "parties": {
+          "type": "array",
+          "description": "All parties that may be referenced in activity assignments.",
+          "items": { "$ref": "#/$defs/Party" },
+          "minItems": 1
+        },
+        "activities": {
+          "type": "array",
+          "description": "All activities governed by this RACI matrix.",
+          "items": { "$ref": "#/$defs/Activity" },
+          "minItems": 1
+        }
+      },
+      "required": ["id", "name", "parties", "activities"],
+      "additionalProperties": false
+    }
+
+  }
+}

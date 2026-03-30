@@ -1,0 +1,143 @@
+{
+  "$schema": "./platform-agent-management.schema.json",
+  "name": "enterprise_aws_agent_management",
+  "version": "1.0.0",
+  "description": "Example platform agent management package for AWS-based orchestration, ingestion, and monitoring workflows.",
+  "source": "Platform Engineering onboarding",
+  "generated_at_utc": "2026-03-29T14:20:00Z",
+  "governance": {
+    "owner": "Cloud Platform Engineering",
+    "steward": "Data Platform Operations",
+    "approval_status": "approved",
+    "approved_at": "2026-03-29"
+  },
+  "platform_connections": [
+    {
+      "connection_id": "aws.prod.data-platform",
+      "platform_type": "aws",
+      "name": "AWS Production Data Platform",
+      "description": "Primary AWS connection profile for regulated data platform automation.",
+      "auth": {
+        "mode": "iam-role",
+        "credential_ref": "secretsmanager://platform/aws/prod-agent-assume-role",
+        "token_rotation_days": 30,
+        "scopes": [
+          "sts:AssumeRole",
+          "cloudwatch:PutMetricData",
+          "events:PutEvents"
+        ]
+      },
+      "network_policy_ref": "netpol.aws.privatelink.prod",
+      "aws": {
+        "account_id": "123456789012",
+        "region": "ap-southeast-2",
+        "role_arn": "arn:aws:iam::123456789012:role/prod-data-platform-agent-role"
+      },
+      "status": "active"
+    }
+  ],
+  "agents": [
+    {
+      "agent_id": "agent.aws.orchestrator",
+      "agent_name": "AWS Pipeline Orchestrator",
+      "agent_type": "orchestration",
+      "description": "Coordinates Step Functions and ECS tasks for daily regulatory processing.",
+      "runtime": {
+        "host_type": "serverless",
+        "execution_mode": "scheduled",
+        "runtime_ref": "stepfunctions://arn:aws:states:ap-southeast-2:123456789012:stateMachine:regulatory-orchestrator"
+      },
+      "connection_ids": [
+        "aws.prod.data-platform"
+      ],
+      "capabilities": [
+        "run-step-functions",
+        "trigger-ecs-tasks",
+        "publish-eventbridge-events"
+      ],
+      "permissions": [
+        {
+          "rule_id": "perm.aws.stepfunctions.execute",
+          "platform_type": "aws",
+          "resource": "arn:aws:states:ap-southeast-2:123456789012:stateMachine:regulatory-orchestrator",
+          "action": "execute",
+          "effect": "allow"
+        },
+        {
+          "rule_id": "perm.aws.ecs.run-task",
+          "platform_type": "aws",
+          "resource": "arn:aws:ecs:ap-southeast-2:123456789012:task-definition/regulatory-transform:*",
+          "action": "run-task",
+          "effect": "allow"
+        }
+      ],
+      "schedule": {
+        "cron": "0 2 * * *",
+        "timezone": "Australia/Sydney",
+        "max_runtime_minutes": 90,
+        "retry_policy": "exponential"
+      },
+      "status": "active",
+      "tags": [
+        "aws",
+        "regulated",
+        "orchestration"
+      ]
+    },
+    {
+      "agent_id": "agent.aws.redshift.ingestion",
+      "agent_name": "AWS Redshift Ingestion Agent",
+      "agent_type": "ingestion",
+      "description": "Loads staged files into curated Redshift datasets and applies ingestion quality checks.",
+      "runtime": {
+        "host_type": "kubernetes",
+        "execution_mode": "event-driven",
+        "runtime_ref": "eks://ap-southeast-2/clusters/data-platform-prod/namespaces/ingestion/jobs/redshift-loader"
+      },
+      "connection_ids": [
+        "aws.prod.data-platform"
+      ],
+      "capabilities": [
+        "copy-into-redshift",
+        "validate-ingestion-manifests",
+        "emit-data-quality-events"
+      ],
+      "permissions": [
+        {
+          "rule_id": "perm.aws.redshift.tables.write",
+          "platform_type": "aws",
+          "resource": "arn:aws:redshift:ap-southeast-2:123456789012:dbuser:prod-cluster/regulatory_loader",
+          "action": "write",
+          "effect": "allow"
+        },
+        {
+          "rule_id": "perm.aws.s3.staging.read",
+          "platform_type": "aws",
+          "resource": "arn:aws:s3:::espedair-prod-staging/*",
+          "action": "read",
+          "effect": "allow"
+        },
+        {
+          "rule_id": "perm.aws.kms.keys.use",
+          "platform_type": "aws",
+          "resource": "arn:aws:kms:ap-southeast-2:123456789012:key/11111111-2222-3333-4444-555555555555",
+          "action": "encrypt-decrypt",
+          "effect": "allow",
+          "condition": "aws:CurrentTime < 2027-01-01T00:00:00Z"
+        }
+      ],
+      "status": "active",
+      "tags": [
+        "aws",
+        "ingestion",
+        "redshift"
+      ]
+    }
+  ],
+  "stats": {
+    "platform_connection_count": 1,
+    "agent_count": 2,
+    "active_agent_count": 2,
+    "permission_rule_count": 5
+  }
+}

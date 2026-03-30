@@ -1,0 +1,46 @@
+{
+  "$schema": "./master-data-management.schema.json",
+  "name": "master_data_minimal",
+  "version": "1.0.0",
+  "domain": "Enterprise Data Management",
+  "governance": {
+    "data_owner": "Enterprise Data Office",
+    "data_steward": "MDM Stewardship Team",
+    "approval_status": "draft"
+  },
+  "entities": [
+    {
+      "entity_id": "party_person",
+      "entity_name": "Party Person",
+      "record_type": "person",
+      "status": "active",
+      "keys": {
+        "business_key": [
+          "first_name",
+          "last_name",
+          "date_of_birth"
+        ]
+      },
+      "attributes": [
+        {
+          "name": "first_name",
+          "data_type": "string",
+          "nullable": false,
+          "golden_record_candidate": true
+        },
+        {
+          "name": "last_name",
+          "data_type": "string",
+          "nullable": false,
+          "golden_record_candidate": true
+        },
+        {
+          "name": "date_of_birth",
+          "data_type": "date",
+          "nullable": false,
+          "golden_record_candidate": true
+        }
+      ]
+    }
+  ]
+}

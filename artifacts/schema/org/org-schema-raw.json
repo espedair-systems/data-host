@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://espedair.io/schema/org-structure",
+  "title": "Organizational Structure Schema",
+  "description": "Schema for organizational structure data including units, positions, people, and their relationships.",
+  "type": "object",
+  "properties": {
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "domain": { "type": "string" },
+        "version": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "rootUnitId": { "type": "string" },
+        "generatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["domain", "version", "title"]
+    },
+    "elements": {
+      "type": "object",
+      "properties": {
+        "nodes": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Node" }
+        },
+        "edges": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Edge" }
+        }
+      },
+      "required": ["nodes", "edges"]
+    },
+    "style": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/StyleRule" }
+    },
+    "layout": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "animate": { "type": "boolean" },
+        "animationDuration": { "type": "number" },
+        "padding": { "type": "number" },
+        "rankDir": { "type": "string" }
+      }
+    }
+  },
+  "required": ["metadata", "elements"],
+  "$defs": {
+    "Node": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "oneOf": [
+            { "$ref": "#/$defs/OrgUnitNode" },
+            { "$ref": "#/$defs/PositionNode" },
+            { "$ref": "#/$defs/PersonNode" },
+            { "$ref": "#/$defs/NoteNode" }
+          ]
+        }
+      },
+      "required": ["data"]
+    },
+    "OrgUnitNode": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "const": "org_unit" },
+        "name": { "type": "string" },
+        "unitType": { "type": "string", "enum": ["company", "division", "department", "team"] },
+        "description": { "type": "string" }
+      },
+      "required": ["id", "type", "name", "unitType"]
+    },
+    "PositionNode": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "const": "position" },
+        "title": { "type": "string" },
+        "level": { "type": "string" },
+        "vacancyStatus": { "type": "string", "enum": ["filled", "vacant"] },
+        "costCenter": { "type": "string" }
+      },
+      "required": ["id", "type", "title", "level", "vacancyStatus"]
+    },
+    "PersonNode": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "const": "person" },
+        "displayName": { "type": "string" },
+        "givenName": { "type": "string" },
+        "familyName": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "employeeId": { "type": "string" },
+        "employmentType": { "type": "string" },
+        "jobTitle": { "type": "string" },
+        "location": { "type": "string" },
+        "timezone": { "type": "string" },
+        "startDate": { "type": "string", "format": "date" }
+      },
+      "required": ["id", "type", "displayName"]
+    },
+    "NoteNode": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "const": "note" },
+        "text": { "type": "string" }
+      },
+      "required": ["id", "type", "text"]
+    },
+    "Edge": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "string" },
+            "type": { "type": "string" },
+            "source": { "type": "string" },
+            "target": { "type": "string" },
+            "label": { "type": "string" },
+            "notes": { "type": "string" }
+          },
+          "required": ["id", "type", "source", "target"]
+        }
+      },
+      "required": ["data"]
+    },
+    "StyleRule": {
+      "type": "object",
+      "properties": {
+        "selector": { "type": "string" },
+        "style": { "type": "object" }
+      },
+      "required": ["selector", "style"]
+    }
+  }
+}

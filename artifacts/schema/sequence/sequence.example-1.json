@@ -1,0 +1,245 @@
+{
+  "$schema": "./sequence.schema.json",
+  "name": "financial-product-onboarding-sequence",
+  "version": "1.0.0",
+  "title": "Financial Product Onboarding and Regulatory Publish",
+  "description": "Sequence for onboarding a new financial product, validating controls, and publishing to downstream regulatory reporting.",
+  "scenario_type": "integration",
+  "source": "Product onboarding runbook and regulatory submission process notes",
+  "generated_at_utc": "2026-03-29T10:00:00Z",
+  "trigger": "New product approved for launch",
+  "preconditions": [
+    "Product proposal approved by governance",
+    "Pricing model and disclosure templates available"
+  ],
+  "postconditions": [
+    "Product reference and pricing records published",
+    "Regulatory reporting dataset refreshed"
+  ],
+  "governance": {
+    "owner": "Product Governance Manager",
+    "steward": "Data Product Steward",
+    "approval_status": "approved",
+    "approved_at": "2026-03-29"
+  },
+  "participants": [
+    {
+      "id": "actor.product_manager",
+      "name": "Product Manager",
+      "participant_type": "actor",
+      "alias": "PM",
+      "owner": "Product Office",
+      "classification": "Internal",
+      "description": "Initiates and coordinates product onboarding."
+    },
+    {
+      "id": "system.product_catalog",
+      "name": "Product Catalog Service",
+      "participant_type": "service",
+      "alias": "CAT",
+      "owner": "Product Platform Team",
+      "classification": "Internal",
+      "description": "Persists product master definitions."
+    },
+    {
+      "id": "service.pricing_engine",
+      "name": "Pricing Engine",
+      "participant_type": "application",
+      "alias": "PRICE",
+      "owner": "Pricing Team",
+      "classification": "Internal"
+    },
+    {
+      "id": "pipeline.data_orchestrator",
+      "name": "Data Orchestrator",
+      "participant_type": "system",
+      "alias": "ORCH",
+      "owner": "Data Engineering",
+      "classification": "Internal",
+      "tags": [
+        "batch",
+        "orchestration"
+      ]
+    },
+    {
+      "id": "queue.reg_reporting",
+      "name": "Regulatory Reporting Queue",
+      "participant_type": "queue",
+      "alias": "REGQ",
+      "owner": "Regulatory Reporting Technology",
+      "classification": "Confidential"
+    },
+    {
+      "id": "external.regulator",
+      "name": "Regulator Gateway",
+      "participant_type": "external",
+      "alias": "REG",
+      "owner": "External",
+      "classification": "Restricted"
+    }
+  ],
+  "messages": [
+    {
+      "id": "msg.001",
+      "sequence": 1,
+      "from": "actor.product_manager",
+      "to": "system.product_catalog",
+      "message_type": "sync",
+      "label": "Create product definition",
+      "operation": "POST /products",
+      "payload_ref": "product-master.v1",
+      "activates": true,
+      "description": "Submits new product profile and taxonomy classification.",
+      "evidence_anchors": [
+        {
+          "source": "API specification",
+          "location": "docs/product-catalog-api.md",
+          "detail": "Product create endpoint contract"
+        }
+      ]
+    },
+    {
+      "id": "msg.002",
+      "sequence": 2,
+      "from": "system.product_catalog",
+      "to": "service.pricing_engine",
+      "message_type": "async",
+      "label": "Publish pricing request",
+      "operation": "publishPricingEvent",
+      "payload_ref": "pricing-request.v1",
+      "activates": true,
+      "timeout_ms": 30000,
+      "tags": [
+        "event",
+        "pricing"
+      ]
+    },
+    {
+      "id": "msg.003",
+      "sequence": 3,
+      "from": "service.pricing_engine",
+      "to": "system.product_catalog",
+      "message_type": "reply",
+      "label": "Pricing calculated",
+      "operation": "pricingResponse",
+      "payload_ref": "pricing-result.v1",
+      "deactivates": true,
+      "description": "Returns base fees and risk-adjusted pricing profile."
+    },
+    {
+      "id": "msg.004",
+      "sequence": 4,
+      "from": "system.product_catalog",
+      "to": "pipeline.data_orchestrator",
+      "message_type": "sync",
+      "label": "Trigger publish pipeline",
+      "operation": "startPipeline(product_publish)",
+      "activates": true
+    },
+    {
+      "id": "msg.005",
+      "sequence": 5,
+      "from": "pipeline.data_orchestrator",
+      "to": "queue.reg_reporting",
+      "message_type": "async",
+      "label": "Enqueue regulatory payload",
+      "operation": "enqueue(regulatory_product_record)",
+      "payload_ref": "regulatory-product-record.v1",
+      "timeout_ms": 15000,
+      "evidence_anchors": [
+        {
+          "source": "Runbook",
+          "location": "runbooks/regulatory-publish.md",
+          "detail": "Queue publishing step"
+        }
+      ]
+    },
+    {
+      "id": "msg.006",
+      "sequence": 6,
+      "from": "queue.reg_reporting",
+      "to": "external.regulator",
+      "message_type": "async",
+      "label": "Transmit submission package",
+      "operation": "sendSubmission",
+      "payload_ref": "srs-product-submission.v1",
+      "description": "Gateway forwards package to regulator endpoint."
+    },
+    {
+      "id": "msg.007",
+      "sequence": 7,
+      "from": "external.regulator",
+      "to": "queue.reg_reporting",
+      "message_type": "reply",
+      "label": "Submission acknowledgement",
+      "operation": "acknowledgeSubmission",
+      "payload_ref": "submission-ack.v1",
+      "deactivates": true
+    }
+  ],
+  "fragments": [
+    {
+      "id": "frag.001",
+      "fragment_type": "alt",
+      "label": "Pricing validation",
+      "condition": "pricing status == valid",
+      "start_sequence": 2,
+      "end_sequence": 4,
+      "participant_ids": [
+        "system.product_catalog",
+        "service.pricing_engine"
+      ],
+      "operands": [
+        {
+          "id": "op.001",
+          "label": "valid",
+          "condition": "pricing response valid",
+          "start_sequence": 2,
+          "end_sequence": 4
+        },
+        {
+          "id": "op.002",
+          "label": "invalid",
+          "condition": "pricing response invalid",
+          "start_sequence": 2,
+          "end_sequence": 3
+        }
+      ]
+    },
+    {
+      "id": "frag.002",
+      "fragment_type": "loop",
+      "label": "Retry submission",
+      "iteration": "retry < 3",
+      "start_sequence": 6,
+      "end_sequence": 7,
+      "participant_ids": [
+        "queue.reg_reporting",
+        "external.regulator"
+      ]
+    }
+  ],
+  "notes": [
+    {
+      "id": "note.001",
+      "text": "Submission must complete within quarterly filing SLA.",
+      "placement": "over",
+      "participant_ids": [
+        "queue.reg_reporting",
+        "external.regulator"
+      ],
+      "sequence": 6
+    },
+    {
+      "id": "note.002",
+      "text": "Classification uses approved financial product taxonomy version 1.0.0.",
+      "placement": "global"
+    }
+  ],
+  "stats": {
+    "participant_count": 6,
+    "message_count": 7,
+    "fragment_count": 2,
+    "max_parallel_branches": 2
+  }
+}

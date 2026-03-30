@@ -1,0 +1,144 @@
+{
+  "$schema": "./platform-agent-management.schema.json",
+  "name": "enterprise_service_now_agent_management",
+  "version": "1.0.0",
+  "description": "Example platform agent management package for ServiceNow-based ticketing, incident automation, and governance workflows.",
+  "source": "Platform Engineering onboarding",
+  "generated_at_utc": "2026-03-29T14:50:00Z",
+  "governance": {
+    "owner": "Service Management Platform Team",
+    "steward": "ITSM Operations",
+    "approval_status": "approved",
+    "approved_at": "2026-03-29"
+  },
+  "platform_connections": [
+    {
+      "connection_id": "service-now.prod.itsm",
+      "platform_type": "service-now",
+      "name": "ServiceNow Production ITSM",
+      "description": "Primary ServiceNow connection profile for incident, change, and request automation.",
+      "auth": {
+        "mode": "oauth",
+        "credential_ref": "vault://platform/service-now/prod-oauth-client",
+        "token_rotation_days": 30,
+        "scopes": [
+          "incident.read",
+          "incident.write",
+          "change_request.read",
+          "change_request.write"
+        ]
+      },
+      "network_policy_ref": "netpol.servicenow.private-egress.prod",
+      "service_now": {
+        "instance_url": "https://espedair.service-now.com",
+        "api_version": "v2",
+        "assignment_group": "Data Platform Operations"
+      },
+      "status": "active"
+    }
+  ],
+  "agents": [
+    {
+      "agent_id": "agent.servicenow.ticketing",
+      "agent_name": "ServiceNow Ticketing Agent",
+      "agent_type": "ticketing",
+      "description": "Creates and updates incidents and service requests based on platform alert and pipeline events.",
+      "runtime": {
+        "host_type": "saas",
+        "execution_mode": "event-driven",
+        "runtime_ref": "servicenow://flows/platform_event_to_ticket"
+      },
+      "connection_ids": [
+        "service-now.prod.itsm"
+      ],
+      "capabilities": [
+        "create-incidents",
+        "update-incidents",
+        "create-service-requests"
+      ],
+      "permissions": [
+        {
+          "rule_id": "perm.sn.incident.write",
+          "platform_type": "service-now",
+          "resource": "table/incident",
+          "action": "write",
+          "effect": "allow"
+        },
+        {
+          "rule_id": "perm.sn.request.write",
+          "platform_type": "service-now",
+          "resource": "table/sc_request",
+          "action": "write",
+          "effect": "allow"
+        }
+      ],
+      "status": "active",
+      "tags": [
+        "service-now",
+        "ticketing",
+        "itsm"
+      ]
+    },
+    {
+      "agent_id": "agent.servicenow.governance",
+      "agent_name": "ServiceNow Governance Agent",
+      "agent_type": "governance",
+      "description": "Monitors policy exceptions, opens compliance tasks, and tracks remediation workflow status.",
+      "runtime": {
+        "host_type": "serverless",
+        "execution_mode": "scheduled",
+        "runtime_ref": "azure-functions://servicenow-governance-agent"
+      },
+      "connection_ids": [
+        "service-now.prod.itsm"
+      ],
+      "capabilities": [
+        "create-compliance-tasks",
+        "query-change-records",
+        "escalate-breaches"
+      ],
+      "permissions": [
+        {
+          "rule_id": "perm.sn.change.read",
+          "platform_type": "service-now",
+          "resource": "table/change_request",
+          "action": "read",
+          "effect": "allow"
+        },
+        {
+          "rule_id": "perm.sn.task.write",
+          "platform_type": "service-now",
+          "resource": "table/task",
+          "action": "write",
+          "effect": "allow"
+        },
+        {
+          "rule_id": "perm.sn.admin.deny",
+          "platform_type": "service-now",
+          "resource": "sys_user_admin",
+          "action": "admin",
+          "effect": "deny",
+          "condition": "all operations are least-privilege and non-admin"
+        }
+      ],
+      "schedule": {
+        "cron": "0 */4 * * *",
+        "timezone": "Australia/Sydney",
+        "max_runtime_minutes": 30,
+        "retry_policy": "fixed"
+      },
+      "status": "active",
+      "tags": [
+        "service-now",
+        "governance",
+        "compliance"
+      ]
+    }
+  ],
+  "stats": {
+    "platform_connection_count": 1,
+    "agent_count": 2,
+    "active_agent_count": 2,
+    "permission_rule_count": 5
+  }
+}

@@ -1,0 +1,362 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://espedair.io/schema/template/reference-data-management",
+  "title": "Reference Data Management Schema",
+  "description": "Schema for defining and governing reference data domains, datasets, code sets, and quality controls.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "version",
+    "domain",
+    "governance",
+    "datasets"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Optional self-reference to this schema file."
+    },
+    "name": {
+      "type": "string",
+      "description": "Logical name of the reference data package."
+    },
+    "version": {
+      "type": "string",
+      "description": "Semantic version or release identifier.",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(-[A-Za-z0-9._-]+)?$"
+    },
+    "description": {
+      "type": "string",
+      "description": "Business purpose and scope for the package."
+    },
+    "domain": {
+      "type": "string",
+      "description": "Business domain owning these reference datasets."
+    },
+    "source": {
+      "type": "string",
+      "description": "System, publication, or process that produced this artifact."
+    },
+    "generated_at_utc": {
+      "type": "string",
+      "format": "date-time",
+      "description": "UTC timestamp for artifact generation."
+    },
+    "governance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "data_owner",
+        "data_steward",
+        "approval_status"
+      ],
+      "properties": {
+        "data_owner": {
+          "type": "string",
+          "description": "Role or team accountable for reference data outcomes."
+        },
+        "data_steward": {
+          "type": "string",
+          "description": "Role or team responsible for quality and maintenance."
+        },
+        "approver": {
+          "type": "string",
+          "description": "Role or person that approved this version."
+        },
+        "approval_status": {
+          "type": "string",
+          "enum": [
+            "draft",
+            "review",
+            "approved",
+            "deprecated"
+          ],
+          "description": "Current governance lifecycle state."
+        },
+        "approval_date": {
+          "type": "string",
+          "format": "date",
+          "description": "Date of approval in ISO format."
+        }
+      }
+    },
+    "datasets": {
+      "type": "array",
+      "description": "Collection of managed reference datasets and code sets.",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "dataset_id",
+          "dataset_name",
+          "status",
+          "keys",
+          "code_sets"
+        ],
+        "properties": {
+          "dataset_id": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9_-]*$",
+            "description": "Stable machine-readable identifier for the dataset."
+          },
+          "dataset_name": {
+            "type": "string",
+            "description": "Human-readable dataset name."
+          },
+          "description": {
+            "type": "string",
+            "description": "Business meaning and intended use of the dataset."
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "inactive",
+              "retired"
+            ],
+            "description": "Operational status of this dataset."
+          },
+          "classification": {
+            "type": "string",
+            "enum": [
+              "Public",
+              "Internal",
+              "Confidential",
+              "Highly Confidential",
+              "Restricted"
+            ],
+            "description": "Information confidentiality classification."
+          },
+          "source_system": {
+            "type": "string",
+            "description": "Authoritative source system for this reference data."
+          },
+          "update_frequency": {
+            "type": "string",
+            "enum": [
+              "event-driven",
+              "hourly",
+              "daily",
+              "weekly",
+              "monthly",
+              "quarterly",
+              "annually",
+              "ad-hoc"
+            ],
+            "description": "Expected cadence for dataset updates."
+          },
+          "effective_date_field": {
+            "type": "string",
+            "description": "Field name used to determine effective-from behavior."
+          },
+          "expiry_date_field": {
+            "type": "string",
+            "description": "Field name used to determine effective-to behavior."
+          },
+          "keys": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "business_key"
+            ],
+            "properties": {
+              "business_key": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "minItems": 1,
+                "description": "One or more fields forming the natural key."
+              },
+              "surrogate_key": {
+                "type": "string",
+                "description": "Optional technical key for storage and joins."
+              }
+            }
+          },
+          "attributes": {
+            "type": "array",
+            "description": "Dataset attribute definitions.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "name",
+                "data_type",
+                "nullable"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "data_type": {
+                  "type": "string",
+                  "enum": [
+                    "string",
+                    "integer",
+                    "number",
+                    "boolean",
+                    "date",
+                    "datetime"
+                  ]
+                },
+                "nullable": {
+                  "type": "boolean"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "allowed_values": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "code_sets": {
+            "type": "array",
+            "description": "Enumerations and controlled vocabularies in this dataset.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "code",
+                "label",
+                "status"
+              ],
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "description": "Stable code value used in source and downstream systems."
+                },
+                "label": {
+                  "type": "string",
+                  "description": "Display label for the code."
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Business meaning of the code."
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "active",
+                    "inactive",
+                    "deprecated"
+                  ],
+                  "description": "Lifecycle status of the code."
+                },
+                "effective_from": {
+                  "type": "string",
+                  "format": "date",
+                  "description": "Start date when code became valid."
+                },
+                "effective_to": {
+                  "type": "string",
+                  "format": "date",
+                  "description": "End date when code ceased to be valid."
+                },
+                "sort_order": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "description": "Optional display sequence for UI/reporting."
+                }
+              }
+            }
+          },
+          "quality_rules": {
+            "type": "array",
+            "description": "Quality and integrity checks for dataset publication.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "rule_id",
+                "rule_type",
+                "severity"
+              ],
+              "properties": {
+                "rule_id": {
+                  "type": "string"
+                },
+                "rule_type": {
+                  "type": "string",
+                  "enum": [
+                    "uniqueness",
+                    "completeness",
+                    "referential-integrity",
+                    "valid-range",
+                    "allowed-values",
+                    "custom"
+                  ]
+                },
+                "severity": {
+                  "type": "string",
+                  "enum": [
+                    "low",
+                    "medium",
+                    "high",
+                    "critical"
+                  ]
+                },
+                "expression": {
+                  "type": "string",
+                  "description": "Rule expression or implementation reference."
+                },
+                "description": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "lineage": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "upstream": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "downstream": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "sla": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "refresh_frequency": {
+                "type": "string"
+              },
+              "latency_target": {
+                "type": "string"
+              },
+              "last_refresh_utc": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          },
+          "records": {
+            "type": "array",
+            "description": "Optional embedded reference data records for lightweight use cases.",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        }
+      }
+    }
+  }
+}

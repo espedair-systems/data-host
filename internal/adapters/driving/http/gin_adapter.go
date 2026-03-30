@@ -150,6 +150,7 @@ func (a *GinAdapter) Start(config domain.HostConfig, repo ports.RegistryReposito
 			ingestion.POST("/full", auth.RequireRole(domain.RoleAdmin), a.IngestSchema)
 			ingestion.POST("/ingest-org", auth.RequireRole(domain.RoleAdmin), a.IngestOrg)
 			ingestion.POST("/ingest-dfd", auth.RequireRole(domain.RoleAdmin), a.IngestDFD)
+			ingestion.POST("/ingest-tax", auth.RequireRole(domain.RoleAdmin), a.IngestTaxonomy)
 			ingestion.GET("/ingest-org", a.GetOrgStructure)
 			ingestion.GET("/ingest-dfd", a.GetDFDStructure)
 			ingestion.GET("/archives", a.GetFileArchives)
@@ -157,6 +158,32 @@ func (a *GinAdapter) Start(config domain.HostConfig, repo ports.RegistryReposito
 			ingestion.POST("/ingest-to-local-folder", auth.RequireRole(domain.RoleAdmin), a.IngestToFolder)
 			ingestion.POST("/generate/:asset", auth.RequireRole(domain.RoleAdmin), a.GenerateAsset)
 			ingestion.GET("/generate/:asset/plan", auth.RequireRole(domain.RoleAdmin), a.GetGenerationPlan)
+		}
+
+		glossary := api.Group("/glossary")
+		{
+			glossary.GET("/list", a.GetGlossaries)
+			glossary.GET("/:id", a.GetGlossary)
+			glossary.GET("/:id/terms", a.GetGlossaryTerms)
+			glossary.GET("/terms/:asset_id", a.GetGlossaryTerm)
+			glossary.POST("/ingest", authMW, auth.RequireRole(domain.RoleAdmin), a.IngestBusinessGlossary)
+			glossary.DELETE("/:id", authMW, auth.RequireRole(domain.RoleAdmin), a.DeleteGlossary)
+		}
+
+		bim := api.Group("/bim")
+		{
+			bim.GET("/list", a.GetBIMModels)
+			bim.GET("/:id", a.GetBIMModel)
+			bim.GET("/:id/entities", a.GetBIMEntities)
+			bim.DELETE("/:id", authMW, auth.RequireRole(domain.RoleAdmin), a.DeleteBIM)
+		}
+
+		rdm := api.Group("/rdm")
+		{
+			rdm.GET("/list", a.GetReferenceDataPackages)
+			rdm.GET("/datasets", a.GetReferenceDatasets)
+			rdm.GET("/:id", a.GetReferenceDataPackage)
+			rdm.DELETE("/:id", authMW, auth.RequireRole(domain.RoleAdmin), a.DeleteReferenceData)
 		}
 	}
 

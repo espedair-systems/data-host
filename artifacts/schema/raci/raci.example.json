@@ -1,0 +1,300 @@
+{
+  "$schema": "./raci.schema.json",
+  "id": "raci-financial-products-governance",
+  "name": "Financial Products Governance RACI",
+  "description": "Defines ownership and responsibilities for managing financial product onboarding, pricing updates, disclosures, and regulatory submissions.",
+  "domain": "Financial Product Governance",
+  "owner": "Product Governance Manager",
+  "version": "1.0.0",
+  "effective_date": "2026-04-01",
+  "review_date": "2027-04-01",
+  "parties": [
+    {
+      "id": "PARTY-001",
+      "name": "Product Governance Manager",
+      "type": "Role",
+      "contact": "product-governance@company.example",
+      "description": "Accountable owner for product governance controls and policy compliance."
+    },
+    {
+      "id": "PARTY-002",
+      "name": "Product Team",
+      "type": "Team",
+      "contact": "product-team@company.example",
+      "description": "Designs and maintains product definitions, terms, and customer propositions."
+    },
+    {
+      "id": "PARTY-003",
+      "name": "Pricing Team",
+      "type": "Team",
+      "contact": "pricing@company.example",
+      "description": "Maintains pricing models, fees, rates, and valuation assumptions."
+    },
+    {
+      "id": "PARTY-004",
+      "name": "Data Engineering",
+      "type": "Team",
+      "contact": "data-engineering@company.example",
+      "description": "Builds and operates data pipelines, validation checks, and reporting datasets."
+    },
+    {
+      "id": "PARTY-005",
+      "name": "Compliance Team",
+      "type": "Team",
+      "contact": "compliance@company.example",
+      "description": "Advises on regulatory obligations and disclosure requirements."
+    },
+    {
+      "id": "PARTY-006",
+      "name": "Risk Committee",
+      "type": "Committee",
+      "contact": "risk-committee@company.example",
+      "description": "Approves major product risk decisions and governance exceptions."
+    },
+    {
+      "id": "PARTY-007",
+      "name": "Regulatory Reporting System",
+      "type": "System",
+      "description": "System used to prepare and submit periodic regulatory product reports."
+    },
+    {
+      "id": "PARTY-008",
+      "name": "Regulator",
+      "type": "External",
+      "description": "Receives submissions and may issue follow-up information requests."
+    }
+  ],
+  "activities": [
+    {
+      "id": "ACT-001",
+      "name": "New Product Classification",
+      "description": "Classify a proposed product into taxonomy categories and define core product attributes before implementation.",
+      "category": "Governance",
+      "tags": ["taxonomy", "classification", "onboarding"],
+      "trigger": "New product proposal approved for design",
+      "frequency": "Ad-hoc",
+      "deadline_days": 5,
+      "standard_refs": ["Product_Governance_Policy_v2"],
+      "assignments": [
+        {
+          "party_id": "PARTY-002",
+          "roles": ["R"],
+          "notes": "Draft classification and product profile"
+        },
+        {
+          "party_id": "PARTY-001",
+          "roles": ["A"]
+        },
+        {
+          "party_id": "PARTY-005",
+          "roles": ["C"]
+        },
+        {
+          "party_id": "PARTY-004",
+          "roles": ["I"]
+        }
+      ]
+    },
+    {
+      "id": "ACT-002",
+      "name": "Pricing Model Setup",
+      "description": "Define product pricing logic, fee schedules, and threshold rules in line with policy and target market requirements.",
+      "category": "Design",
+      "tags": ["pricing", "fees", "model"],
+      "trigger": "Product classification finalised",
+      "frequency": "Ad-hoc",
+      "deadline_days": 10,
+      "standard_refs": ["Pricing_Standard_v1"],
+      "assignments": [
+        {
+          "party_id": "PARTY-003",
+          "roles": ["R"]
+        },
+        {
+          "party_id": "PARTY-001",
+          "roles": ["A"]
+        },
+        {
+          "party_id": "PARTY-002",
+          "roles": ["C"]
+        },
+        {
+          "party_id": "PARTY-005",
+          "roles": ["C"]
+        },
+        {
+          "party_id": "PARTY-006",
+          "roles": ["I"]
+        }
+      ]
+    },
+    {
+      "id": "ACT-003",
+      "name": "Data Pipeline Configuration",
+      "description": "Configure ingestion and transformation pipelines for product reference, pricing, and performance data.",
+      "category": "Data Engineering",
+      "tags": ["pipeline", "ingestion", "transformation"],
+      "trigger": "Pricing model approved",
+      "frequency": "Ad-hoc",
+      "deadline_days": 7,
+      "standard_refs": ["Data_Platform_Control_Standard"],
+      "assignments": [
+        {
+          "party_id": "PARTY-004",
+          "roles": ["R"]
+        },
+        {
+          "party_id": "PARTY-001",
+          "roles": ["A"]
+        },
+        {
+          "party_id": "PARTY-003",
+          "roles": ["C"]
+        },
+        {
+          "party_id": "PARTY-002",
+          "roles": ["C"]
+        },
+        {
+          "party_id": "PARTY-007",
+          "roles": ["I"],
+          "notes": "Receives configured outbound dataset"
+        }
+      ]
+    },
+    {
+      "id": "ACT-004",
+      "name": "Pre-Launch Compliance Review",
+      "description": "Review product disclosures, eligibility logic, and reporting fields prior to customer launch.",
+      "category": "Compliance",
+      "tags": ["disclosure", "pre-launch", "compliance"],
+      "trigger": "Product launch readiness checkpoint",
+      "frequency": "Ad-hoc",
+      "deadline_days": 3,
+      "standard_refs": ["Disclosure_Guideline_2026"],
+      "assignments": [
+        {
+          "party_id": "PARTY-005",
+          "roles": ["R"]
+        },
+        {
+          "party_id": "PARTY-001",
+          "roles": ["A"]
+        },
+        {
+          "party_id": "PARTY-002",
+          "roles": ["C"]
+        },
+        {
+          "party_id": "PARTY-003",
+          "roles": ["C"]
+        },
+        {
+          "party_id": "PARTY-006",
+          "roles": ["I"]
+        }
+      ]
+    },
+    {
+      "id": "ACT-005",
+      "name": "Monthly Pricing Refresh",
+      "description": "Run monthly pricing refresh, execute quality checks, and publish approved updates to downstream systems.",
+      "category": "Operations",
+      "tags": ["monthly", "pricing", "quality-check"],
+      "trigger": "Month-end close",
+      "frequency": "Monthly",
+      "deadline_days": 2,
+      "standard_refs": ["Pricing_Standard_v1", "Operational_Runbook_Products"],
+      "assignments": [
+        {
+          "party_id": "PARTY-003",
+          "roles": ["R"]
+        },
+        {
+          "party_id": "PARTY-001",
+          "roles": ["A"]
+        },
+        {
+          "party_id": "PARTY-004",
+          "roles": ["R"],
+          "notes": "Executes pipeline and data quality checks"
+        },
+        {
+          "party_id": "PARTY-005",
+          "roles": ["C"]
+        },
+        {
+          "party_id": "PARTY-007",
+          "roles": ["I"]
+        }
+      ]
+    },
+    {
+      "id": "ACT-006",
+      "name": "Quarterly Regulatory Product Submission",
+      "description": "Compile product metrics and disclosures for quarterly regulatory submission and transmit through the reporting system.",
+      "category": "Regulatory Reporting",
+      "tags": ["quarterly", "submission", "regulatory"],
+      "trigger": "Quarter end",
+      "frequency": "Quarterly",
+      "deadline_days": 15,
+      "standard_refs": ["SRS_550.0", "SRS_551.0"],
+      "assignments": [
+        {
+          "party_id": "PARTY-004",
+          "roles": ["R"]
+        },
+        {
+          "party_id": "PARTY-001",
+          "roles": ["A"]
+        },
+        {
+          "party_id": "PARTY-005",
+          "roles": ["C"]
+        },
+        {
+          "party_id": "PARTY-007",
+          "roles": ["R"],
+          "notes": "Generates submission package and acknowledgement"
+        },
+        {
+          "party_id": "PARTY-008",
+          "roles": ["I"]
+        }
+      ]
+    },
+    {
+      "id": "ACT-007",
+      "name": "Annual Governance Review",
+      "description": "Review RACI matrix effectiveness, role assignments, and policy alignment; approve updates for the next cycle.",
+      "category": "Governance",
+      "tags": ["annual", "raci", "review"],
+      "trigger": "Annual policy review window",
+      "frequency": "Annual",
+      "deadline_days": 30,
+      "standard_refs": ["Governance_Review_Framework"],
+      "assignments": [
+        {
+          "party_id": "PARTY-001",
+          "roles": ["R", "A"]
+        },
+        {
+          "party_id": "PARTY-006",
+          "roles": ["C"]
+        },
+        {
+          "party_id": "PARTY-002",
+          "roles": ["C"]
+        },
+        {
+          "party_id": "PARTY-005",
+          "roles": ["C"]
+        },
+        {
+          "party_id": "PARTY-004",
+          "roles": ["I"]
+        }
+      ]
+    }
+  ]
+}

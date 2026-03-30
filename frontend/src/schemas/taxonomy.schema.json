@@ -1,0 +1,383 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://espedair.io/schema/template/taxonomy",
+  "title": "Taxonomy Schema",
+  "description": "Schema for defining governed taxonomies with hierarchical terms, relationships, synonyms, rules, and lifecycle metadata.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "version",
+    "taxonomy_type",
+    "terms"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Optional self-reference to this schema file."
+    },
+    "name": {
+      "type": "string",
+      "description": "Logical name of the taxonomy."
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(-[A-Za-z0-9._-]+)?$",
+      "description": "Semantic version of the taxonomy definition."
+    },
+    "title": {
+      "type": "string",
+      "description": "Human-readable taxonomy title."
+    },
+    "description": {
+      "type": "string",
+      "description": "Business description of taxonomy scope and intent."
+    },
+    "taxonomy_type": {
+      "type": "string",
+      "enum": [
+        "business",
+        "technical",
+        "regulatory",
+        "domain",
+        "product",
+        "risk",
+        "control",
+        "custom"
+      ],
+      "description": "Primary taxonomy category."
+    },
+    "source": {
+      "type": "string",
+      "description": "Source notes, standards, or process from which taxonomy was derived."
+    },
+    "generated_at_utc": {
+      "type": "string",
+      "format": "date-time",
+      "description": "UTC timestamp when taxonomy was generated."
+    },
+    "default_language": {
+      "type": "string",
+      "description": "Default language code for term labels and definitions.",
+      "default": "en"
+    },
+    "governance": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "owner": {
+          "type": "string",
+          "description": "Accountable owner of taxonomy content and approvals."
+        },
+        "steward": {
+          "type": "string",
+          "description": "Steward responsible for day-to-day taxonomy maintenance."
+        },
+        "approver": {
+          "type": "string",
+          "description": "Approver for taxonomy changes."
+        },
+        "approval_status": {
+          "type": "string",
+          "enum": [
+            "draft",
+            "review",
+            "approved",
+            "deprecated"
+          ],
+          "description": "Governance lifecycle state for the taxonomy."
+        },
+        "approved_at": {
+          "type": "string",
+          "format": "date",
+          "description": "Date the taxonomy version was approved."
+        }
+      }
+    },
+    "term_attributes": {
+      "type": "array",
+      "description": "Optional registry of additional attributes that can be used across terms.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "attribute_id",
+          "name",
+          "data_type"
+        ],
+        "properties": {
+          "attribute_id": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9._:-]*$"
+          },
+          "name": {
+            "type": "string"
+          },
+          "data_type": {
+            "type": "string",
+            "enum": [
+              "string",
+              "integer",
+              "number",
+              "boolean",
+              "date",
+              "datetime",
+              "array",
+              "object"
+            ]
+          },
+          "required": {
+            "type": "boolean",
+            "default": false
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "rule_definitions": {
+      "type": "array",
+      "description": "Reusable taxonomy rules applied at taxonomy or term level.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "rule_id",
+          "rule_type",
+          "severity"
+        ],
+        "properties": {
+          "rule_id": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9._:-]*$"
+          },
+          "rule_type": {
+            "type": "string",
+            "enum": [
+              "governance",
+              "classification",
+              "naming",
+              "validation",
+              "quality",
+              "constraint",
+              "custom"
+            ]
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high",
+              "critical"
+            ]
+          },
+          "expression": {
+            "type": "string",
+            "description": "Rule expression or condition text."
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "terms": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Taxonomy terms and hierarchical relationships.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "term_id",
+          "label",
+          "status"
+        ],
+        "properties": {
+          "term_id": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9._:-]*$",
+            "description": "Stable unique identifier for the term."
+          },
+          "label": {
+            "type": "string",
+            "description": "Preferred display label for the term."
+          },
+          "definition": {
+            "type": "string",
+            "description": "Business definition of the term."
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "proposed",
+              "active",
+              "deprecated",
+              "retired"
+            ],
+            "description": "Lifecycle status of the term."
+          },
+          "term_type": {
+            "type": "string",
+            "enum": [
+              "category",
+              "concept",
+              "class",
+              "code",
+              "tag",
+              "custom"
+            ],
+            "description": "Type classification of the term."
+          },
+          "language": {
+            "type": "string",
+            "description": "Language code for this term label/definition."
+          },
+          "synonyms": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Alternative labels for this term."
+          },
+          "acronyms": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Optional acronym list for this term."
+          },
+          "parent_term_id": {
+            "type": "string",
+            "description": "Parent term id for hierarchy navigation (single-parent model)."
+          },
+          "child_term_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Optional explicit child term references."
+          },
+          "broader_term_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Broader term references for polyhierarchy and semantic links."
+          },
+          "narrower_term_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Narrower term references for polyhierarchy and semantic links."
+          },
+          "related_term_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Associative term references."
+          },
+          "classification": {
+            "type": "string",
+            "enum": [
+              "Public",
+              "Internal",
+              "Confidential",
+              "Highly Confidential",
+              "Restricted"
+            ],
+            "description": "Optional information classification tied to this term."
+          },
+          "owner": {
+            "type": "string",
+            "description": "Owner accountable for term meaning and usage."
+          },
+          "steward": {
+            "type": "string",
+            "description": "Steward maintaining this term."
+          },
+          "effective_from": {
+            "type": "string",
+            "format": "date"
+          },
+          "effective_to": {
+            "type": "string",
+            "format": "date"
+          },
+          "attributes": {
+            "type": "object",
+            "description": "Optional custom attributes for this term.",
+            "additionalProperties": {
+              "type": [
+                "string",
+                "number",
+                "integer",
+                "boolean",
+                "array",
+                "object",
+                "null"
+              ]
+            }
+          },
+          "rule_refs": {
+            "type": "array",
+            "description": "References to reusable rule_definitions applying to this term.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "evidence_anchors": {
+            "type": "array",
+            "description": "Evidence references supporting this term definition or relationship.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "source",
+                "location",
+                "detail"
+              ],
+              "properties": {
+                "source": {
+                  "type": "string"
+                },
+                "location": {
+                  "type": "string"
+                },
+                "detail": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "stats": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "term_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "active_term_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "deprecated_term_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max_depth": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

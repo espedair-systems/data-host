@@ -1,0 +1,196 @@
+{
+  "$schema": "./library-file-upload.schema.json",
+  "name": "enterprise_library_upload_catalog",
+  "version": "1.0.0",
+  "description": "Example library configuration for managed file uploads to filesystem and cloud storage with purpose-based grouping and controlled version access.",
+  "source": "Library platform onboarding",
+  "generated_at_utc": "2026-03-29T13:20:00Z",
+  "governance": {
+    "owner": "Enterprise Content Platform",
+    "steward": "Library Operations Team",
+    "approval_status": "approved",
+    "approved_at": "2026-03-29"
+  },
+  "storage_profiles": [
+    {
+      "storage_id": "stor.fs.primary",
+      "storage_type": "filesystem",
+      "name": "Primary Filesystem Store",
+      "status": "active",
+      "filesystem": {
+        "root_path": "D:/library/uploads",
+        "path_pattern": "{group_id}/{file_id}/{version_number}"
+      }
+    },
+    {
+      "storage_id": "stor.cloud.archive",
+      "storage_type": "cloud",
+      "name": "Archive Cloud Store",
+      "status": "active",
+      "cloud": {
+        "provider": "azure-blob",
+        "container": "library-uploads",
+        "region": "australiaeast",
+        "prefix": "archive/"
+      }
+    }
+  ],
+  "parties": [
+    {
+      "party_id": "party.internal.risk-team",
+      "party_name": "Risk Reporting Team",
+      "party_type": "internal",
+      "contact": "risk-reporting@example.com",
+      "status": "active"
+    },
+    {
+      "party_id": "party.external.regulator",
+      "party_name": "External Regulator",
+      "party_type": "external",
+      "contact": "submissions@regulator.example",
+      "status": "active"
+    },
+    {
+      "party_id": "party.internal.library-batch",
+      "party_name": "Library Batch Service",
+      "party_type": "internal",
+      "contact": "svc-library-batch@example.com",
+      "status": "active"
+    }
+  ],
+  "file_groups": [
+    {
+      "group_id": "grp.regulatory-submissions",
+      "group_name": "Regulatory Submissions",
+      "purpose": "Versioned submissions and supporting evidence shared with internal and external parties.",
+      "default_storage_id": "stor.fs.primary",
+      "visibility": "shared",
+      "versioning_mode": "semantic",
+      "allowed_file_types": [
+        ".csv",
+        ".zip",
+        ".pdf"
+      ],
+      "max_file_size_mb": 512,
+      "retention_days": 2555,
+      "status": "active"
+    },
+    {
+      "group_id": "grp.internal-reference",
+      "group_name": "Internal Reference Files",
+      "purpose": "Internal lookup and support artifacts used by downstream jobs.",
+      "default_storage_id": "stor.cloud.archive",
+      "visibility": "internal",
+      "versioning_mode": "sequence",
+      "allowed_file_types": [
+        ".json",
+        ".csv"
+      ],
+      "max_file_size_mb": 128,
+      "retention_days": 3650,
+      "status": "active"
+    }
+  ],
+  "files": [
+    {
+      "file_id": "file.reg.apra533.package",
+      "group_id": "grp.regulatory-submissions",
+      "file_name": "APRA_533_Submission_Package.zip",
+      "file_type": ".zip",
+      "storage_id": "stor.fs.primary",
+      "visibility": "shared",
+      "uploaded_by_party_id": "party.internal.library-batch",
+      "status": "active",
+      "current_version": "v1.1.0",
+      "versions": [
+        {
+          "version_id": "ver.file.reg.apra533.v1-0-0",
+          "version_number": "v1.0.0",
+          "storage_uri": "D:/library/uploads/grp.regulatory-submissions/file.reg.apra533.package/v1.0.0/APRA_533_Submission_Package.zip",
+          "checksum": "sha256:9d8b9f8e7a6b5c4d3e2f1a0b99887766554433221100ffeeddccbbaa99887766",
+          "access_scope": "shared",
+          "allowed_party_ids": [
+            "party.internal.risk-team",
+            "party.external.regulator"
+          ],
+          "uploaded_at_utc": "2026-03-25T06:00:00Z",
+          "uploaded_by": "svc-library-batch",
+          "change_summary": "Initial approved submission package.",
+          "status": "superseded"
+        },
+        {
+          "version_id": "ver.file.reg.apra533.v1-1-0",
+          "version_number": "v1.1.0",
+          "storage_uri": "D:/library/uploads/grp.regulatory-submissions/file.reg.apra533.package/v1.1.0/APRA_533_Submission_Package.zip",
+          "checksum": "sha256:3a4b5c6d7e8f901234567890abcdef1234567890abcdef1234567890abcdef12",
+          "access_scope": "shared",
+          "allowed_party_ids": [
+            "party.internal.risk-team",
+            "party.external.regulator"
+          ],
+          "uploaded_at_utc": "2026-03-28T08:15:00Z",
+          "uploaded_by": "svc-library-batch",
+          "change_summary": "Updated mapping and corrected metadata annex.",
+          "status": "active"
+        }
+      ],
+      "tags": [
+        "regulatory",
+        "submission",
+        "apra"
+      ]
+    },
+    {
+      "file_id": "file.ref.country-codes",
+      "group_id": "grp.internal-reference",
+      "file_name": "country_codes.json",
+      "file_type": ".json",
+      "storage_id": "stor.cloud.archive",
+      "visibility": "internal",
+      "uploaded_by_party_id": "party.internal.library-batch",
+      "status": "active",
+      "current_version": "7",
+      "versions": [
+        {
+          "version_id": "ver.file.ref.country-codes.6",
+          "version_number": "6",
+          "storage_uri": "azure-blob://library-uploads/archive/grp.internal-reference/file.ref.country-codes/6/country_codes.json",
+          "checksum": "sha256:11223344556677889900aabbccddeeff00112233445566778899aabbccddeeff",
+          "access_scope": "internal",
+          "allowed_party_ids": [
+            "party.internal.risk-team"
+          ],
+          "uploaded_at_utc": "2026-03-20T02:10:00Z",
+          "uploaded_by": "svc-library-batch",
+          "change_summary": "Added region metadata for AMER entries.",
+          "status": "superseded"
+        },
+        {
+          "version_id": "ver.file.ref.country-codes.7",
+          "version_number": "7",
+          "storage_uri": "azure-blob://library-uploads/archive/grp.internal-reference/file.ref.country-codes/7/country_codes.json",
+          "checksum": "sha256:ffeeddccbbaa0099887766554433221100ffeeddccbbaa009988776655443322",
+          "access_scope": "internal",
+          "allowed_party_ids": [
+            "party.internal.risk-team"
+          ],
+          "uploaded_at_utc": "2026-03-29T00:30:00Z",
+          "uploaded_by": "svc-library-batch",
+          "change_summary": "Aligned inactive country labels with latest reference standard.",
+          "status": "active"
+        }
+      ],
+      "tags": [
+        "reference-data",
+        "internal"
+      ]
+    }
+  ],
+  "stats": {
+    "storage_profile_count": 2,
+    "party_count": 3,
+    "file_group_count": 2,
+    "file_count": 2,
+    "version_count": 4
+  }
+}

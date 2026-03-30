@@ -1,0 +1,602 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://espedair.io/schema/template/mapping",
+  "title": "Source-Target Mapping Schema",
+  "description": "Schema for defining table mappings across one-to-one, many-to-one, and one-to-many patterns with column mappings, transformations, and business/quality rules.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "version",
+    "mapping_sets"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Optional self-reference to this schema file."
+    },
+    "name": {
+      "type": "string",
+      "description": "Logical name of the mapping specification."
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(-[A-Za-z0-9._-]+)?$",
+      "description": "Semantic version of the mapping specification."
+    },
+    "description": {
+      "type": "string",
+      "description": "Business and technical summary of mapping scope."
+    },
+    "source": {
+      "type": "string",
+      "description": "Source document, notes, or process from which mapping was derived."
+    },
+    "generated_at_utc": {
+      "type": "string",
+      "format": "date-time",
+      "description": "UTC timestamp of mapping generation."
+    },
+    "governance": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "owner": {
+          "type": "string",
+          "description": "Accountable owner for mapping accuracy."
+        },
+        "steward": {
+          "type": "string",
+          "description": "Steward responsible for maintenance."
+        },
+        "approval_status": {
+          "type": "string",
+          "enum": [
+            "draft",
+            "review",
+            "approved",
+            "deprecated"
+          ],
+          "description": "Governance lifecycle state for this mapping definition."
+        },
+        "approved_at": {
+          "type": "string",
+          "format": "date",
+          "description": "Date mapping definition was approved."
+        }
+      }
+    },
+    "table_registry": {
+      "type": "array",
+      "description": "Optional registry of source and target tables referenced by mapping sets.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "table_id",
+          "table_name",
+          "role"
+        ],
+        "properties": {
+          "table_id": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9._:-]*$",
+            "description": "Stable table identifier used in mapping references."
+          },
+          "table_name": {
+            "type": "string",
+            "description": "Fully qualified or logical table name."
+          },
+          "database": {
+            "type": "string"
+          },
+          "schema": {
+            "type": "string"
+          },
+          "platform": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "source",
+              "target",
+              "both"
+            ],
+            "description": "Whether table is used as source, target, or both."
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "transformation_definitions": {
+      "type": "array",
+      "description": "Reusable transformation definitions that can be referenced by column mappings.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "transformation_id",
+          "type"
+        ],
+        "properties": {
+          "transformation_id": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9._:-]*$"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "direct",
+              "expression",
+              "cast",
+              "concat",
+              "lookup",
+              "aggregate",
+              "window",
+              "conditional",
+              "custom"
+            ]
+          },
+          "expression": {
+            "type": "string",
+            "description": "SQL, pseudo-code, or expression text implementing this transformation."
+          },
+          "language": {
+            "type": "string",
+            "enum": [
+              "sql",
+              "python",
+              "spark-sql",
+              "pseudo",
+              "custom"
+            ],
+            "description": "Expression language used by this transformation definition."
+          },
+          "parameters": {
+            "type": "object",
+            "description": "Named transformation parameters.",
+            "additionalProperties": {
+              "type": [
+                "string",
+                "number",
+                "integer",
+                "boolean"
+              ]
+            }
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "rule_definitions": {
+      "type": "array",
+      "description": "Reusable validation and business rule definitions referenced by mapping sets or column mappings.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "rule_id",
+          "rule_type",
+          "severity"
+        ],
+        "properties": {
+          "rule_id": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9._:-]*$"
+          },
+          "rule_type": {
+            "type": "string",
+            "enum": [
+              "business",
+              "validation",
+              "quality",
+              "filter",
+              "defaulting",
+              "deduplication",
+              "constraint",
+              "custom"
+            ]
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high",
+              "critical"
+            ]
+          },
+          "expression": {
+            "type": "string",
+            "description": "Rule logic or condition text."
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "mapping_sets": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Mapping set definitions supporting one-or-more source tables to one-or-more target tables.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "mapping_id",
+          "mapping_type",
+          "sources",
+          "targets",
+          "column_mappings"
+        ],
+        "properties": {
+          "mapping_id": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9._:-]*$",
+            "description": "Unique identifier for this mapping set."
+          },
+          "mapping_name": {
+            "type": "string",
+            "description": "Human-readable mapping name."
+          },
+          "mapping_type": {
+            "type": "string",
+            "enum": [
+              "one-to-one",
+              "many-to-one",
+              "one-to-many",
+              "many-to-many"
+            ],
+            "description": "Cardinality pattern from sources to targets."
+          },
+          "description": {
+            "type": "string"
+          },
+          "sources": {
+            "type": "array",
+            "minItems": 1,
+            "description": "Source tables participating in this mapping set.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "table_id",
+                "table_name"
+              ],
+              "properties": {
+                "table_id": {
+                  "type": "string"
+                },
+                "table_name": {
+                  "type": "string"
+                },
+                "alias": {
+                  "type": "string"
+                },
+                "filter": {
+                  "type": "string",
+                  "description": "Optional row-level source filter for this table in this mapping."
+                }
+              }
+            }
+          },
+          "targets": {
+            "type": "array",
+            "minItems": 1,
+            "description": "Target tables produced by this mapping set.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "table_id",
+                "table_name"
+              ],
+              "properties": {
+                "table_id": {
+                  "type": "string"
+                },
+                "table_name": {
+                  "type": "string"
+                },
+                "write_mode": {
+                  "type": "string",
+                  "enum": [
+                    "insert",
+                    "upsert",
+                    "overwrite",
+                    "merge"
+                  ],
+                  "description": "Target load behavior for this table."
+                }
+              }
+            }
+          },
+          "join_definitions": {
+            "type": "array",
+            "description": "Join logic used for many-to-one or many-to-many mappings.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "left_table_id",
+                "right_table_id",
+                "join_type",
+                "condition"
+              ],
+              "properties": {
+                "left_table_id": {
+                  "type": "string"
+                },
+                "right_table_id": {
+                  "type": "string"
+                },
+                "join_type": {
+                  "type": "string",
+                  "enum": [
+                    "inner",
+                    "left",
+                    "right",
+                    "full",
+                    "cross"
+                  ]
+                },
+                "condition": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "column_mappings": {
+            "type": "array",
+            "minItems": 1,
+            "description": "Column-level mappings from source columns/expressions to target columns.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "target_table_id",
+                "target_column",
+                "mapping_mode"
+              ],
+              "properties": {
+                "target_table_id": {
+                  "type": "string",
+                  "description": "Target table identifier this column mapping writes to."
+                },
+                "target_column": {
+                  "type": "string",
+                  "description": "Target column name."
+                },
+                "target_data_type": {
+                  "type": "string",
+                  "description": "Optional target data type expectation."
+                },
+                "mapping_mode": {
+                  "type": "string",
+                  "enum": [
+                    "direct",
+                    "expression",
+                    "constant",
+                    "lookup",
+                    "aggregate",
+                    "conditional",
+                    "custom"
+                  ],
+                  "description": "Column mapping style."
+                },
+                "source_columns": {
+                  "type": "array",
+                  "description": "Source columns used in this mapping.",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "table_id",
+                      "column"
+                    ],
+                    "properties": {
+                      "table_id": {
+                        "type": "string"
+                      },
+                      "column": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "expression": {
+                  "type": "string",
+                  "description": "Inline expression for deriving target value when applicable."
+                },
+                "constant_value": {
+                  "type": [
+                    "string",
+                    "number",
+                    "integer",
+                    "boolean",
+                    "null"
+                  ],
+                  "description": "Constant assigned to target column for constant mappings."
+                },
+                "transformation_ref": {
+                  "type": "string",
+                  "description": "Reference to a reusable transformation definition id."
+                },
+                "rule_refs": {
+                  "type": "array",
+                  "description": "References to reusable rule definitions applied to this mapping.",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "nullable": {
+                  "type": "boolean",
+                  "description": "Whether resulting target value may be null."
+                },
+                "default_value": {
+                  "type": [
+                    "string",
+                    "number",
+                    "integer",
+                    "boolean",
+                    "null"
+                  ],
+                  "description": "Fallback value when source is null or invalid."
+                },
+                "description": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "rule_refs": {
+            "type": "array",
+            "description": "Rules applied at mapping-set level.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "execution": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "load_type": {
+                "type": "string",
+                "enum": [
+                  "full",
+                  "incremental",
+                  "cdc",
+                  "snapshot"
+                ]
+              },
+              "schedule": {
+                "type": "string"
+              },
+              "sla": {
+                "type": "string"
+              },
+              "refresh_expectation": {
+                "type": "string"
+              }
+            }
+          },
+          "evidence_anchors": {
+            "type": "array",
+            "description": "Evidence references supporting this mapping set.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "source",
+                "location",
+                "detail"
+              ],
+              "properties": {
+                "source": {
+                  "type": "string"
+                },
+                "location": {
+                  "type": "string"
+                },
+                "detail": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "mapping_type": {
+                  "const": "many-to-one"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "sources": {
+                  "minItems": 2
+                },
+                "targets": {
+                  "minItems": 1,
+                  "maxItems": 1
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "mapping_type": {
+                  "const": "one-to-many"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "sources": {
+                  "minItems": 1,
+                  "maxItems": 1
+                },
+                "targets": {
+                  "minItems": 2
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "mapping_type": {
+                  "const": "one-to-one"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "sources": {
+                  "minItems": 1,
+                  "maxItems": 1
+                },
+                "targets": {
+                  "minItems": 1,
+                  "maxItems": 1
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "stats": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mapping_set_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "source_table_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "target_table_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "column_mapping_count": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

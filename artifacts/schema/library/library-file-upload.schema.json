@@ -1,0 +1,523 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://espedair.io/schema/template/library-file-upload",
+  "title": "Library File Upload Management Schema",
+  "description": "Schema for managing file uploads to filesystem or cloud storage with purpose-based grouping, versioning, and internal or external party access.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "version",
+    "storage_profiles",
+    "file_groups",
+    "files"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Optional self-reference to this schema file."
+    },
+    "name": {
+      "type": "string",
+      "description": "Logical name of this library upload configuration."
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(-[A-Za-z0-9._-]+)?$",
+      "description": "Semantic version of this library configuration."
+    },
+    "description": {
+      "type": "string",
+      "description": "Business and technical scope for file upload management."
+    },
+    "source": {
+      "type": "string",
+      "description": "Source process or owner that generated this artifact."
+    },
+    "generated_at_utc": {
+      "type": "string",
+      "format": "date-time",
+      "description": "UTC timestamp for artifact generation."
+    },
+    "governance": {
+      "$ref": "#/$defs/Governance"
+    },
+    "storage_profiles": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Storage backends available for uploaded files.",
+      "items": {
+        "$ref": "#/$defs/StorageProfile"
+      }
+    },
+    "parties": {
+      "type": "array",
+      "description": "Optional internal and external parties consuming or supplying files.",
+      "items": {
+        "$ref": "#/$defs/Party"
+      }
+    },
+    "file_groups": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Purpose-oriented groups used to organize upload files.",
+      "items": {
+        "$ref": "#/$defs/FileGroup"
+      }
+    },
+    "files": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Files managed by the library, including version history and access scope.",
+      "items": {
+        "$ref": "#/$defs/FileEntry"
+      }
+    },
+    "stats": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Optional summary metrics for the library snapshot.",
+      "properties": {
+        "storage_profile_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "party_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "file_group_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "file_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "version_count": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  },
+  "$defs": {
+    "Governance": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "owner": {
+          "type": "string",
+          "description": "Accountable owner for upload governance."
+        },
+        "steward": {
+          "type": "string",
+          "description": "Operational steward for upload maintenance."
+        },
+        "approval_status": {
+          "type": "string",
+          "enum": [
+            "draft",
+            "review",
+            "approved",
+            "deprecated"
+          ],
+          "description": "Governance lifecycle status."
+        },
+        "approved_at": {
+          "type": "string",
+          "format": "date",
+          "description": "Approval date for this version."
+        }
+      }
+    },
+    "StorageProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "storage_id",
+        "storage_type",
+        "name",
+        "status"
+      ],
+      "properties": {
+        "storage_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._:-]*$",
+          "description": "Stable identifier for this storage backend."
+        },
+        "storage_type": {
+          "type": "string",
+          "enum": [
+            "filesystem",
+            "cloud"
+          ],
+          "description": "Storage backend type."
+        },
+        "name": {
+          "type": "string",
+          "description": "Human-readable storage profile name."
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "active",
+            "inactive",
+            "retired"
+          ],
+          "description": "Operational status of the storage profile."
+        },
+        "filesystem": {
+          "$ref": "#/$defs/FilesystemConfig"
+        },
+        "cloud": {
+          "$ref": "#/$defs/CloudConfig"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "storage_type": {
+                "const": "filesystem"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "filesystem"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "storage_type": {
+                "const": "cloud"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "cloud"
+            ]
+          }
+        }
+      ]
+    },
+    "FilesystemConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "root_path"
+      ],
+      "properties": {
+        "root_path": {
+          "type": "string",
+          "description": "Root path for file uploads on the filesystem."
+        },
+        "path_pattern": {
+          "type": "string",
+          "description": "Optional path template for group and version folders."
+        }
+      }
+    },
+    "CloudConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "provider",
+        "container",
+        "region"
+      ],
+      "properties": {
+        "provider": {
+          "type": "string",
+          "enum": [
+            "aws-s3",
+            "azure-blob",
+            "gcp-storage",
+            "other"
+          ],
+          "description": "Cloud storage provider."
+        },
+        "container": {
+          "type": "string",
+          "description": "Bucket or container name."
+        },
+        "region": {
+          "type": "string",
+          "description": "Cloud region for storage."
+        },
+        "prefix": {
+          "type": "string",
+          "description": "Optional prefix for logical partitioning."
+        }
+      }
+    },
+    "Party": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "party_id",
+        "party_name",
+        "party_type",
+        "status"
+      ],
+      "properties": {
+        "party_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._:-]*$",
+          "description": "Stable party identifier."
+        },
+        "party_name": {
+          "type": "string",
+          "description": "Display name of internal or external party."
+        },
+        "party_type": {
+          "type": "string",
+          "enum": [
+            "internal",
+            "external"
+          ],
+          "description": "Party classification for access policy."
+        },
+        "contact": {
+          "type": "string",
+          "description": "Contact point for this party."
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "active",
+            "inactive"
+          ],
+          "description": "Party lifecycle status."
+        }
+      }
+    },
+    "FileGroup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "group_id",
+        "group_name",
+        "purpose",
+        "default_storage_id",
+        "visibility",
+        "versioning_mode",
+        "status"
+      ],
+      "properties": {
+        "group_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._:-]*$",
+          "description": "Stable group identifier for purpose-based file grouping."
+        },
+        "group_name": {
+          "type": "string",
+          "description": "Human-readable group name."
+        },
+        "purpose": {
+          "type": "string",
+          "description": "Business purpose for this file group."
+        },
+        "default_storage_id": {
+          "type": "string",
+          "description": "Default storage profile reference used for this group."
+        },
+        "visibility": {
+          "type": "string",
+          "enum": [
+            "internal",
+            "external",
+            "shared"
+          ],
+          "description": "Default visibility policy for files in this group."
+        },
+        "versioning_mode": {
+          "type": "string",
+          "enum": [
+            "semantic",
+            "sequence",
+            "timestamp",
+            "manual"
+          ],
+          "description": "Versioning approach used for files in this group."
+        },
+        "allowed_file_types": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Allowed file extensions or media types."
+        },
+        "max_file_size_mb": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Maximum upload size for this group."
+        },
+        "retention_days": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Retention period in days."
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "active",
+            "inactive",
+            "retired"
+          ],
+          "description": "Operational status of this file group."
+        }
+      }
+    },
+    "FileEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "file_id",
+        "group_id",
+        "file_name",
+        "storage_id",
+        "status",
+        "current_version",
+        "versions"
+      ],
+      "properties": {
+        "file_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._:-]*$",
+          "description": "Stable file identifier."
+        },
+        "group_id": {
+          "type": "string",
+          "description": "File group reference. Must match file_groups.group_id."
+        },
+        "file_name": {
+          "type": "string",
+          "description": "Display file name."
+        },
+        "file_type": {
+          "type": "string",
+          "description": "File extension or media type."
+        },
+        "storage_id": {
+          "type": "string",
+          "description": "Storage profile reference used for this file."
+        },
+        "visibility": {
+          "type": "string",
+          "enum": [
+            "internal",
+            "external",
+            "shared"
+          ],
+          "description": "Visibility of this file for internal and external usage."
+        },
+        "uploaded_by_party_id": {
+          "type": "string",
+          "description": "Party identifier that uploaded the current file version."
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "active",
+            "inactive",
+            "retired"
+          ],
+          "description": "Lifecycle status for this file entry."
+        },
+        "current_version": {
+          "type": "string",
+          "description": "Current effective version identifier."
+        },
+        "versions": {
+          "type": "array",
+          "minItems": 1,
+          "description": "Version history for this file entry.",
+          "items": {
+            "$ref": "#/$defs/FileVersion"
+          }
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Optional labels for search and grouping."
+        }
+      }
+    },
+    "FileVersion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version_id",
+        "version_number",
+        "storage_uri",
+        "access_scope",
+        "uploaded_at_utc",
+        "status"
+      ],
+      "properties": {
+        "version_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._:-]*$",
+          "description": "Stable version identifier."
+        },
+        "version_number": {
+          "type": "string",
+          "description": "Human-readable version marker such as 1.0.0 or v5."
+        },
+        "storage_uri": {
+          "type": "string",
+          "description": "Filesystem path or cloud URI for this file version."
+        },
+        "checksum": {
+          "type": "string",
+          "description": "Optional hash checksum for integrity validation."
+        },
+        "access_scope": {
+          "type": "string",
+          "enum": [
+            "internal",
+            "external",
+            "shared"
+          ],
+          "description": "Scope for version access by internal or external parties."
+        },
+        "allowed_party_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Optional allow-list of parties authorized for this version."
+        },
+        "uploaded_at_utc": {
+          "type": "string",
+          "format": "date-time",
+          "description": "UTC timestamp for this version upload."
+        },
+        "uploaded_by": {
+          "type": "string",
+          "description": "User or service principal that uploaded this version."
+        },
+        "change_summary": {
+          "type": "string",
+          "description": "Summary of changes introduced in this version."
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "active",
+            "superseded",
+            "withdrawn"
+          ],
+          "description": "Version lifecycle status."
+        }
+      }
+    }
+  }
+}

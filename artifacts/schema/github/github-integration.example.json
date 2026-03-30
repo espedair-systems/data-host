@@ -1,0 +1,153 @@
+{
+  "$schema": "./github-integration.schema.json",
+  "name": "enterprise_github_integration",
+  "version": "1.0.0",
+  "description": "Example GitHub integration configuration for repository discovery, controlled access, and webhook-based automation.",
+  "source": "Platform Engineering onboarding",
+  "generated_at_utc": "2026-03-29T12:30:00Z",
+  "integration": {
+    "provider": "github",
+    "base_url": "https://api.github.com",
+    "api_version": "2022-11-28",
+    "auth": {
+      "mode": "github-app",
+      "credential_ref": "vault://platform/github/app-private-key",
+      "app_id": "123456",
+      "installation_id": "98765432",
+      "token_rotation_days": 30,
+      "scopes": [
+        "repo",
+        "read:org",
+        "workflow",
+        "security_events"
+      ]
+    },
+    "organizations": [
+      {
+        "org_id": "espedair",
+        "org_name": "Espedair",
+        "org_type": "organization",
+        "visibility_policy": "mixed",
+        "status": "active"
+      },
+      {
+        "org_id": "espedair-regulatory",
+        "org_name": "Espedair Regulatory",
+        "org_type": "organization",
+        "visibility_policy": "private-only",
+        "status": "active"
+      }
+    ],
+    "repositories": [
+      {
+        "repo_id": "repo.espedair.regs-system",
+        "org_id": "espedair",
+        "repo_name": "regs-system",
+        "full_name": "espedair/regs-system",
+        "visibility": "private",
+        "default_branch": "main",
+        "is_archived": false,
+        "compliance_tier": "regulated",
+        "status": "active",
+        "topics": [
+          "regulatory",
+          "taxonomy",
+          "reporting"
+        ]
+      },
+      {
+        "repo_id": "repo.espedair.datahost",
+        "org_id": "espedair",
+        "repo_name": "datahost",
+        "full_name": "espedair/datahost",
+        "visibility": "private",
+        "default_branch": "main",
+        "is_archived": false,
+        "compliance_tier": "regulated",
+        "status": "active",
+        "topics": [
+          "data",
+          "schema",
+          "governance"
+        ]
+      },
+      {
+        "repo_id": "repo.espedair.reference-templates",
+        "org_id": "espedair-regulatory",
+        "repo_name": "reference-templates",
+        "full_name": "espedair-regulatory/reference-templates",
+        "visibility": "internal",
+        "default_branch": "main",
+        "is_archived": false,
+        "compliance_tier": "standard",
+        "status": "active",
+        "topics": [
+          "templates",
+          "standards"
+        ]
+      }
+    ],
+    "access_rules": [
+      {
+        "rule_id": "rule.platform-team-maintain-datahost",
+        "principal_type": "team",
+        "principal_id": "platform-engineering",
+        "repo_id": "repo.espedair.datahost",
+        "permission": "maintain",
+        "branch_scope": "protected",
+        "status": "active"
+      },
+      {
+        "rule_id": "rule.reg-reporting-write-regs-system",
+        "principal_type": "service-account",
+        "principal_id": "svc-reg-reporting-pipeline",
+        "repo_id": "repo.espedair.regs-system",
+        "permission": "write",
+        "branch_scope": "pattern",
+        "branch_pattern": "release/*",
+        "expires_at_utc": "2026-12-31T23:59:59Z",
+        "status": "active"
+      },
+      {
+        "rule_id": "rule.audit-team-read-regs-system",
+        "principal_type": "team",
+        "principal_id": "internal-audit",
+        "repo_id": "repo.espedair.regs-system",
+        "permission": "read",
+        "branch_scope": "all",
+        "status": "active"
+      },
+      {
+        "rule_id": "rule.docs-bot-triage-reference",
+        "principal_type": "bot",
+        "principal_id": "docs-maintainer-bot",
+        "repo_id": "repo.espedair.reference-templates",
+        "permission": "triage",
+        "branch_scope": "default",
+        "status": "active"
+      }
+    ],
+    "webhooks": [
+      {
+        "webhook_id": "wh.regs-system.workflow",
+        "event": "workflow_run",
+        "endpoint_ref": "event-grid://platform/github/workflow-events",
+        "status": "active"
+      },
+      {
+        "webhook_id": "wh.regs-system.pull-request",
+        "event": "pull_request",
+        "endpoint_ref": "servicebus://platform/github/pr-events",
+        "status": "active"
+      }
+    ],
+    "status": "active"
+  },
+  "stats": {
+    "organization_count": 2,
+    "repository_count": 3,
+    "private_repository_count": 2,
+    "archived_repository_count": 0,
+    "access_rule_count": 4
+  }
+}

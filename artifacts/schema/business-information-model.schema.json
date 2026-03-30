@@ -1,0 +1,191 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://espedair.io/schema/business-information-model",
+  "title": "Business Information Model",
+  "description": "Schema for Business Information Model entities organized by data domains, concepts, and governance metadata.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "entities"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Reference to the schema definition"
+    },
+    "name": {
+      "type": "string",
+      "description": "Identifier name for the BIM (e.g., insignia_business_information_model)"
+    },
+    "description": {
+      "type": "string",
+      "description": "Human-readable description of the Business Information Model"
+    },
+    "source": {
+      "type": "string",
+      "description": "Optional source identifier or document reference"
+    },
+    "generated_at_utc": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of when the model was generated"
+    },
+    "stats": {
+      "type": "object",
+      "description": "Statistics about the model contents",
+      "additionalProperties": false,
+      "properties": {
+        "total_entities": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total number of entities in the model"
+        },
+        "data_domains": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Count of Data Domain entities"
+        },
+        "data_concepts": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Count of Data Concept entities"
+        },
+        "duplicates_removed": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of duplicate entities removed during deduplication"
+        }
+      }
+    },
+    "entities": {
+      "type": "array",
+      "description": "Array of data entities organized in the information model",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "asset_type",
+          "roles",
+          "relationships"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Entity name (e.g., Account, Member, ABN)"
+          },
+          "asset_type": {
+            "type": "string",
+            "description": "Type of asset (e.g., Data Domain, Data Concept)"
+          },
+          "description": {
+            "type": "string",
+            "description": "Business definition and purpose of the entity"
+          },
+          "information_confidentiality_classification": {
+            "type": "string",
+            "description": "Data classification level (Public, Internal, Confidential, Restricted)"
+          },
+          "roles": {
+            "type": "object",
+            "description": "Governance roles assigned to this entity",
+            "additionalProperties": false,
+            "properties": {
+              "data_owner_user_name": {
+                "type": "string",
+                "description": "Data Owner user identifier"
+              },
+              "data_owner_first_name": {
+                "type": "string",
+                "description": "Data Owner first name"
+              },
+              "data_owner_last_name": {
+                "type": "string",
+                "description": "Data Owner last name"
+              },
+              "data_owner_group_name": {
+                "type": "string",
+                "description": "Data Owner organization group"
+              },
+              "business_steward_user_name": {
+                "type": "string",
+                "description": "Business Steward user identifier"
+              },
+              "business_steward_first_name": {
+                "type": "string",
+                "description": "Business Steward first name"
+              },
+              "business_steward_last_name": {
+                "type": "string",
+                "description": "Business Steward last name"
+              },
+              "business_steward_group_name": {
+                "type": "string",
+                "description": "Business Steward organization group"
+              },
+              "data_custodian_user_name": {
+                "type": "string",
+                "description": "Data Custodian user identifier"
+              },
+              "data_custodian_first_name": {
+                "type": "string",
+                "description": "Data Custodian first name"
+              },
+              "data_custodian_last_name": {
+                "type": "string",
+                "description": "Data Custodian last name"
+              },
+              "data_custodian_group_name": {
+                "type": "string",
+                "description": "Data Custodian organization group"
+              },
+              "data_steward_user_name": {
+                "type": "string",
+                "description": "Data Steward user identifier"
+              },
+              "data_steward_first_name": {
+                "type": "string",
+                "description": "Data Steward first name"
+              },
+              "data_steward_last_name": {
+                "type": "string",
+                "description": "Data Steward last name"
+              },
+              "data_steward_group_name": {
+                "type": "string",
+                "description": "Data Steward organization group"
+              }
+            }
+          },
+          "relationships": {
+            "type": "array",
+            "description": "Hierarchical relationships to other entities",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "data_concept_groups_data_concept_name": {
+                  "type": "string",
+                  "description": "Name of Data Concept grouped by this entity"
+                },
+                "data_concept_is_grouped_by_data_concept_name": {
+                  "type": "string",
+                  "description": "Name of Data Concept that groups this entity"
+                },
+                "data_concept_is_grouped_by_data_domain_name": {
+                  "type": "string",
+                  "description": "Name of Data Domain that groups this Data Concept"
+                },
+                "data_domain_groups_data_concept_name": {
+                  "type": "string",
+                  "description": "Name of Data Concept grouped by this Data Domain"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
