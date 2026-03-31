@@ -48,6 +48,8 @@ import BusinessGlossary from './pages/BusinessGlossary';
 import BusinessInformationModel from './pages/BusinessInformationModel';
 import ReferenceData from './pages/ReferenceData';
 import Taxonomy from './pages/Taxonomy';
+import DataProducts from './pages/DataProducts';
+import CMDBSystems from './pages/CMDBSystems';
 import Model from './pages/Model';
 import Secure from './pages/Secure';
 import MockPage from './pages/MockPage';
@@ -122,6 +124,7 @@ function App() {
                   <Route path="dashboard" element={<Steward />} />
                   <Route path="glossary" element={<BusinessGlossary />} />
                   <Route path="bim" element={<BusinessInformationModel />} />
+                  <Route path="cmdb" element={<CMDBSystems />} />
                   <Route path="critical" element={<MockPage title="Critical Data Elements" parent="Steward" icon={<Zap className="h-10 w-10" />} />} />
                   <Route path="owners" element={<MockPage title="Data Owners" parent="Steward" icon={<UserCircle className="h-10 w-10" />} />} />
                   <Route path="privacy" element={<MockPage title="Privacy" parent="Steward" icon={<Lock className="h-10 w-10" />} />} />
@@ -156,6 +159,9 @@ function App() {
                   </Route>
                   <Route path="taxonomy">
                     <Route index element={<Taxonomy />} />
+                  </Route>
+                  <Route path="data-product">
+                    <Route index element={<DataProducts />} />
                   </Route>
                 </Route>
                 <Route path="knowledge">

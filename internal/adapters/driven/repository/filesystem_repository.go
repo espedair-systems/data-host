@@ -217,6 +217,58 @@ func (r *FilesystemRepository) GetTaxonomyTerms(taxonomyID int64) ([]domain.Taxo
 	return []domain.TaxonomyTerm{}, nil
 }
 
+func (r *FilesystemRepository) GetDataProductCatalogs() ([]domain.DataProductCatalog, error) {
+	return []domain.DataProductCatalog{}, nil
+}
+
+func (r *FilesystemRepository) GetDataProductCatalogByID(id int64) (*domain.DataProductCatalog, error) {
+	return nil, nil
+}
+
+func (r *FilesystemRepository) GetDataProductProducts(catalogID int64) ([]domain.DataProduct, error) {
+	return []domain.DataProduct{}, nil
+}
+
+func (r *FilesystemRepository) SaveDataProductCatalog(catalog *domain.DataProductCatalog, products []domain.DataProduct) error {
+	return fmt.Errorf("SaveDataProductCatalog not implemented in filesystem mode")
+}
+
+func (r *FilesystemRepository) GetCMDBSnapshots() ([]domain.CMDBSnapshot, error) {
+	return []domain.CMDBSnapshot{}, nil
+}
+
+func (r *FilesystemRepository) GetCMDBSnapshotByID(id int64) (*domain.CMDBSnapshot, error) {
+	return nil, nil
+}
+
+func (r *FilesystemRepository) GetCMDBOwners(snapshotID int64) ([]domain.CMDBOwner, error) {
+	return []domain.CMDBOwner{}, nil
+}
+
+func (r *FilesystemRepository) GetCMDBSystems(snapshotID int64) ([]domain.CMDBSystem, error) {
+	return []domain.CMDBSystem{}, nil
+}
+
+func (r *FilesystemRepository) GetCMDBDatabases(snapshotID int64) ([]domain.CMDBDatabase, error) {
+	return []domain.CMDBDatabase{}, nil
+}
+
+func (r *FilesystemRepository) GetCMDBRelationships(snapshotID int64) ([]domain.CMDBRelationship, error) {
+	return []domain.CMDBRelationship{}, nil
+}
+
+func (r *FilesystemRepository) GetCMDBStats(snapshotID int64) (*domain.CMDBStats, error) {
+	return nil, nil
+}
+
+func (r *FilesystemRepository) SaveCMDBSnapshot(snapshot *domain.CMDBSnapshot) error {
+	return fmt.Errorf("SaveCMDBSnapshot not implemented in filesystem mode")
+}
+
+func (r *FilesystemRepository) DeleteCMDBSnapshot(id int64) error {
+	return fmt.Errorf("DeleteCMDBSnapshot not implemented in filesystem mode")
+}
+
 func (r *FilesystemRepository) GetDatabaseStats() (domain.DatabaseStats, error) {
 	return domain.DatabaseStats{}, nil
 }

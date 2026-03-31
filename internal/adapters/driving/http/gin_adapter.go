@@ -30,6 +30,8 @@ import (
 	"data-host/internal/core/services"
 )
 
+// GinAdapter is the primary driving adapter for the HTTP entry point.
+// It manages the Gin engine, server lifecycle, and translates HTTP requests into core service calls.
 type GinAdapter struct {
 	server            *http.Server
 	On404             chan string
@@ -45,6 +47,7 @@ type GinAdapter struct {
 	clients           sync.Map
 }
 
+// NewGinAdapter initializes a new GinAdapter with default notification channels.
 func NewGinAdapter() *GinAdapter {
 	return &GinAdapter{
 		On404:          make(chan string, 100),
@@ -54,6 +57,8 @@ func NewGinAdapter() *GinAdapter {
 	}
 }
 
+// Start configures and runs the Gin HTTP server on the port specified in config.
+// It sets up all middleware, security headers, rate limiting, and API routes.
 func (a *GinAdapter) Start(config domain.HostConfig, repo ports.RegistryRepository) error {
 	a.config = config
 	a.repo = repo
@@ -191,6 +196,26 @@ func (a *GinAdapter) Start(config domain.HostConfig, repo ports.RegistryReposito
 			rdm.GET("/datasets", a.GetReferenceDatasets)
 			rdm.GET("/:id", a.GetReferenceDataPackage)
 			rdm.DELETE("/:id", authMW, auth.RequireRole(domain.RoleAdmin), a.DeleteReferenceData)
+		}
+
+		dpro := api.Group("/data-product")
+		{
+			dpro.GET("/list", a.GetDataProductCatalogs)
+			dpro.GET("/:id", a.GetDataProductCatalog)
+			dpro.GET("/:id/products", a.GetDataProductProducts)
+			dpro.POST("/ingest", authMW, auth.RequireRole(domain.RoleAdmin), a.IngestDataProductCatalog)
+		}
+
+		cmdb := api.Group("/cmdb")
+		{
+			cmdb.GET("/list", a.GetCMDBSnapshots)
+			cmdb.GET("/:id", a.GetCMDBSnapshot)
+			cmdb.GET("/:id/owners", a.GetCMDBOwners)
+			cmdb.GET("/:id/systems", a.GetCMDBSystems)
+			cmdb.GET("/:id/databases", a.GetCMDBDatabases)
+			cmdb.GET("/:id/relationships", a.GetCMDBRelationships)
+			cmdb.POST("/ingest", authMW, auth.RequireRole(domain.RoleAdmin), a.IngestCMDBSnapshot)
+			cmdb.DELETE("/:id", authMW, auth.RequireRole(domain.RoleAdmin), a.DeleteCMDBSnapshot)
 		}
 	}
 
@@ -332,6 +357,7 @@ func (a *GinAdapter) Start(config domain.HostConfig, repo ports.RegistryReposito
 	return a.server.ListenAndServe()
 }
 
+// Stop gracefully shuts down the HTTP server with a 5-second timeout.
 func (a *GinAdapter) Stop() error {
 	close(a.shutdownNotify)
 
@@ -345,22 +371,27 @@ func (a *GinAdapter) Stop() error {
 	return a.server.Shutdown(ctx)
 }
 
+// GetOn404 returns a read-only channel for 404 event notifications.
 func (a *GinAdapter) GetOn404() <-chan string {
 	return a.On404
 }
 
+// GetOnRequest returns a read-only channel for request tracking signals.
 func (a *GinAdapter) GetOnRequest() <-chan struct{} {
 	return a.OnRequest
 }
 
+// GetOnStatus returns a read-only channel for response status code signals.
 func (a *GinAdapter) GetOnStatus() <-chan int {
 	return a.OnStatus
 }
 
+// SetLogOutput configures the writer for HTTP activity logging.
 func (a *GinAdapter) SetLogOutput(w io.Writer) {
 	a.LogOutput = w
 }
 
+// BroadcastMessage sends a string message to all currently connected SSE clients.
 func (a *GinAdapter) BroadcastMessage(msg string) {
 	a.clients.Range(func(key, value interface{}) bool {
 		ch := key.(chan string)
@@ -389,6 +420,7 @@ func (a *GinAdapter) RequestTrackerMiddleware() gin.HandlerFunc {
 		}
 	}
 }
+// SaveOrgStructure handles the legacy organizational structure updates via a generic interface.
 func (a *GinAdapter) SaveOrgStructure(c *gin.Context) {
 	log.Info().Msg("Received request to save organizational structure")
 	var payload interface{}
@@ -410,6 +442,8 @@ func (a *GinAdapter) SaveOrgStructure(c *gin.Context) {
 
 	c.JSON(200, domain.AppResponse{OK: true, Text: "organizational structure saved successfully"})
 }
+
+// GenerateAsset triggers the generation of a documentation site or specific module based on schema data.
 func (a *GinAdapter) GenerateAsset(c *gin.Context) {
 	asset := c.Param("asset")
 	if asset == "" {
@@ -438,6 +472,7 @@ func (a *GinAdapter) GenerateAsset(c *gin.Context) {
 	})
 }
 
+// GetGenerationPlan returns a detailed plan of files to be generated or modified for a specific asset.
 func (a *GinAdapter) GetGenerationPlan(c *gin.Context) {
 	asset := c.Param("asset")
 	if asset == "" {

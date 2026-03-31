@@ -89,4 +89,21 @@ type RegistryRepository interface {
 	GetTaxonomies() ([]domain.Taxonomy, error)
 	GetTaxonomyByID(id int64) (*domain.Taxonomy, error)
 	GetTaxonomyTerms(taxonomyID int64) ([]domain.TaxonomyTerm, error)
+
+	// Data Product Catalog operations
+	GetDataProductCatalogs() ([]domain.DataProductCatalog, error)
+	GetDataProductCatalogByID(id int64) (*domain.DataProductCatalog, error)
+	GetDataProductProducts(catalogID int64) ([]domain.DataProduct, error)
+	SaveDataProductCatalog(catalog *domain.DataProductCatalog, products []domain.DataProduct) error
+
+	// CMDB operations
+	GetCMDBSnapshots() ([]domain.CMDBSnapshot, error)
+	GetCMDBSnapshotByID(id int64) (*domain.CMDBSnapshot, error)
+	GetCMDBOwners(snapshotID int64) ([]domain.CMDBOwner, error)
+	GetCMDBSystems(snapshotID int64) ([]domain.CMDBSystem, error)
+	GetCMDBDatabases(snapshotID int64) ([]domain.CMDBDatabase, error)
+	GetCMDBRelationships(snapshotID int64) ([]domain.CMDBRelationship, error)
+	GetCMDBStats(snapshotID int64) (*domain.CMDBStats, error)
+	SaveCMDBSnapshot(snapshot *domain.CMDBSnapshot) error
+	DeleteCMDBSnapshot(id int64) error
 }

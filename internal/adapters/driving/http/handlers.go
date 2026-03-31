@@ -494,6 +494,13 @@ func (a *GinAdapter) ValidateSchema(c *gin.Context) {
 		isRDM = true
 	}
 
+	isCMDB := false
+	if _, ok := rawData["systems"]; ok {
+		if _, ok2 := rawData["databases"]; ok2 {
+			isCMDB = true
+		}
+	}
+
 	schemaPath := "schema/services.schema.json"
 	detectedType := "DB_SCHEMA"
 	if isOrg {
@@ -514,6 +521,9 @@ func (a *GinAdapter) ValidateSchema(c *gin.Context) {
 	} else if isTaxonomy {
 		schemaPath = "schema/taxonomy/taxonomy.schema.json"
 		detectedType = "TAXONOMY"
+	} else if isCMDB {
+		schemaPath = "schema/cmdb/cmdb.schema.json"
+		detectedType = "CMDB"
 	}
 
 	// 1. JSON Schema Validation from embedded FS
@@ -541,7 +551,7 @@ func (a *GinAdapter) ValidateSchema(c *gin.Context) {
 	}
 
 	// 2. Further processing for DB schemas (diff preview)
-	if !isOrg && !isGlossary && !isDFD && !isTaxonomy {
+	if !isOrg && !isGlossary && !isDFD && !isTaxonomy && !isBIM && !isRDM && !isCMDB {
 		var newSchema domain.FileSchema
 		_ = json.Unmarshal(body, &newSchema)
 
@@ -578,6 +588,8 @@ func (a *GinAdapter) ValidateSchema(c *gin.Context) {
 		message = "Data flow diagram is valid and ready for ingestion."
 	} else if isTaxonomy {
 		message = "Taxonomy definition is valid and ready for ingestion."
+	} else if isCMDB {
+		message = "CMDB snapshot is valid and ready for ingestion."
 	}
 
 	c.JSON(http.StatusOK, gin.H{
@@ -624,6 +636,13 @@ func (a *GinAdapter) IngestSchema(c *gin.Context) {
 		}
 	}
 
+	isCMDB := false
+	if _, ok := rawData["systems"]; ok {
+		if _, ok2 := rawData["databases"]; ok2 {
+			isCMDB = true
+		}
+	}
+
 	isTaxonomy := false
 	if _, ok := rawData["taxonomy_type"]; ok {
 		isTaxonomy = true
@@ -649,7 +668,8 @@ func (a *GinAdapter) IngestSchema(c *gin.Context) {
 	desc := ""
 
 	var schema domain.FileSchema
-	if isOrg || isDFD || isGlossary || isBIM || isRDM || isTaxonomy {
+
+	if isOrg || isDFD || isGlossary || isBIM || isRDM || isTaxonomy || isCMDB {
 		if isOrg {
 			ingestType = "org"
 			name = "org-structure"
@@ -671,6 +691,12 @@ func (a *GinAdapter) IngestSchema(c *gin.Context) {
 		} else if isTaxonomy {
 			ingestType = "taxonomy"
 			name = "business-taxonomy"
+			if n, ok := rawData["name"].(string); ok {
+				name = n
+			}
+		} else if isCMDB {
+			ingestType = "cmdb"
+			name = "cmdb-snapshot"
 			if n, ok := rawData["name"].(string); ok {
 				name = n
 			}
@@ -697,6 +723,13 @@ func (a *GinAdapter) IngestSchema(c *gin.Context) {
 			err = a.repo.SaveOrgStructure(rawData)
 		} else if isDFD {
 			err = a.repo.SaveDFDStructure(rawData)
+		} else if isCMDB {
+			var snapshot domain.CMDBSnapshot
+			if unmarshalErr := json.Unmarshal(body, &snapshot); unmarshalErr == nil {
+				err = a.repo.SaveCMDBSnapshot(&snapshot)
+			} else {
+				err = unmarshalErr
+			}
 		} else if isGlossary {
 			var payload struct {
 				Name              string               `json:"name"`
@@ -746,6 +779,48 @@ func (a *GinAdapter) IngestSchema(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save data: " + err.Error()})
 			return
 		}
+
+		// Calculate Hash
+		hasher := sha256.New()
+		hasher.Write(body)
+		fileHash := hex.EncodeToString(hasher.Sum(nil))
+
+		// 1. Archive to filesystem if path is configured
+		var fileName, filePath string
+		if a.config.ArchivePath != "" {
+			archiveDir := a.config.ArchivePath
+			if err := os.MkdirAll(archiveDir, 0755); err == nil {
+				ts := time.Now().Unix()
+				if isOrg {
+					fileName = fmt.Sprintf("%s_%d.org.json", name, ts)
+				} else if isDFD {
+					fileName = fmt.Sprintf("%s_%d.dfd.json", name, ts)
+				} else if isRDM {
+					fileName = fmt.Sprintf("%s_%d.rdm.json", name, ts)
+				} else if isTaxonomy {
+					fileName = fmt.Sprintf("%s_%d.tax.json", name, ts)
+				} else if isCMDB {
+					fileName = fmt.Sprintf("%s_%d.cmdb.json", name, ts)
+				} else {
+					fileName = fmt.Sprintf("%s_%d.%s.json", name, ts, ingestType)
+				}
+				filePath = filepath.Join(archiveDir, fileName)
+				_ = os.WriteFile(filePath, body, 0644)
+			}
+		}
+
+		_ = a.repo.SaveFileArchive(domain.FileArchive{
+			Name:        name,
+			FileName:    fileName,
+			Path:        filePath,
+			Type:        ingestType,
+			Description: desc,
+			Hash:        fileHash,
+			Status:      "synced",
+		})
+
+		c.JSON(http.StatusOK, gin.H{"status": "success", "message": "Data ingested successfully"})
+		return
 	} else {
 		if err := json.Unmarshal(body, &schema); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid schema format"})

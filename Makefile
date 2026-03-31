@@ -183,8 +183,10 @@ watch: ## Run API with live reload (requires air)
 
 # Security Scanning
 scan: ## Scan dependencies for vulnerabilities using osv-scanner
+	@mkdir -p ./design/security
 	@echo "Scanning for vulnerabilities..."
-	@osv-scanner -r .
+	@osv-scanner -r . > ./design/security/scan_results.txt 2>&1 || true
+	@echo "Security scan output saved to ./design/security/scan_results.txt"
 
 # DB Migrations
 migrate-up: ## Run database migrations up
@@ -193,4 +195,20 @@ migrate-up: ## Run database migrations up
 migrate-down: ## Run database migrations down
 	@goose -dir internal/database/migrations/sqlite sqlite blueprint.db down -allow-missing
 
-.PHONY: all build run test clean watch scan migrate-up migrate-down help push docker-bundle docker-stage build-frontend run-cli run-tui run-frontend storybook build-storybook docker-run docker-down build-linux build-windows build-mac build-all build-linux-amd64 build-linux-arm64 build-windows-amd64 build-mac-amd64 build-mac-arm64 setup
+godocs: ## Generate backend documentation using go doc
+	@mkdir -p ./design/backend
+	@echo "Generating backend documentation..."
+	@echo "# Backend Documentation" > ./design/backend/godocs.txt
+	@echo "Generated at: $$(date)" >> ./design/backend/godocs.txt
+	@echo "" >> ./design/backend/godocs.txt
+	@for pkg in $$(go list ./...); do \
+		echo "## Package: $$pkg" >> ./design/backend/godocs.txt; \
+		echo "------------------------" >> ./design/backend/godocs.txt; \
+		go doc -all $$pkg >> ./design/backend/godocs.txt; \
+		echo "" >> ./design/backend/godocs.txt; \
+		echo "---" >> ./design/backend/godocs.txt; \
+		echo "" >> ./design/backend/godocs.txt; \
+	done
+	@echo "Documentation generated in ./design/backend/godocs.txt"
+
+.PHONY: all build run test clean watch scan migrate-up migrate-down help push docker-bundle docker-stage build-frontend run-cli run-tui run-frontend storybook build-storybook docker-run docker-down build-linux build-windows build-mac build-all build-linux-amd64 build-linux-arm64 build-windows-amd64 build-mac-amd64 build-mac-arm64 setup godocs

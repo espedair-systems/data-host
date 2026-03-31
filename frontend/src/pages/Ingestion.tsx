@@ -33,15 +33,13 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
 
-// @ts-ignore
-import taxonomySchema from '../schemas/taxonomy.schema.json';
-
+// Validation result interface
 interface ValidationResult {
     status: 'success' | 'conflict' | 'error';
     message: string;
     existing?: any;
     new?: any;
-    type?: 'SCHEMA' | 'ORG' | 'DFD' | 'BUSINESS_GLOSSARY' | 'BUSINESS_INFORMATION_MODEL' | 'REFERENCE_DATA_MANAGEMENT' | 'TAXONOMY';
+    type?: 'SCHEMA' | 'ORG' | 'DFD' | 'BUSINESS_GLOSSARY' | 'BUSINESS_INFORMATION_MODEL' | 'REFERENCE_DATA_MANAGEMENT' | 'TAXONOMY' | 'CMDB';
     error?: string;
     details?: string[];
     fileName?: string;
@@ -100,6 +98,7 @@ const IngestionPage: React.FC = () => {
                             { name: 'Business Glossary', type: 'GLOSSARY', icon: BookOpen, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
                             { name: 'Taxonomy', type: 'TAXONOMY', icon: Network, color: 'text-rose-500', bg: 'bg-rose-500/10' },
                             { name: 'Reference Data', type: 'RDM', icon: TableProperties, color: 'text-cyan-500', bg: 'bg-cyan-500/10' },
+                            { name: 'CMDB Snapshot', type: 'CMDB', icon: Cpu, color: 'text-orange-500', bg: 'bg-orange-500/10' },
                         ].map((item) => (
                             <div key={item.type} className="flex items-center gap-4 p-4 rounded-2xl bg-muted/20 border border-white/5 group hover:bg-muted/40 transition-all duration-300 shadow-sm shadow-black/20 hover:scale-[1.02]">
                                 <div className={`p-2.5 rounded-xl ${item.bg} ${item.color} shadow-inner`}>
@@ -246,36 +245,6 @@ const IngestionPage: React.FC = () => {
                 return;
             }
 
-            // SPECIAL CASE: Taxonomy Data
-            if (schema.taxonomy_type || (schema.$schema && typeof schema.$schema === 'string' && schema.$schema.includes('taxonomy'))) {
-                const Ajv = (await import('ajv')).default;
-                const ajv = new Ajv();
-                
-                const validate = ajv.compile(taxonomySchema);
-                const valid = validate(schema);
-
-                if (!valid) {
-                    setResult({
-                        status: 'error',
-                        message: 'Taxonomy Validation Failed',
-                        details: validate.errors?.map(err => `${err.instancePath} ${err.message}`)
-                    });
-                    toast.error("Validation Failed", { description: "Taxonomy schema does not match definition." });
-                    setIsUploading(false);
-                    return;
-                }
-
-                setResult({
-                    status: 'success',
-                    message: 'Taxonomy Authenticated',
-                    type: 'TAXONOMY' as any,
-                    new: schema,
-                    fileName: file.name
-                });
-                toast.success("Taxonomy Recognized", { description: "Taxonomy validated against schema." });
-                setIsUploading(false);
-                return;
-            }
             const token = localStorage.getItem('token');
             const response = await fetch('/api/ingestion/validate', {
                 method: 'POST',
@@ -337,7 +306,8 @@ const IngestionPage: React.FC = () => {
         const isBIM = (result as any).type === "BUSINESS_INFORMATION_MODEL";
         const isRDM = (result as any).type === "REFERENCE_DATA_MANAGEMENT";
         const isTaxonomy = (result as any).type === "TAXONOMY";
-        const payload = (isOrg || isDFD || isGlossary || isBIM || isRDM || isTaxonomy) ? { ...result.new, fileName: result.fileName } : { ...result.new, fileName: result.fileName };
+        const isCMDB = (result as any).type === "CMDB";
+        const payload = (isOrg || isDFD || isGlossary || isBIM || isRDM || isTaxonomy || isCMDB) ? { ...result.new, fileName: result.fileName } : { ...result.new, fileName: result.fileName };
 
         // If conflict, filter elements based on selection
         if (!isOrg && !isDFD && !isGlossary && !isBIM && !isRDM && !isTaxonomy && result.status === 'conflict') {
@@ -353,6 +323,7 @@ const IngestionPage: React.FC = () => {
             if (isOrg) endpoint = '/api/ingestion/ingest-org';
             else if (isDFD) endpoint = '/api/ingestion/ingest-dfd';
             else if (isTaxonomy) endpoint = '/api/ingestion/ingest-tax';
+            else if (isCMDB) endpoint = '/api/cmdb/ingest';
 
             const response = await fetch(endpoint, {
                 method: 'POST',
@@ -590,6 +561,15 @@ const IngestionPage: React.FC = () => {
                                         </ul>
                                     </div>
                                 )}
+                                {!result.details && result.error && (
+                                    <div className="space-y-4">
+                                        <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground opacity-50 px-4">INTERNAL ERROR FAULT</h4>
+                                        <div className="p-8 bg-black/30 flex gap-4 items-center rounded-[2.5rem] border border-white/5 shadow-2xl">
+                                            <span className="text-destructive opacity-40">•</span>
+                                            <p className="text-xs font-bold text-muted-foreground leading-relaxed italic">{result.error}</p>
+                                        </div>
+                                    </div>
+                                )}
                             </CardContent>
                             <CardFooter className="p-10 bg-muted/20 flex gap-4 border-t border-white/5">
                                 <Button variant="outline" onClick={() => setResult(null)} className="rounded-[1.5rem] h-14 px-10 font-black uppercase text-[10px] tracking-widest border-white/10 hover:bg-white/5">Reinitialize Protocol</Button>
@@ -626,6 +606,8 @@ const IngestionPage: React.FC = () => {
                                             <TableProperties className="h-12 w-12" />
                                         ) : (result as any).type === "TAXONOMY" ? (
                                             <Network className="h-12 w-12" />
+                                        ) : (result as any).type === "CMDB" ? (
+                                            <Cpu className="h-12 w-12" />
                                         ) : (
                                             <Database className="h-12 w-12" />
                                         )}
@@ -647,6 +629,8 @@ const IngestionPage: React.FC = () => {
                                                 `REFERENCE DATA DETECTED [${result.new?.datasets?.length || 0} DATASETS]`
                                             ) : (result as any).type === "TAXONOMY" ? (
                                                 `TAXONOMY DETECTED [${result.new?.terms?.length || 0} TERMS]`
+                                            ) : (result as any).type === "CMDB" ? (
+                                                `CMDB SNAPSHOT DETECTED [${result.new?.systems?.length || 0} SYSTEMS / ${result.new?.databases?.length || 0} DATABASES]`
                                             ) : (
                                                 `${result.new?.tables?.length || 0} CORE TABLES AUTHENTICATED`
                                             )}

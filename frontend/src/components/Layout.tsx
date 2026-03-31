@@ -10,6 +10,7 @@ import {
   Cable as CableIcon,
   Search,
   Bell,
+  Box,
   HelpCircle,
   LogOut,
   ChevronDown,
@@ -387,6 +388,12 @@ const Layout: React.FC = () => {
                   className="h-8 text-xs"
                 />
                 <NavButton
+                  item={{ text: 'CMDB Systems', icon: <Monitor className="h-4 w-4" /> }}
+                  selected={location.pathname === '/steward/cmdb'}
+                  onClick={() => navigate('/steward/cmdb')}
+                  className="h-8 text-xs"
+                />
+                <NavButton
                   item={{ text: 'Critical Data', icon: <Zap className="h-4 w-4" /> }}
                   selected={location.pathname === '/steward/critical'}
                   onClick={() => navigate('/steward/critical')}
@@ -504,6 +511,12 @@ const Layout: React.FC = () => {
                   item={{ text: 'Taxonomy', icon: <Library className="h-4 w-4" /> }}
                   selected={location.pathname === '/analysis/taxonomy'}
                   onClick={() => navigate('/analysis/taxonomy')}
+                  className="h-8 text-xs"
+                />
+                <NavButton
+                  item={{ text: 'Data Product', icon: <Box className="h-4 w-4" /> }}
+                  selected={location.pathname === '/analysis/data-product'}
+                  onClick={() => navigate('/analysis/data-product')}
                   className="h-8 text-xs"
                 />
               </div>
