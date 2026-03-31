@@ -178,6 +178,13 @@ func (a *GinAdapter) Start(config domain.HostConfig, repo ports.RegistryReposito
 			bim.DELETE("/:id", authMW, auth.RequireRole(domain.RoleAdmin), a.DeleteBIM)
 		}
 
+		taxonomy := api.Group("/taxonomy")
+		{
+			taxonomy.GET("/list", a.GetTaxonomies)
+			taxonomy.GET("/:id", a.GetTaxonomy)
+			taxonomy.GET("/:id/terms", a.GetTaxonomyTerms)
+		}
+
 		rdm := api.Group("/rdm")
 		{
 			rdm.GET("/list", a.GetReferenceDataPackages)

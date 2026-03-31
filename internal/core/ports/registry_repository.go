@@ -84,4 +84,9 @@ type RegistryRepository interface {
 	GetReferenceDatasets() ([]domain.ReferenceDataset, error)
 	SaveReferenceData(pkg *domain.ReferenceDataPackage) error
 	DeleteReferenceData(id int64) error
+
+	// Taxonomy operations
+	GetTaxonomies() ([]domain.Taxonomy, error)
+	GetTaxonomyByID(id int64) (*domain.Taxonomy, error)
+	GetTaxonomyTerms(taxonomyID int64) ([]domain.TaxonomyTerm, error)
 }

@@ -500,6 +500,12 @@ const Layout: React.FC = () => {
                   onClick={() => navigate('/analysis/rdm/list')}
                   className="h-8 text-xs"
                 />
+                <NavButton
+                  item={{ text: 'Taxonomy', icon: <Library className="h-4 w-4" /> }}
+                  selected={location.pathname === '/analysis/taxonomy'}
+                  onClick={() => navigate('/analysis/taxonomy')}
+                  className="h-8 text-xs"
+                />
               </div>
             </CollapsibleContent>
           </Collapsible>

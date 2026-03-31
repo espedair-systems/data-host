@@ -205,6 +205,18 @@ func (r *FilesystemRepository) DeleteReferenceData(id int64) error {
 	return nil
 }
 
+func (r *FilesystemRepository) GetTaxonomies() ([]domain.Taxonomy, error) {
+	return nil, nil
+}
+
+func (r *FilesystemRepository) GetTaxonomyByID(id int64) (*domain.Taxonomy, error) {
+	return nil, nil
+}
+
+func (r *FilesystemRepository) GetTaxonomyTerms(taxonomyID int64) ([]domain.TaxonomyTerm, error) {
+	return []domain.TaxonomyTerm{}, nil
+}
+
 func (r *FilesystemRepository) GetDatabaseStats() (domain.DatabaseStats, error) {
 	return domain.DatabaseStats{}, nil
 }

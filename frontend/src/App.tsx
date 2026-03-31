@@ -47,6 +47,7 @@ import Steward from './pages/Steward';
 import BusinessGlossary from './pages/BusinessGlossary';
 import BusinessInformationModel from './pages/BusinessInformationModel';
 import ReferenceData from './pages/ReferenceData';
+import Taxonomy from './pages/Taxonomy';
 import Model from './pages/Model';
 import Secure from './pages/Secure';
 import MockPage from './pages/MockPage';
@@ -152,6 +153,9 @@ function App() {
                     <Route index element={<ReferenceData />} />
                     <Route path="list" element={<ReferenceData />} />
                     <Route path="edit/:type/:id" element={<ReferenceData />} />
+                  </Route>
+                  <Route path="taxonomy">
+                    <Route index element={<Taxonomy />} />
                   </Route>
                 </Route>
                 <Route path="knowledge">

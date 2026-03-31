@@ -12,6 +12,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	
+	"strconv"
+	
 	"data-host/internal/core/domain"
 )
 
@@ -76,4 +78,44 @@ func (a *GinAdapter) IngestTaxonomy(c *gin.Context) {
 	})
 
 	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "Taxonomy ingested successfully"})
+}
+
+func (a *GinAdapter) GetTaxonomies(c *gin.Context) {
+	taxonomies, err := a.repo.GetTaxonomies()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get taxonomies: " + err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, taxonomies)
+}
+func (a *GinAdapter) GetTaxonomy(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
+		return
+	}
+
+	taxonomy, err := a.repo.GetTaxonomyByID(id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Taxonomy not found"})
+		return
+	}
+	c.JSON(http.StatusOK, taxonomy)
+}
+
+func (a *GinAdapter) GetTaxonomyTerms(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
+		return
+	}
+
+	terms, err := a.repo.GetTaxonomyTerms(id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get taxonomy terms: " + err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, terms)
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/rs/zerolog/log"
+	"data-host/internal/core/domain"
 )
 
 func (r *SQLiteRepository) SaveTaxonomy(payload interface{}) error {
@@ -105,4 +106,113 @@ func (r *SQLiteRepository) SaveTaxonomy(payload interface{}) error {
 	}
 
 	return tx.Commit()
+}
+
+func (r *SQLiteRepository) GetTaxonomies() ([]domain.Taxonomy, error) {
+	rows, err := r.db.Query(`
+		SELECT tax_taxonomy_id as id, taxonomy_name, version, title, description, taxonomy_type, source, generated_at_utc, default_language
+		FROM TAX_TAXONOMY
+		ORDER BY taxonomy_name ASC
+	`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var results []domain.Taxonomy
+	for rows.Next() {
+		var t domain.Taxonomy
+		var title, desc, taxType, source, genAt, lang NullStringScanner
+		err := rows.Scan(&t.ID, &t.Name, &t.Version, &title, &desc, &taxType, &source, &genAt, &lang)
+		if err != nil {
+			return nil, err
+		}
+		t.Title = title.String
+		t.Description = desc.String
+		t.TaxonomyType = taxType.String
+		t.Source = source.String
+		t.GeneratedAt = genAt.String
+		t.Language = lang.String
+		results = append(results, t)
+	}
+	return results, nil
+}
+
+func (r *SQLiteRepository) GetTaxonomyByID(id int64) (*domain.Taxonomy, error) {
+	var t domain.Taxonomy
+	var title, desc, taxType, source, genAt, lang NullStringScanner
+	err := r.db.QueryRow(`
+		SELECT tax_taxonomy_id as id, taxonomy_name, version, title, description, taxonomy_type, source, generated_at_utc, default_language
+		FROM TAX_TAXONOMY
+		WHERE tax_taxonomy_id = ?
+	`, id).Scan(&t.ID, &t.Name, &t.Version, &title, &desc, &taxType, &source, &genAt, &lang)
+
+	if err != nil {
+		return nil, err
+	}
+
+	t.Title = title.String
+	t.Description = desc.String
+	t.TaxonomyType = taxType.String
+	t.Source = source.String
+	t.GeneratedAt = genAt.String
+	t.Language = lang.String
+
+	return &t, nil
+}
+
+func (r *SQLiteRepository) GetTaxonomyTerms(taxonomyID int64) ([]domain.TaxonomyTerm, error) {
+	rows, err := r.db.Query(`
+		SELECT tax_term_id as id, tax_taxonomy_id, term_id, label, definition, status, term_type, language, parent_term_id, classification, owner, steward
+		FROM TAX_TERM
+		WHERE tax_taxonomy_id = ?
+		ORDER BY label ASC
+	`, taxonomyID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var terms []domain.TaxonomyTerm
+	for rows.Next() {
+		var tm domain.TaxonomyTerm
+		var label, def, status, termType, lang, parent, class, owner, steward NullStringScanner
+		err := rows.Scan(&tm.ID, &tm.TaxonomyID, &tm.TermID, &label, &def, &status, &termType, &lang, &parent, &class, &owner, &steward)
+		if err != nil {
+			return nil, err
+		}
+		tm.Label = label.String
+		tm.Definition = def.String
+		tm.Status = status.String
+		tm.TermType = termType.String
+		tm.Language = lang.String
+		tm.ParentTermID = parent.String
+		tm.Classification = class.String
+		tm.Owner = owner.String
+		tm.Steward = steward.String
+		terms = append(terms, tm)
+	}
+	return terms, nil
+}
+
+type NullStringScanner struct {
+	String string
+	Valid  bool
+}
+
+func (n *NullStringScanner) Scan(value interface{}) error {
+	if value == nil {
+		n.String, n.Valid = "", false
+		return nil
+	}
+	n.Valid = true
+	switch v := value.(type) {
+	case string:
+		n.String = v
+	case []byte:
+		n.String = string(v)
+	default:
+		n.String = fmt.Sprintf("%v", v)
+	}
+	return nil
 }
